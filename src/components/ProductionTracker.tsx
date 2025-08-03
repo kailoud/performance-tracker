@@ -676,11 +676,11 @@ const ProductionTracker = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 min-h-screen bg-gray-50">
+    <div className="max-w-6xl mx-auto p-0 sm:p-6 min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center space-x-4">
+      <div className="bg-white rounded-none sm:rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+          <div className="flex items-center space-x-3 sm:space-x-4">
             <div>
               <img 
                 src="/bike.png" 
@@ -689,37 +689,41 @@ const ProductionTracker = () => {
               />
             </div>
             <div>
-              <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Production Tracker</h1>
-              <p className="text-sm sm:text-base text-gray-600">Welcome back, {userName}! 👋</p>
+              <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-800">Production Tracker</h1>
+              <p className="text-xs sm:text-sm text-gray-600">
+                Welcome back, {userName.split(' ').map(n => n[0]).join('')}! 👋
+              </p>
             </div>
           </div>
-          <div className="text-right flex items-center space-x-4">
-            <div className="text-right">
-              <p className="text-sm text-gray-500">{userEmail}</p>
-              <button onClick={handleLogout} className="text-sm text-red-600 hover:text-red-800 underline">
+          
+          <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3">
+            <div className="text-left sm:text-right">
+              <p className="text-xs sm:text-sm text-gray-500">{userEmail.split('@')[0]}@...</p>
+              <button onClick={handleLogout} className="text-xs sm:text-sm text-red-600 hover:text-red-800 underline">
                 Logout
               </button>
             </div>
+            
             {/* Calendar Icon for Historical Data */}
             <button
               onClick={() => setShowCalendarModal(true)}
-              className="p-1.5 sm:p-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors"
+              className="p-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors"
               title="View Historical Data"
             >
-              <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
+              <Calendar className="h-4 w-4" />
             </button>
             
             {selectedDate && (
               <button
                 onClick={finishWorkDay}
                 disabled={allDailyData[selectedDate]?.isFinished}
-                className={`px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg font-medium transition-colors ${
+                className={`px-2 py-1 text-xs rounded-lg font-medium transition-colors ${
                   allDailyData[selectedDate]?.isFinished
                     ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
                     : 'bg-green-600 hover:bg-green-700 text-white'
                 }`}
               >
-                {allDailyData[selectedDate]?.isFinished ? 'Day Finished' : 'Finish Work Day'}
+                {allDailyData[selectedDate]?.isFinished ? 'Finished' : 'Finish Day'}
               </button>
             )}
             
@@ -727,16 +731,16 @@ const ProductionTracker = () => {
             {isWeekComplete() && (
               <button
                 onClick={resetWeek}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg font-medium bg-purple-600 hover:bg-purple-700 text-white transition-colors ml-2"
+                className="px-2 py-1 text-xs rounded-lg font-medium bg-purple-600 hover:bg-purple-700 text-white transition-colors"
               >
-                🎉 Start New Week
+                🎉 New Week
               </button>
             )}
           </div>
         </div>
 
         {/* Date Selection */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-3">Select Working Day</h3>
           <div className="flex flex-wrap gap-1 sm:gap-2">
             {getWorkingDays().map((date) => {
@@ -792,7 +796,7 @@ const ProductionTracker = () => {
         
         {/* Weekly Summary - shows when week is complete */}
         {isWeekComplete() && (
-          <div className="mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 p-6 rounded-lg border border-purple-200">
+          <div className="mb-4 sm:mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 p-4 sm:p-6 rounded-none sm:rounded-lg border border-purple-200">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-purple-800">🎉 Week Complete!</h3>
               <div className="text-sm text-purple-600">
@@ -843,7 +847,7 @@ const ProductionTracker = () => {
         )}
         
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
           <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
             <div className="flex items-center">
               <Target className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-2 sm:mr-3" />
@@ -887,7 +891,7 @@ const ProductionTracker = () => {
 
         {/* Loss Time Alert */}
         {lossTimeTotal > 0 && (
-          <div className="bg-red-50 p-3 sm:p-4 rounded-lg mb-4 border border-red-200">
+          <div className="bg-red-50 p-3 sm:p-4 rounded-none sm:rounded-lg mb-4 border border-red-200">
             <div className="flex items-center">
               <StopCircle className="h-6 w-6 sm:h-8 sm:w-8 text-red-600 mr-2 sm:mr-3" />
               <div>
@@ -900,7 +904,7 @@ const ProductionTracker = () => {
         )}
 
         {/* Progress Bar */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <div className="flex justify-between items-center mb-2">
             <span className="text-xs sm:text-sm font-medium text-gray-700">Daily Progress</span>
             {allDailyData[selectedDate]?.isFinished && (
@@ -922,7 +926,7 @@ const ProductionTracker = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Input Form */}
-        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+        <div className="bg-white rounded-none sm:rounded-lg shadow-lg p-4 sm:p-6">
           <h2 className="text-lg sm:text-xl font-semibold mb-4">Log Completed Work</h2>
           
           <div className="space-y-4">
@@ -1090,7 +1094,7 @@ const ProductionTracker = () => {
         </div>
 
         {/* Progress Chart */}
-        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+        <div className="bg-white rounded-none sm:rounded-lg shadow-lg p-4 sm:p-6">
           <h2 className="text-lg sm:text-xl font-semibold mb-4">Progress Status</h2>
           
           <div className="h-64 relative">
@@ -1148,9 +1152,9 @@ const ProductionTracker = () => {
         </div>
       </div>
 
-      {/* Jobs Summary */}
-      {(completedJobs.length > 0 || lossTimeEntries.length > 0) && (
-        <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
+              {/* Jobs Summary */}
+        {(completedJobs.length > 0 || lossTimeEntries.length > 0) && (
+          <div className="bg-white rounded-none sm:rounded-lg shadow-lg p-4 sm:p-6 mt-4 sm:mt-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">
               Daily Summary - {userName} ({formatDateForDisplay(selectedDate)})
