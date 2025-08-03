@@ -257,9 +257,9 @@ const ProductionTracker = () => {
         const elapsedMinutes = parsed.elapsedTime / 60000;
         const expectedMinutes = parsed.expectedTime;
         
-        // If timer has exceeded expected time, auto-complete the job
-        if (elapsedMinutes >= expectedMinutes) {
-          console.log('Timer exceeded expected time, auto-completing job');
+        // If timer has exceeded expected time by 1 minute, auto-complete the job
+        if (elapsedMinutes >= expectedMinutes + 1) {
+          console.log('Timer exceeded expected time by 1 minute, auto-completing job');
           autoCompleteJob(parsed);
         } else {
           // Show notification about active timer
@@ -1786,22 +1786,23 @@ const ProductionTracker = () => {
     };
   }, [timerState]);
 
-  // Periodic check for timers that exceed expected time
+  // Periodic check for timers that exceed expected time by exactly 1 minute
   useEffect(() => {
     if (timerState.isActive && !timerState.isPaused) {
       const checkInterval = setInterval(() => {
         const elapsedMinutes = timerState.elapsedTime / 60000;
         const expectedMinutes = timerState.expectedTime;
         
-        if (elapsedMinutes >= expectedMinutes) {
-          console.log('Timer exceeded expected time during active session, showing notification');
+        // Trigger auto-completion when timer exceeds expected time by exactly 1 minute
+        if (elapsedMinutes >= expectedMinutes + 1) {
+          console.log('Timer exceeded expected time by 1 minute, showing auto-completion modal');
           // Show notification popup
           if (!showAutoCompletionModal) {
             triggerAutoCompletionModal(timerState);
           }
           clearInterval(checkInterval);
         }
-      }, 10000); // Check every 10 seconds
+      }, 5000); // Check every 5 seconds for more precise timing
       
       return () => clearInterval(checkInterval);
     }
@@ -2711,11 +2712,17 @@ const ProductionTracker = () => {
                 {/* Time Status */}
                 {timerState.elapsedTime > 0 && (
                   <div className="mt-2">
-                    {timerState.elapsedTime / 60000 > timerState.expectedTime ? (
+                    {timerState.elapsedTime / 60000 > timerState.expectedTime + 1 ? (
                       <div className="text-red-600 text-sm font-medium">
                         ⚠️ Over expected time by {Math.round((timerState.elapsedTime / 60000) - timerState.expectedTime)} minutes
                         <br />
-                        <span className="text-xs">Job will be auto-completed soon</span>
+                        <span className="text-xs">Auto-completion modal will open</span>
+                      </div>
+                    ) : timerState.elapsedTime / 60000 > timerState.expectedTime ? (
+                      <div className="text-orange-600 text-sm font-medium">
+                        ⚠️ Over expected time by {Math.round((timerState.elapsedTime / 60000) - timerState.expectedTime)} minutes
+                        <br />
+                        <span className="text-xs">Modal will open in {Math.max(0, Math.ceil(60 - ((timerState.elapsedTime / 60000 - timerState.expectedTime) * 60)))} seconds</span>
                       </div>
                     ) : timerState.elapsedTime / 60000 > timerState.expectedTime * 0.8 ? (
                       <div className="text-yellow-600 text-sm font-medium">
