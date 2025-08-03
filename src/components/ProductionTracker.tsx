@@ -1947,12 +1947,7 @@ const ProductionTracker = () => {
               </button>
               <button
                 onClick={() => setShowScanner(true)}
-                disabled={!isWithinWorkingHoursState && !isAdmin}
-                className={`px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg flex items-center space-x-1 transition-colors ${
-                  (!isWithinWorkingHoursState && !isAdmin) 
-                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50 transform scale-95' 
-                    : 'bg-green-600 hover:bg-green-700 text-white'
-                }`}
+                className="px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg flex items-center space-x-1 transition-colors bg-green-600 hover:bg-green-700 text-white"
               >
                 <Camera className="h-3 w-3" />
                 <span>📱 Barcode Scanner</span>
