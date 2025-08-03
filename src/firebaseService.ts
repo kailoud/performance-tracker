@@ -40,8 +40,6 @@ interface CompletedJob {
   unitsCompleted: number;
   completionPercentage: number;
   actualMinutes: number;
-  expectedMinutes: number;
-  actualTimeTaken: number; // in seconds
   timestamp: string;
   id: number;
 }

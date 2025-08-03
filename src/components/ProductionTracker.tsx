@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Clock, Target, CheckCircle, AlertCircle, StopCircle, Plus, Trash2, Download, Calendar, X, LogOut, Camera, Timer, Play, Pause, Square } from 'lucide-react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Clock, Target, CheckCircle, AlertCircle, StopCircle, Plus, Trash2, Download, Calendar, X, LogOut } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { 
   signIn, 
@@ -32,22 +31,11 @@ interface CompletedJob extends ProductionItem {
   unitsCompleted: number;
   completionPercentage: number;
   actualMinutes: number;
-  expectedMinutes: number;
-  actualTimeTaken: number; // in seconds
   timestamp: string;
   id: number;
 }
 
-interface TimerState {
-  isActive: boolean;
-  isPaused: boolean;
-  startTime: number;
-  pausedTime: number;
-  elapsedTime: number;
-  expectedTime: number; // in minutes
-  itemCode: string;
-  lmCode: string;
-}
+
 
 interface LossTimeEntry {
   reason: string;
@@ -115,22 +103,7 @@ const ProductionTracker = () => {
   const [lossTimeMinutes, setLossTimeMinutes] = useState('');
   const [showLossTimeForm, setShowLossTimeForm] = useState(false);
   
-  // Barcode scanner and timer state
-  const [showScanner, setShowScanner] = useState(false);
-  const [scannedBarcode, setScannedBarcode] = useState('');
-  const [showTimerModal, setShowTimerModal] = useState(false);
-  const [scannerInstance, setScannerInstance] = useState<Html5QrcodeScanner | null>(null);
-  const [timerState, setTimerState] = useState<TimerState>({
-    isActive: false,
-    isPaused: false,
-    startTime: 0,
-    pausedTime: 0,
-    elapsedTime: 0,
-    expectedTime: 0,
-    itemCode: '',
-    lmCode: ''
-  });
-  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+
   
   // Calendar modal state
   const [showCalendarModal, setShowCalendarModal] = useState(false);
@@ -604,8 +577,6 @@ const ProductionTracker = () => {
       unitsCompleted,
       completionPercentage,
       actualMinutes,
-      expectedMinutes: item.time,
-      actualTimeTaken: 0, // Will be updated by timer
       timestamp: new Date().toLocaleTimeString(),
       id: Date.now()
     };
@@ -1357,199 +1328,13 @@ const ProductionTracker = () => {
     setEditingValue('');
   };
 
-  // Timer functions
-  const startTimer = () => {
-    if (!timerState.isActive) {
-      const now = Date.now();
-      setTimerState(prev => ({
-        ...prev,
-        isActive: true,
-        startTime: now,
-        elapsedTime: 0
-      }));
-      
-      const interval = setInterval(() => {
-        setTimerState(prev => ({
-          ...prev,
-          elapsedTime: Date.now() - prev.startTime
-        }));
-      }, 100);
-      
-      setTimerInterval(interval);
-    }
-  };
 
-  const pauseTimer = () => {
-    if (timerState.isActive && !timerState.isPaused) {
-      setTimerState(prev => ({
-        ...prev,
-        isPaused: true,
-        pausedTime: prev.elapsedTime
-      }));
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        setTimerInterval(null);
-      }
-    }
-  };
 
-  const resumeTimer = () => {
-    if (timerState.isActive && timerState.isPaused) {
-      const now = Date.now();
-      setTimerState(prev => ({
-        ...prev,
-        isPaused: false,
-        startTime: now - prev.pausedTime
-      }));
-      
-      const interval = setInterval(() => {
-        setTimerState(prev => ({
-          ...prev,
-          elapsedTime: Date.now() - prev.startTime
-        }));
-      }, 100);
-      
-      setTimerInterval(interval);
-    }
-  };
 
-  const stopTimer = () => {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      setTimerInterval(null);
-    }
-    
-    const actualTimeTaken = timerState.elapsedTime / 1000; // Convert to seconds
-    
-    // Create completed job with actual time taken
-    const item = productionData.find(p => p.itemCode === timerState.itemCode);
-    if (item) {
-      const unitsCompleted = item.quantity; // Full quantity for scanned items
-      const completionPercentage = 1; // 100% completion
-      const actualMinutes = actualTimeTaken / 60; // Convert seconds to minutes
-      
-      const newJob: CompletedJob = {
-        ...item,
-        unitsCompleted,
-        completionPercentage,
-        actualMinutes,
-        expectedMinutes: item.time,
-        actualTimeTaken,
-        timestamp: new Date().toLocaleTimeString(),
-        id: Date.now()
-      };
 
-      const updatedJobs = [...completedJobs, newJob];
-      setCompletedJobs(updatedJobs);
 
-      // Save to Firebase
-      if (userId && selectedDate) {
-        const dailyData = {
-          date: selectedDate,
-          completedJobs: updatedJobs,
-          lossTimeEntries,
-          isFinished: allDailyData[selectedDate]?.isFinished || false,
-          finishTime: allDailyData[selectedDate]?.finishTime
-        };
-        
-        saveDailyData(userId, selectedDate, dailyData).then(() => {
-          setAllDailyData(prev => ({
-            ...prev,
-            [selectedDate]: dailyData
-          }));
-        }).catch(error => {
-          console.error('Error saving job:', error);
-        });
-      }
-    }
-    
-    // Reset timer state
-    setTimerState({
-      isActive: false,
-      isPaused: false,
-      startTime: 0,
-      pausedTime: 0,
-      elapsedTime: 0,
-      expectedTime: 0,
-      itemCode: '',
-      lmCode: ''
-    });
-    setShowTimerModal(false);
-  };
 
-  // Barcode scanning functions
-  const handleBarcodeScan = (barcode: string) => {
-    setScannedBarcode(barcode);
-    
-    // Find the item by barcode (assuming barcode is the item code)
-    const item = productionData.find(p => p.itemCode === barcode);
-    
-    if (item) {
-      setTimerState(prev => ({
-        ...prev,
-        expectedTime: item.time,
-        itemCode: item.itemCode,
-        lmCode: item.lmCode
-      }));
-      setShowTimerModal(true);
-      setShowScanner(false);
-      
-      // Stop the scanner
-      if (scannerInstance) {
-        scannerInstance.clear();
-        setScannerInstance(null);
-      }
-    } else {
-      alert('Item not found for barcode: ' + barcode);
-    }
-  };
 
-  const handleManualBarcodeInput = (barcode: string) => {
-    handleBarcodeScan(barcode);
-  };
-
-  const startCameraScanner = () => {
-    setShowScanner(true);
-    
-    // Initialize the scanner after a short delay to ensure the modal is rendered
-    setTimeout(() => {
-      const scanner = new Html5QrcodeScanner(
-        "reader",
-        { 
-          fps: 10, 
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0
-        },
-        false
-      );
-      
-      scanner.render((decodedText) => {
-        handleBarcodeScan(decodedText);
-      }, (error) => {
-        // Handle scan errors silently
-        console.log('Scan error:', error);
-      });
-      
-      setScannerInstance(scanner);
-    }, 100);
-  };
-
-  const closeScanner = () => {
-    setShowScanner(false);
-    if (scannerInstance) {
-      scannerInstance.clear();
-      setScannerInstance(null);
-    }
-  };
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-      }
-    };
-  }, [timerInterval]);
 
   // Load users when admin panel is opened
   React.useEffect(() => {
@@ -1987,13 +1772,7 @@ const ProductionTracker = () => {
               >
                 🔍 Quick Search
               </button>
-              <button
-                onClick={startCameraScanner}
-                className="px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg flex items-center space-x-1 transition-colors bg-green-600 hover:bg-green-700 text-white"
-              >
-                <Camera className="h-3 w-3" />
-                <span>📱 Barcode Scanner</span>
-              </button>
+
             </div>
 
             {/* Item Selection */}
@@ -2301,9 +2080,6 @@ const ProductionTracker = () => {
                         <th className="px-3 py-3 text-left font-medium text-gray-700">Item Code</th>
                         <th className="px-3 py-3 text-left font-medium text-gray-700">LM Code</th>
                         <th className="px-3 py-3 text-left font-medium text-gray-700">Units</th>
-                        <th className="px-3 py-3 text-left font-medium text-gray-700">Expected</th>
-                        <th className="px-3 py-3 text-left font-medium text-gray-700">Actual</th>
-                        <th className="px-3 py-3 text-left font-medium text-gray-700">Timer</th>
                         <th className="px-3 py-3 text-left font-medium text-gray-700">Time</th>
                       </tr>
                     </thead>
@@ -2313,21 +2089,6 @@ const ProductionTracker = () => {
                           <td className="px-3 py-3 font-medium text-gray-900">{job.itemCode}</td>
                           <td className="px-3 py-3 text-gray-700">{job.lmCode}</td>
                           <td className="px-3 py-3 font-medium text-blue-600">{job.unitsCompleted}</td>
-                          <td className="px-3 py-3 text-gray-700">{job.expectedMinutes} min</td>
-                          <td className="px-3 py-3 text-gray-700">{job.actualMinutes.toFixed(1)} min</td>
-                          <td className="px-3 py-3 text-xs text-gray-500">
-                            {job.actualTimeTaken > 0 ? (
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                job.actualTimeTaken / 60 <= job.expectedMinutes 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {Math.floor(job.actualTimeTaken / 60)}:{(job.actualTimeTaken % 60).toString().padStart(2, '0')}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">Manual</span>
-                            )}
-                          </td>
                           <td className="px-3 py-3 text-xs text-gray-500">{job.timestamp}</td>
                         </tr>
                       ))}
@@ -3002,180 +2763,9 @@ const ProductionTracker = () => {
         </div>
       )}
       
-      {/* Barcode Scanner Modal */}
-      {showScanner && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-bold text-gray-800">📱 Barcode Scanner</h2>
-              <button
-                onClick={closeScanner}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="h-6 w-6 text-gray-600" />
-              </button>
-            </div>
-            
-            <div className="p-6">
-              <div className="text-center mb-6">
-                <Camera className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Scan Barcode</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Point your camera at the QR code to scan the item code
-                </p>
-              </div>
-              
-              {/* Camera Scanner */}
-              <div className="mb-6">
-                <div id="reader" className="w-full"></div>
-              </div>
-              
-              {/* Manual Input Option */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Or Enter Barcode Manually</label>
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={scannedBarcode}
-                    onChange={(e) => setScannedBarcode(e.target.value)}
-                    placeholder="Enter barcode (e.g., B102823)"
-                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 uppercase"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && scannedBarcode.trim()) {
-                        handleManualBarcodeInput(scannedBarcode.trim());
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={() => handleManualBarcodeInput(scannedBarcode.trim())}
-                    disabled={!scannedBarcode.trim()}
-                    className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    Scan
-                  </button>
-                </div>
-              </div>
-              
-              <div className="text-center">
-                <button
-                  onClick={closeScanner}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
       
-      {/* Timer Modal */}
-      {showTimerModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-bold text-gray-800">⏱️ Job Timer</h2>
-              <button
-                onClick={() => {
-                  setShowTimerModal(false);
-                  if (timerInterval) {
-                    clearInterval(timerInterval);
-                    setTimerInterval(null);
-                  }
-                }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="h-6 w-6 text-gray-600" />
-              </button>
-            </div>
-            
-            <div className="p-6">
-              <div className="text-center mb-6">
-                <Timer className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                  {timerState.itemCode} - {timerState.lmCode}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Expected Time: {timerState.expectedTime} minutes
-                </p>
-              </div>
-              
-              {/* Timer Display */}
-              <div className="bg-gray-50 rounded-lg p-6 mb-6 text-center">
-                <div className="text-4xl font-mono font-bold text-blue-600 mb-2">
-                  {Math.floor(timerState.elapsedTime / 60000).toString().padStart(2, '0')}:
-                  {Math.floor((timerState.elapsedTime % 60000) / 1000).toString().padStart(2, '0')}
-                </div>
-                <p className="text-sm text-gray-600">Elapsed Time</p>
-              </div>
-              
-              {/* Timer Controls */}
-              <div className="flex justify-center space-x-4 mb-6">
-                {!timerState.isActive ? (
-                  <button
-                    onClick={startTimer}
-                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center space-x-2"
-                  >
-                    <Play className="h-5 w-5" />
-                    <span>Start Timer</span>
-                  </button>
-                ) : timerState.isPaused ? (
-                  <button
-                    onClick={resumeTimer}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
-                  >
-                    <Play className="h-5 w-5" />
-                    <span>Resume</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={pauseTimer}
-                    className="px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 flex items-center space-x-2"
-                  >
-                    <Pause className="h-5 w-5" />
-                    <span>Pause</span>
-                  </button>
-                )}
-                
-                {timerState.isActive && (
-                  <button
-                    onClick={stopTimer}
-                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center space-x-2"
-                  >
-                    <Square className="h-5 w-5" />
-                    <span>Complete Job</span>
-                  </button>
-                )}
-              </div>
-              
-              {/* Progress Bar */}
-              <div className="mb-6">
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
-                  <span>Progress</span>
-                  <span>
-                    {Math.round((timerState.elapsedTime / 60000) / timerState.expectedTime * 100)}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ 
-                      width: `${Math.min((timerState.elapsedTime / 60000) / timerState.expectedTime * 100, 100)}%` 
-                    }}
-                  ></div>
-                </div>
-              </div>
-              
-              <div className="text-center text-sm text-gray-600">
-                <p>Timer will automatically log the job when completed</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Actual time taken will be recorded vs expected time
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };
