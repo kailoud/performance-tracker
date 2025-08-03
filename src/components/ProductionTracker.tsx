@@ -563,7 +563,6 @@ const ProductionTracker = () => {
                 src="/bike.png" 
                 alt="Folding Bike Logo" 
                 className="mx-auto w-20 h-20 object-contain"
-                style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%)' }}
               />
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Production Tracker</h1>
@@ -620,7 +619,6 @@ const ProductionTracker = () => {
                 src="/bike.png" 
                 alt="Folding Bike Logo" 
                 className="w-12 h-12 object-contain"
-                style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%)' }}
               />
             </div>
             <div>
