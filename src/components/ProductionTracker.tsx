@@ -1154,77 +1154,90 @@ const ProductionTracker = () => {
 
               {/* Jobs Summary */}
         {(completedJobs.length > 0 || lossTimeEntries.length > 0) && (
-          <div className="bg-white rounded-none sm:rounded-lg shadow-lg p-4 sm:p-6 mt-4 sm:mt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">
-              Daily Summary - {userName} ({formatDateForDisplay(selectedDate)})
-            </h2>
-            <button
-              onClick={downloadPDF}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-            >
-              <Download className="h-4 w-4" />
-              <span>Download PDF</span>
-            </button>
-          </div>
-          
-          {completedJobs.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-medium mb-3">✅ Completed Jobs</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full table-auto text-sm">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-4 py-2 text-left">Item Code</th>
-                      <th className="px-4 py-2 text-left">LM Code</th>
-                      <th className="px-4 py-2 text-left">Units</th>
-                      <th className="px-4 py-2 text-left">Minutes</th>
-                      <th className="px-4 py-2 text-left">Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {completedJobs.map((job, index) => (
-                      <tr key={index} className="border-b border-gray-100">
-                        <td className="px-4 py-2 font-medium">{job.itemCode}</td>
-                        <td className="px-4 py-2">{job.lmCode}</td>
-                        <td className="px-4 py-2 font-medium text-blue-600">{job.unitsCompleted}</td>
-                        <td className="px-4 py-2">{job.actualMinutes.toFixed(1)}</td>
-                        <td className="px-4 py-2 text-xs">{job.timestamp}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <div className="bg-white rounded-none sm:rounded-lg shadow-lg p-6 sm:p-8 mt-4 sm:mt-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-3 sm:space-y-0">
+              <div>
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
+                  Daily Summary
+                </h2>
+                <p className="text-sm text-gray-600">
+                  {userName} • {formatDateForDisplay(selectedDate)}
+                </p>
               </div>
+              <button
+                onClick={downloadPDF}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 text-sm rounded-lg flex items-center space-x-1.5 transition-colors self-start sm:self-auto"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>PDF</span>
+              </button>
             </div>
-          )}
+            
+            {completedJobs.length > 0 && (
+              <div className="mb-8">
+                <div className="flex items-center mb-4">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                  <h3 className="text-base sm:text-lg font-medium text-gray-800">Completed Jobs</h3>
+                  <span className="ml-2 text-sm text-gray-500">({completedJobs.length} jobs)</span>
+                </div>
+                <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                  <table className="w-full table-auto text-xs sm:text-sm">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="px-3 py-3 text-left font-medium text-gray-700">Item Code</th>
+                        <th className="px-3 py-3 text-left font-medium text-gray-700">LM Code</th>
+                        <th className="px-3 py-3 text-left font-medium text-gray-700">Units</th>
+                        <th className="px-3 py-3 text-left font-medium text-gray-700">Minutes</th>
+                        <th className="px-3 py-3 text-left font-medium text-gray-700">Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {completedJobs.map((job, index) => (
+                        <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="px-3 py-3 font-medium text-gray-900">{job.itemCode}</td>
+                          <td className="px-3 py-3 text-gray-700">{job.lmCode}</td>
+                          <td className="px-3 py-3 font-medium text-blue-600">{job.unitsCompleted}</td>
+                          <td className="px-3 py-3 text-gray-700">{job.actualMinutes.toFixed(1)}</td>
+                          <td className="px-3 py-3 text-xs text-gray-500">{job.timestamp}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
-          {lossTimeEntries.length > 0 && (
-            <div>
-              <h3 className="text-lg font-medium mb-3 text-red-700">⚠️ Loss Time Entries</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full table-auto text-sm">
-                  <thead>
-                    <tr className="bg-red-50">
-                      <th className="px-4 py-2 text-left">Reason</th>
-                      <th className="px-4 py-2 text-left">Minutes Lost</th>
-                      <th className="px-4 py-2 text-left">Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lossTimeEntries.map((entry, index) => (
-                      <tr key={index} className="border-b border-gray-100">
-                        <td className="px-4 py-2 font-medium text-red-700">{entry.reason}</td>
-                        <td className="px-4 py-2 text-red-600">{entry.minutes}</td>
-                        <td className="px-4 py-2 text-xs">{entry.timestamp}</td>
+            {lossTimeEntries.length > 0 && (
+              <div>
+                <div className="flex items-center mb-4">
+                  <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
+                  <h3 className="text-base sm:text-lg font-medium text-gray-800">Loss Time Entries</h3>
+                  <span className="ml-2 text-sm text-gray-500">({lossTimeEntries.length} entries)</span>
+                </div>
+                <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                  <table className="w-full table-auto text-xs sm:text-sm">
+                    <thead>
+                      <tr className="bg-red-50">
+                        <th className="px-3 py-3 text-left font-medium text-gray-700">Reason</th>
+                        <th className="px-3 py-3 text-left font-medium text-gray-700">Minutes Lost</th>
+                        <th className="px-3 py-3 text-left font-medium text-gray-700">Time</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {lossTimeEntries.map((entry, index) => (
+                        <tr key={index} className="border-b border-gray-100 hover:bg-red-50">
+                          <td className="px-3 py-3 font-medium text-red-700">{entry.reason}</td>
+                          <td className="px-3 py-3 text-red-600 font-medium">{entry.minutes}</td>
+                          <td className="px-3 py-3 text-xs text-gray-500">{entry.timestamp}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
       
       {/* Calendar Modal for Historical Data */}
       {showCalendarModal && (
