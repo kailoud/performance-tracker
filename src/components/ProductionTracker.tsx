@@ -70,6 +70,11 @@ const ProductionTracker = () => {
   const [editingSelectedDate, setEditingSelectedDate] = useState<string>('');
   const [isLoadingUserData, setIsLoadingUserData] = useState(false);
   
+  // Inline editing state
+  const [editingJobId, setEditingJobId] = useState<number | null>(null);
+  const [editingField, setEditingField] = useState<string>('');
+  const [editingValue, setEditingValue] = useState<string>('');
+  
   const [completedJobs, setCompletedJobs] = useState<CompletedJob[]>([]);
   const [selectedItem, setSelectedItem] = useState('');
   const [completedQuantity, setCompletedQuantity] = useState('');
@@ -1197,6 +1202,75 @@ const ProductionTracker = () => {
         }
       }));
     }
+  };
+
+  // Inline editing functions
+  const startEditing = (jobId: number, field: string, currentValue: string | number) => {
+    setEditingJobId(jobId);
+    setEditingField(field);
+    setEditingValue(currentValue.toString());
+  };
+
+  const saveEdit = () => {
+    if (!selectedUserForEdit || !editingSelectedDate || editingJobId === null) return;
+    
+    const currentData = editingUserData[editingSelectedDate];
+    if (currentData) {
+      const updatedJobs = currentData.completedJobs.map(job => {
+        if (job.id === editingJobId) {
+          const updatedJob = { ...job };
+          
+          switch (editingField) {
+            case 'itemCode':
+              updatedJob.itemCode = editingValue;
+              break;
+            case 'lmCode':
+              updatedJob.lmCode = editingValue;
+              break;
+            case 'unitsCompleted':
+              const units = parseInt(editingValue);
+              if (!isNaN(units) && units > 0) {
+                updatedJob.unitsCompleted = units;
+                // Recalculate completion percentage and actual minutes
+                const item = productionData.find(p => p.itemCode === updatedJob.itemCode);
+                if (item) {
+                  updatedJob.completionPercentage = units / item.quantity;
+                  updatedJob.actualMinutes = item.time * updatedJob.completionPercentage;
+                }
+              }
+              break;
+            case 'actualMinutes':
+              const minutes = parseFloat(editingValue);
+              if (!isNaN(minutes) && minutes >= 0) {
+                updatedJob.actualMinutes = minutes;
+              }
+              break;
+          }
+          
+          return updatedJob;
+        }
+        return job;
+      });
+      
+      setEditingUserData(prev => ({
+        ...prev,
+        [editingSelectedDate]: {
+          ...currentData,
+          completedJobs: updatedJobs
+        }
+      }));
+    }
+    
+    // Reset editing state
+    setEditingJobId(null);
+    setEditingField('');
+    setEditingValue('');
+  };
+
+  const cancelEdit = () => {
+    setEditingJobId(null);
+    setEditingField('');
+    setEditingValue('');
   };
 
   // Load users when admin panel is opened
@@ -2331,10 +2405,163 @@ const ProductionTracker = () => {
                               <tbody>
                                 {editingUserData[editingSelectedDate].completedJobs.map((job, index) => (
                                   <tr key={job.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                    <td className="px-4 py-3 font-medium text-gray-900">{job.itemCode}</td>
-                                    <td className="px-4 py-3 text-gray-700">{job.lmCode}</td>
-                                    <td className="px-4 py-3 font-medium text-blue-600">{job.unitsCompleted}</td>
-                                    <td className="px-4 py-3 text-gray-700">{job.actualMinutes.toFixed(1)}</td>
+                                    <td className="px-4 py-3 font-medium text-gray-900">
+                                      {editingJobId === job.id && editingField === 'itemCode' ? (
+                                        <div className="flex items-center space-x-2">
+                                          <input
+                                            type="text"
+                                            value={editingValue}
+                                            onChange={(e) => setEditingValue(e.target.value)}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') saveEdit();
+                                              if (e.key === 'Escape') cancelEdit();
+                                            }}
+                                            className="w-24 px-2 py-1 border border-blue-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                                            autoFocus
+                                          />
+                                          <button
+                                            onClick={saveEdit}
+                                            className="text-green-600 hover:text-green-800 text-xs"
+                                            title="Save"
+                                          >
+                                            ✓
+                                          </button>
+                                          <button
+                                            onClick={cancelEdit}
+                                            className="text-red-600 hover:text-red-800 text-xs"
+                                            title="Cancel"
+                                          >
+                                            ✕
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={() => startEditing(job.id, 'itemCode', job.itemCode)}
+                                          className="hover:bg-blue-50 px-2 py-1 rounded text-left w-full"
+                                          title="Click to edit"
+                                        >
+                                          {job.itemCode}
+                                        </button>
+                                      )}
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-700">
+                                      {editingJobId === job.id && editingField === 'lmCode' ? (
+                                        <div className="flex items-center space-x-2">
+                                          <input
+                                            type="text"
+                                            value={editingValue}
+                                            onChange={(e) => setEditingValue(e.target.value)}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') saveEdit();
+                                              if (e.key === 'Escape') cancelEdit();
+                                            }}
+                                            className="w-24 px-2 py-1 border border-blue-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                                            autoFocus
+                                          />
+                                          <button
+                                            onClick={saveEdit}
+                                            className="text-green-600 hover:text-green-800 text-xs"
+                                            title="Save"
+                                          >
+                                            ✓
+                                          </button>
+                                          <button
+                                            onClick={cancelEdit}
+                                            className="text-red-600 hover:text-red-800 text-xs"
+                                            title="Cancel"
+                                          >
+                                            ✕
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={() => startEditing(job.id, 'lmCode', job.lmCode)}
+                                          className="hover:bg-blue-50 px-2 py-1 rounded text-left w-full"
+                                          title="Click to edit"
+                                        >
+                                          {job.lmCode}
+                                        </button>
+                                      )}
+                                    </td>
+                                    <td className="px-4 py-3 font-medium text-blue-600">
+                                      {editingJobId === job.id && editingField === 'unitsCompleted' ? (
+                                        <div className="flex items-center space-x-2">
+                                          <input
+                                            type="number"
+                                            value={editingValue}
+                                            onChange={(e) => setEditingValue(e.target.value)}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') saveEdit();
+                                              if (e.key === 'Escape') cancelEdit();
+                                            }}
+                                            className="w-16 px-2 py-1 border border-blue-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                                            autoFocus
+                                          />
+                                          <button
+                                            onClick={saveEdit}
+                                            className="text-green-600 hover:text-green-800 text-xs"
+                                            title="Save"
+                                          >
+                                            ✓
+                                          </button>
+                                          <button
+                                            onClick={cancelEdit}
+                                            className="text-red-600 hover:text-red-800 text-xs"
+                                            title="Cancel"
+                                          >
+                                            ✕
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={() => startEditing(job.id, 'unitsCompleted', job.unitsCompleted)}
+                                          className="hover:bg-blue-50 px-2 py-1 rounded text-left w-full"
+                                          title="Click to edit"
+                                        >
+                                          {job.unitsCompleted}
+                                        </button>
+                                      )}
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-700">
+                                      {editingJobId === job.id && editingField === 'actualMinutes' ? (
+                                        <div className="flex items-center space-x-2">
+                                          <input
+                                            type="number"
+                                            step="0.1"
+                                            value={editingValue}
+                                            onChange={(e) => setEditingValue(e.target.value)}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') saveEdit();
+                                              if (e.key === 'Escape') cancelEdit();
+                                            }}
+                                            className="w-16 px-2 py-1 border border-blue-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                                            autoFocus
+                                          />
+                                          <button
+                                            onClick={saveEdit}
+                                            className="text-green-600 hover:text-green-800 text-xs"
+                                            title="Save"
+                                          >
+                                            ✓
+                                          </button>
+                                          <button
+                                            onClick={cancelEdit}
+                                            className="text-red-600 hover:text-red-800 text-xs"
+                                            title="Cancel"
+                                          >
+                                            ✕
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={() => startEditing(job.id, 'actualMinutes', job.actualMinutes)}
+                                          className="hover:bg-blue-50 px-2 py-1 rounded text-left w-full"
+                                          title="Click to edit"
+                                        >
+                                          {job.actualMinutes.toFixed(1)}
+                                        </button>
+                                      )}
+                                    </td>
                                     <td className="px-4 py-3 text-xs text-gray-500">{job.timestamp}</td>
                                     <td className="px-4 py-3">
                                       <button
