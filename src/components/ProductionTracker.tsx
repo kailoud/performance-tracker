@@ -50,6 +50,10 @@ const ProductionTracker = () => {
   const [allDailyData, setAllDailyData] = useState<Record<string, DailyData>>({});
   const [isSwitchingDate, setIsSwitchingDate] = useState(false);
   
+  // Time and access control state
+  const [isWithinWorkingHoursState, setIsWithinWorkingHoursState] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false); // You can set this based on user role
+  
   const [completedJobs, setCompletedJobs] = useState<CompletedJob[]>([]);
   const [selectedItem, setSelectedItem] = useState('');
   const [completedQuantity, setCompletedQuantity] = useState('');
@@ -115,6 +119,11 @@ const ProductionTracker = () => {
       const profile = await getUserProfile(uid);
       if (profile) {
         setUserName(profile.name || '');
+        
+        // Set admin status based on email (you can modify this logic)
+        // For now, let's set admin based on specific email addresses
+        const adminEmails = ['admin@company.com', 'manager@company.com']; // Add your admin emails
+        setIsAdmin(adminEmails.includes(profile.email));
       }
     } catch (error) {
       console.error('Error loading user profile:', error);
@@ -242,6 +251,67 @@ const ProductionTracker = () => {
 
   const TARGET_MINUTES = 525;
 
+  // Time and access control functions
+  const isWithinWorkingHours = (date: Date): boolean => {
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const currentTime = hours * 60 + minutes;
+    const startTime = 6 * 60 + 55; // 06:55 AM
+    const endTime = 16 * 60 + 35; // 16:35 PM (4:35 PM)
+    
+    return currentTime >= startTime && currentTime <= endTime;
+  };
+
+  const isWorkingDay = (date: Date): boolean => {
+    const day = date.getDay();
+    return day >= 1 && day <= 4; // Monday (1) to Thursday (4)
+  };
+
+  const canAccessDate = (dateString: string): boolean => {
+    const date = new Date(dateString);
+    const today = new Date();
+    
+    // Check if it's a working day
+    if (!isWorkingDay(date)) return false;
+    
+    // Check if it's today and within working hours
+    if (dateString === today.toISOString().split('T')[0]) {
+      return isWithinWorkingHours(today);
+    }
+    
+    // For past dates, always allow access
+    if (date < today) return true;
+    
+    // For future dates, only allow if admin or if it's the next working day
+    const workingDays = getWorkingDays();
+    const todayIndex = workingDays.indexOf(today.toISOString().split('T')[0]);
+    const dateIndex = workingDays.indexOf(dateString);
+    
+    if (todayIndex === -1 || dateIndex === -1) return false;
+    
+    // Allow access to next day only if current day is finished
+    if (dateIndex === todayIndex + 1) {
+      const currentDayData = allDailyData[workingDays[todayIndex]];
+      return currentDayData?.isFinished || isAdmin;
+    }
+    
+    // For dates beyond next day, only admin can access
+    return isAdmin;
+  };
+
+  // Update current time every minute
+  React.useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setIsWithinWorkingHoursState(isWithinWorkingHours(now));
+    };
+    
+    updateTime(); // Initial call
+    const interval = setInterval(updateTime, 60000); // Update every minute
+    
+    return () => clearInterval(interval);
+  }, []);
+
   // Helper functions for date management
   const getWorkingDays = (): string[] => {
     const today = new Date();
@@ -334,18 +404,36 @@ const ProductionTracker = () => {
     alert(`Week completed! Starting new week: ${formatDateForDisplay(nextWeekDays[0])} to ${formatDateForDisplay(nextWeekDays[3])}`);
   };
 
-  // Initialize selected date if not set
+  // Initialize selected date if not set and handle automatic week progression
   React.useEffect(() => {
     if (!selectedDate && isLoggedIn) {
       const today = getCurrentDateKey();
       const workingDays = getWorkingDays();
-      if (workingDays.includes(today)) {
+      
+      // Check if current week is complete and we should move to next week
+      const isCurrentWeekComplete = workingDays.every(day => allDailyData[day]?.isFinished);
+      const isCurrentWeekInProgress = workingDays.some(day => allDailyData[day] && !allDailyData[day].isFinished);
+      
+      if (isCurrentWeekComplete && !isCurrentWeekInProgress) {
+        // Move to next week
+        const nextWeekStart = new Date(workingDays[0]);
+        nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+        
+        const nextWeekDays: string[] = [];
+        for (let i = 0; i < 4; i++) {
+          const date = new Date(nextWeekStart);
+          date.setDate(nextWeekStart.getDate() + i);
+          nextWeekDays.push(date.toISOString().split('T')[0]);
+        }
+        
+        setSelectedDate(nextWeekDays[0]);
+      } else if (workingDays.includes(today)) {
         setSelectedDate(today);
       } else {
         setSelectedDate(workingDays[0]); // Default to Monday
       }
     }
-  }, [isLoggedIn, selectedDate]);
+  }, [isLoggedIn, selectedDate, allDailyData]);
 
   // Load data for selected date
   React.useEffect(() => {
@@ -1103,6 +1191,7 @@ const ProductionTracker = () => {
               <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-800">Production Tracker</h1>
               <p className="text-xs sm:text-sm text-gray-600">
                 Welcome back, {userName.split(' ').map(n => n[0]).join('')}! 👋
+                {isAdmin && <span className="ml-2 text-purple-600 font-medium">(Admin)</span>}
               </p>
             </div>
           </div>
@@ -1162,22 +1251,38 @@ const ProductionTracker = () => {
         {/* Date Selection */}
         <div className="mb-4 sm:mb-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-3">Select Working Day</h3>
+          
+          {/* Time Access Warning */}
+          {!isWithinWorkingHoursState && (
+            <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center">
+                <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-800">Outside Working Hours</p>
+                  <p className="text-xs text-yellow-700">Access is only available between 06:55 AM and 16:35 PM on working days</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div className="flex flex-wrap gap-1 sm:gap-2">
             {getWorkingDays().map((date) => {
               const isSelected = selectedDate === date;
               const hasData = allDailyData[date];
               const isToday = date === getCurrentDateKey();
+              const canAccess = canAccessDate(date);
               
               return (
                 <button
                   key={date}
                   onClick={() => {
-                    if (date !== selectedDate) {
+                    if (date !== selectedDate && canAccess) {
                       setIsSwitchingDate(true);
                       setSelectedDate(date);
                       setTimeout(() => setIsSwitchingDate(false), 100);
                     }
                   }}
+                  disabled={!canAccess}
                   className={`px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg border-2 transition-all ${
                     isSelected
                       ? 'bg-blue-600 text-white border-blue-600'
@@ -1186,7 +1291,9 @@ const ProductionTracker = () => {
                       : 'bg-white text-gray-500 border-gray-200'
                   } ${isToday ? 'ring-2 ring-yellow-400' : ''} ${
                     hasData ? 'font-semibold' : ''
-                  } ${allDailyData[date]?.isFinished ? 'border-green-500 bg-green-50' : ''}`}
+                  } ${allDailyData[date]?.isFinished ? 'border-green-500 bg-green-50' : ''} ${
+                    !canAccess ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
                   <div className="text-xs sm:text-sm">
                     {formatDateForDisplay(date)}
@@ -1206,6 +1313,11 @@ const ProductionTracker = () => {
                   {isToday && !hasData && (
                     <div className="text-xs mt-1 text-yellow-600 font-medium">
                       Today
+                    </div>
+                  )}
+                  {!canAccess && (
+                    <div className="text-xs mt-1 text-red-600 font-medium">
+                      {isAdmin ? 'Admin Only' : 'Locked'}
                     </div>
                   )}
                 </button>
