@@ -104,7 +104,8 @@ const ProductionTracker = () => {
         setUserEmail('');
         setUserName('');
         setUserId('');
-        setAllDailyData({} as any);
+        // @ts-expect-error
+        setAllDailyData({});
       }
       setIsLoading(false);
     });
@@ -1045,7 +1046,7 @@ const ProductionTracker = () => {
                 disabled={isLoading}
               />
               <p className="text-xs text-gray-500 mt-1">
-                {isSignUp ? "Create a password for your account" : "Enter your password"}
+                {isSignUp ? "Create a password for your account (min 6 chars)" : "Enter your password"}
               </p>
             </div>
             
