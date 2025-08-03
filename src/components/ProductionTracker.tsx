@@ -1019,6 +1019,154 @@ const ProductionTracker = () => {
     }
   };
 
+  const downloadHistoricalPDF = async (dateString: string, dailyData: DailyData) => {
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    
+    // Title
+    pdf.setFontSize(24);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Production Tracker - Historical Data', pageWidth / 2, 30, { align: 'center' });
+    
+    // Date
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    const reportDate = formatDateForDisplay(dateString);
+    pdf.text(`Date: ${reportDate}`, margin, 45);
+    pdf.text(`User: ${userName}`, margin, 55);
+    pdf.text(`Email: ${userEmail}`, margin, 65);
+    
+    let yPosition = 85;
+    
+    // Summary Statistics
+    const completedMinutes = dailyData.completedJobs.reduce((sum, job) => sum + job.actualMinutes, 0);
+    const lossTimeTotal = dailyData.lossTimeEntries.reduce((sum, entry) => sum + entry.minutes, 0);
+    const adjustedTarget = TARGET_MINUTES - lossTimeTotal;
+    const completedPercentage = adjustedTarget > 0 ? Math.min((completedMinutes / adjustedTarget) * 100, 100) : 100;
+    
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Daily Summary', margin, yPosition);
+    yPosition += 15;
+    
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Target Minutes: ${TARGET_MINUTES}`, margin, yPosition);
+    yPosition += 8;
+    pdf.text(`Completed Minutes: ${completedMinutes.toFixed(1)}`, margin, yPosition);
+    yPosition += 8;
+    pdf.text(`Loss Time: ${lossTimeTotal} minutes`, margin, yPosition);
+    yPosition += 8;
+    pdf.text(`Adjusted Target: ${adjustedTarget} minutes`, margin, yPosition);
+    yPosition += 8;
+    pdf.text(`Progress: ${completedPercentage.toFixed(1)}%`, margin, yPosition);
+    yPosition += 8;
+    
+    // Add finish status if applicable
+    if (dailyData.isFinished) {
+      pdf.text(`Status: Work Day Finished at ${dailyData.finishTime}`, margin, yPosition);
+      yPosition += 8;
+    }
+    yPosition += 15;
+    
+    // Completed Jobs
+    if (dailyData.completedJobs.length > 0) {
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Completed Jobs', margin, yPosition);
+      yPosition += 10;
+      
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      
+      // Table headers
+      const headers = ['Item Code', 'LM Code', 'Units', 'Minutes', 'Time'];
+      const colWidths = [35, 50, 25, 25, 30];
+      let xPos = margin;
+      
+      headers.forEach((header, index) => {
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(header, xPos, yPosition);
+        xPos += colWidths[index];
+      });
+      yPosition += 8;
+      
+      // Table data
+      dailyData.completedJobs.forEach((job, index) => {
+        if (yPosition > pageHeight - 40) {
+          pdf.addPage();
+          yPosition = 30;
+        }
+        
+        xPos = margin;
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(job.itemCode, xPos, yPosition);
+        xPos += colWidths[0];
+        pdf.text(job.lmCode, xPos, yPosition);
+        xPos += colWidths[1];
+        pdf.text(job.unitsCompleted.toString(), xPos, yPosition);
+        xPos += colWidths[2];
+        pdf.text(job.actualMinutes.toFixed(1), xPos, yPosition);
+        xPos += colWidths[3];
+        pdf.text(job.timestamp, xPos, yPosition);
+        
+        yPosition += 6;
+      });
+      yPosition += 10;
+    }
+    
+    // Loss Time Entries
+    if (dailyData.lossTimeEntries.length > 0) {
+      if (yPosition > pageHeight - 40) {
+        pdf.addPage();
+        yPosition = 30;
+      }
+      
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Loss Time Entries', margin, yPosition);
+      yPosition += 10;
+      
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      
+      // Table headers
+      const headers = ['Reason', 'Minutes Lost', 'Time'];
+      const colWidths = [80, 30, 30];
+      let xPos = margin;
+      
+      headers.forEach((header, index) => {
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(header, xPos, yPosition);
+        xPos += colWidths[index];
+      });
+      yPosition += 8;
+      
+      // Table data
+      dailyData.lossTimeEntries.forEach((entry, index) => {
+        if (yPosition > pageHeight - 40) {
+          pdf.addPage();
+          yPosition = 30;
+        }
+        
+        xPos = margin;
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(entry.reason, xPos, yPosition);
+        xPos += colWidths[0];
+        pdf.text(entry.minutes.toString(), xPos, yPosition);
+        xPos += colWidths[1];
+        pdf.text(entry.timestamp, xPos, yPosition);
+        
+        yPosition += 6;
+      });
+    }
+    
+    // Save the PDF
+    pdf.save(`production-tracker-${dateString}.pdf`);
+  };
+
   const downloadPDF = async () => {
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -2951,20 +3099,92 @@ const ProductionTracker = () => {
             </div>
             
             <div className="p-6">
-              {/* Date Selection */}
+              {/* Calendar Grid */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Date to View</label>
-                <input
-                  type="date"
-                  value={selectedHistoryDate}
-                  onChange={(e) => setSelectedHistoryDate(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-3">Select Date to View</label>
+                <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                  {/* Day Headers */}
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                    <div key={day} className="text-center text-xs sm:text-sm font-medium text-gray-500 p-2">
+                      {day}
+                    </div>
+                  ))}
+                  
+                  {/* Calendar Days */}
+                  {(() => {
+                    const workingDays = getWorkingDays();
+                    const currentWeekStart = new Date();
+                    currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay() + 1); // Monday
+                    
+                    const days = [];
+                    for (let i = 0; i < 7; i++) {
+                      const date = new Date(currentWeekStart);
+                      date.setDate(currentWeekStart.getDate() + i);
+                      const dateString = date.toISOString().split('T')[0];
+                      const hasData = allDailyData[dateString];
+                      const isAccessible = canAccessDate(dateString);
+                      const isSelected = selectedHistoryDate === dateString;
+                      const isToday = dateString === new Date().toISOString().split('T')[0];
+                      
+                      days.push(
+                        <button
+                          key={dateString}
+                          onClick={() => {
+                            if (isAccessible) {
+                              setSelectedHistoryDate(dateString);
+                            }
+                          }}
+                          disabled={!isAccessible}
+                          className={`
+                            p-2 sm:p-3 text-xs sm:text-sm rounded-lg transition-all duration-200
+                            ${isSelected 
+                              ? 'bg-blue-600 text-white font-semibold' 
+                              : isAccessible 
+                                ? hasData 
+                                  ? 'bg-green-100 hover:bg-green-200 text-green-800 font-medium cursor-pointer' 
+                                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700 cursor-pointer'
+                                : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                            }
+                            ${isToday ? 'ring-2 ring-blue-300' : ''}
+                          `}
+                          title={isAccessible ? `View data for ${formatDateForDisplay(dateString)}` : 'Date not accessible'}
+                        >
+                          <div className="text-center">
+                            <div className="font-medium">{date.getDate()}</div>
+                            {hasData && (
+                              <div className="text-xs mt-1">
+                                <span className="inline-block w-1 h-1 bg-green-500 rounded-full"></span>
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    }
+                    return days;
+                  })()}
+                </div>
               </div>
               
               {/* Historical Data Display */}
               {selectedHistoryDate && allDailyData[selectedHistoryDate] && (
                 <div className="space-y-6">
+                  {/* Download PDF Button */}
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => {
+                        const dailyData = allDailyData[selectedHistoryDate];
+                        if (dailyData) {
+                          downloadHistoricalPDF(selectedHistoryDate, dailyData);
+                        }
+                      }}
+                      className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors"
+                    >
+                      <Download className="h-4 w-4" />
+                      <span className="hidden sm:inline">Download PDF</span>
+                      <span className="sm:hidden">PDF</span>
+                    </button>
+                  </div>
+                  
                   {/* Summary Stats */}
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold mb-3">📊 {formatDateForDisplay(selectedHistoryDate)} Summary</h3>
