@@ -14,7 +14,8 @@ import {
   getAllUsers,
   updateUserBlockStatus,
   resetUserDailyData,
-  deleteUser
+  deleteUser,
+  resetPassword
 } from '../firebaseService';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -109,6 +110,12 @@ const ProductionTracker = () => {
   const [authError, setAuthError] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
+  
+  // Forgot password state
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   
   // Loss Time tracking
   const [lossTimeEntries, setLossTimeEntries] = useState<LossTimeEntry[]>([]);
@@ -1547,6 +1554,40 @@ const ProductionTracker = () => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!forgotPasswordEmail) {
+      setForgotPasswordMessage('Please enter your email address');
+      return;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(forgotPasswordEmail)) {
+      setForgotPasswordMessage('Please enter a valid email address');
+      return;
+    }
+
+    try {
+      setForgotPasswordMessage('');
+      setIsResettingPassword(true);
+      
+      await resetPassword(forgotPasswordEmail);
+      setForgotPasswordMessage('Password reset email sent! Check your inbox and spam folder.');
+      setForgotPasswordEmail('');
+      
+      // Auto-hide the message after 5 seconds
+      setTimeout(() => {
+        setForgotPasswordMessage('');
+        setShowForgotPassword(false);
+      }, 5000);
+      
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      setForgotPasswordMessage(error.message || 'Failed to send reset email. Please try again.');
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
   // Admin panel functions
   const loadAllUsers = React.useCallback(async () => {
     if (!isAdmin) return;
@@ -2080,6 +2121,15 @@ const ProductionTracker = () => {
               <p className="text-xs text-gray-500 mt-1">
                 {isSignUp ? "Create a password for your account (min 6 chars)" : "Enter your password"}
               </p>
+              {!isSignUp && (
+                <button
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-xs text-blue-600 hover:text-blue-700 mt-1"
+                  disabled={isLoading}
+                >
+                  Forgot your password?
+                </button>
+              )}
             </div>
             
             <button
@@ -2106,6 +2156,57 @@ const ProductionTracker = () => {
               </button>
             </div>
           </div>
+          
+          {/* Forgot Password Form */}
+          {showForgotPassword && (
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">Reset Password</h3>
+                <button
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setForgotPasswordEmail('');
+                    setForgotPasswordMessage('');
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              {forgotPasswordMessage && (
+                <div className={`mb-4 p-3 rounded-lg text-sm ${
+                  forgotPasswordMessage.includes('sent') 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {forgotPasswordMessage}
+                </div>
+              )}
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                  <input
+                    type="email"
+                    value={forgotPasswordEmail}
+                    onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                    placeholder="Enter your email address"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    disabled={isResettingPassword}
+                  />
+                </div>
+                
+                <button
+                  onClick={handleForgotPassword}
+                  disabled={isResettingPassword || !forgotPasswordEmail}
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isResettingPassword ? 'Sending...' : 'Send Reset Email'}
+                </button>
+              </div>
+            </div>
+          )}
           
           <div className="mt-6 text-center">
             <p className="text-xs text-gray-500">🔒 Your data is securely stored in the cloud</p>
