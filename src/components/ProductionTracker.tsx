@@ -62,6 +62,10 @@ const ProductionTracker = () => {
   // Calendar modal state
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [selectedHistoryDate, setSelectedHistoryDate] = useState<string>('');
+  
+  // Search suggestions state
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredItems, setFilteredItems] = useState<ProductionItem[]>([]);
 
   const lossReasons = [
     'Waiting for Parts', 'Waiting Jobs', 'Cleaning', 'Maintenance', 
@@ -365,6 +369,45 @@ const ProductionTracker = () => {
       return productionData.find(p => p.itemCode.toUpperCase() === searchInput.toUpperCase()) || null;
     }
     return null;
+  };
+
+  // Handle search input changes
+  const handleSearchInputChange = (value: string) => {
+    setSearchInput(value);
+    
+    if (value.trim() === '') {
+      setFilteredItems([]);
+      setShowSuggestions(false);
+      return;
+    }
+    
+    const filtered = productionData.filter(item => 
+      item.itemCode.toUpperCase().includes(value.toUpperCase()) ||
+      item.lmCode.toUpperCase().includes(value.toUpperCase())
+    );
+    
+    setFilteredItems(filtered);
+    setShowSuggestions(filtered.length > 0);
+    
+    // Auto-select if exact match is found
+    const exactMatch = productionData.find(item => 
+      item.itemCode.toUpperCase() === value.toUpperCase()
+    );
+    
+    if (exactMatch) {
+      setSelectedItem(exactMatch.itemCode);
+      setShowSuggestions(false);
+    } else {
+      setSelectedItem('');
+    }
+  };
+
+  // Handle item selection from suggestions
+  const handleItemSelect = (item: ProductionItem) => {
+    setSearchInput(item.itemCode);
+    setSelectedItem(item.itemCode);
+    setShowSuggestions(false);
+    setFilteredItems([]);
   };
 
   const handleLossTimeSubmit = () => {
@@ -964,13 +1007,43 @@ const ProductionTracker = () => {
                   ))}
                 </select>
               ) : (
-                <input
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Type item code (e.g., B102823)"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 uppercase"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchInput}
+                    onChange={(e) => handleSearchInputChange(e.target.value)}
+                    onFocus={() => searchInput.trim() !== '' && setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    placeholder="Type item code (e.g., B102823)"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 uppercase"
+                    autoComplete="off"
+                  />
+                  
+                  {/* Search Suggestions Dropdown */}
+                  {showSuggestions && filteredItems.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {filteredItems.map((item, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleItemSelect(item)}
+                          className="w-full px-3 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="font-medium text-gray-900">{item.itemCode}</div>
+                          <div className="text-sm text-gray-600">{item.lmCode}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* No results message */}
+                  {showSuggestions && searchInput.trim() !== '' && filteredItems.length === 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                      <div className="px-3 py-2 text-sm text-gray-500">
+                        No items found for "{searchInput}"
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
