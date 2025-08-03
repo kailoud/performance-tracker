@@ -1221,7 +1221,7 @@ const ProductionTracker = () => {
       
       // Load user's daily data
       const userData = await getAllDailyData(user.uid);
-      setEditingUserData(userData);
+      setEditingUserData(userData as Record<string, DailyData>);
       
       // Set to today's date or first available date
       const today = new Date().toISOString().split('T')[0];
