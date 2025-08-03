@@ -863,22 +863,25 @@ const ProductionTracker = () => {
     setShowSuggestions(false);
     setFilteredItems([]);
     
-    // Show timer popup for the selected item
-    setTimerState(prev => {
-      console.log('Setting timer state:', { ...prev, isVisible: true, expectedTime: item.time, itemCode: item.itemCode, lmCode: item.lmCode }); // Debug log
-      return {
-        ...prev,
-        isVisible: true,
-        expectedTime: item.time,
-        itemCode: item.itemCode,
-        lmCode: item.lmCode,
-        isActive: false,
-        isPaused: false,
-        startTime: 0,
-        pausedTime: 0,
-        elapsedTime: 0
-      };
-    });
+    // Only show timer popup during working hours or if admin
+    if (isWithinWorkingHoursState || isAdmin) {
+      // Show timer popup for the selected item
+      setTimerState(prev => {
+        console.log('Setting timer state:', { ...prev, isVisible: true, expectedTime: item.time, itemCode: item.itemCode, lmCode: item.lmCode }); // Debug log
+        return {
+          ...prev,
+          isVisible: true,
+          expectedTime: item.time,
+          itemCode: item.itemCode,
+          lmCode: item.lmCode,
+          isActive: false,
+          isPaused: false,
+          startTime: 0,
+          pausedTime: 0,
+          elapsedTime: 0
+        };
+      });
+    }
   };
 
   // Handle dropdown item selection
@@ -890,22 +893,25 @@ const ProductionTracker = () => {
       const item = productionData.find(p => p.itemCode === itemCode);
       if (item) {
         console.log('Found item for dropdown:', item); // Debug log
-        // Show timer popup for the selected item
-        setTimerState(prev => {
-          console.log('Setting timer state from dropdown:', { ...prev, isVisible: true, expectedTime: item.time, itemCode: item.itemCode, lmCode: item.lmCode }); // Debug log
-          return {
-            ...prev,
-            isVisible: true,
-            expectedTime: item.time,
-            itemCode: item.itemCode,
-            lmCode: item.lmCode,
-            isActive: false,
-            isPaused: false,
-            startTime: 0,
-            pausedTime: 0,
-            elapsedTime: 0
-          };
-        });
+        // Only show timer popup during working hours or if admin
+        if (isWithinWorkingHoursState || isAdmin) {
+          // Show timer popup for the selected item
+          setTimerState(prev => {
+            console.log('Setting timer state from dropdown:', { ...prev, isVisible: true, expectedTime: item.time, itemCode: item.itemCode, lmCode: item.lmCode }); // Debug log
+            return {
+              ...prev,
+              isVisible: true,
+              expectedTime: item.time,
+              itemCode: item.itemCode,
+              lmCode: item.lmCode,
+              isActive: false,
+              isPaused: false,
+              startTime: 0,
+              pausedTime: 0,
+              elapsedTime: 0
+            };
+          });
+        }
       }
     }
   };
@@ -1584,6 +1590,12 @@ const ProductionTracker = () => {
   // Timer functions
   const startTimer = () => {
     if (!timerState.isActive) {
+      // Only allow timer operations during working hours or if admin
+      if (!isWithinWorkingHoursState && !isAdmin) {
+        alert('Timer can only be used during working hours (06:55 AM - 16:35 PM, Monday to Thursday)');
+        return;
+      }
+      
       // Request notification permission when starting timer
       if (notificationPermission === 'default') {
         requestNotificationPermission();
@@ -1610,6 +1622,12 @@ const ProductionTracker = () => {
 
   const pauseTimer = () => {
     if (timerState.isActive && !timerState.isPaused) {
+      // Only allow timer operations during working hours or if admin
+      if (!isWithinWorkingHoursState && !isAdmin) {
+        alert('Timer can only be used during working hours (06:55 AM - 16:35 PM, Monday to Thursday)');
+        return;
+      }
+      
       setTimerState(prev => ({
         ...prev,
         isPaused: true,
@@ -1624,6 +1642,12 @@ const ProductionTracker = () => {
 
   const resumeTimer = () => {
     if (timerState.isActive && timerState.isPaused) {
+      // Only allow timer operations during working hours or if admin
+      if (!isWithinWorkingHoursState && !isAdmin) {
+        alert('Timer can only be used during working hours (06:55 AM - 16:35 PM, Monday to Thursday)');
+        return;
+      }
+      
       const now = Date.now();
       setTimerState(prev => ({
         ...prev,
