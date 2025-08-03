@@ -907,8 +907,13 @@ const ProductionTracker = () => {
   };
 
   const handleLogin = async () => {
-    if (!loginEmail || !loginName || !loginPassword) {
-      setAuthError('Please enter email, name, and password');
+    if (!loginEmail || !loginPassword) {
+      setAuthError('Please enter email and password');
+      return;
+    }
+    
+    if (isSignUp && !loginName) {
+      setAuthError('Please enter your name to create an account');
       return;
     }
     
@@ -1007,17 +1012,19 @@ const ProductionTracker = () => {
           )}
           
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
-              <input
-                type="text"
-                value={loginName}
-                onChange={(e) => setLoginName(e.target.value)}
-                placeholder="Enter your full name"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                disabled={isLoading}
-              />
-            </div>
+            {isSignUp && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+                <input
+                  type="text"
+                  value={loginName}
+                  onChange={(e) => setLoginName(e.target.value)}
+                  placeholder="Enter your full name"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  disabled={isLoading}
+                />
+              </div>
+            )}
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
@@ -1048,7 +1055,7 @@ const ProductionTracker = () => {
             
             <button
               onClick={handleLogin}
-              disabled={isLoading}
+              disabled={isLoading || (isSignUp && !loginName) || !loginEmail || !loginPassword}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}
@@ -1056,7 +1063,13 @@ const ProductionTracker = () => {
             
             <div className="text-center">
               <button
-                onClick={() => setIsSignUp(!isSignUp)}
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  if (!isSignUp) {
+                    // When switching to sign-in mode, clear the name field
+                    setLoginName('');
+                  }
+                }}
                 className="text-blue-600 hover:text-blue-700 text-sm"
                 disabled={isLoading}
               >
