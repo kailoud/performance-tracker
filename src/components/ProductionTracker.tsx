@@ -1946,18 +1946,18 @@ const ProductionTracker = () => {
     <div className="max-w-6xl mx-auto p-0 sm:p-6 min-h-screen bg-gray-50">
       {/* Time Exceeded Banner */}
       {showTimeExceededBanner && bannerData && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white p-4 shadow-lg">
-          <div className="max-w-6xl mx-auto flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="text-2xl">⏰</div>
-              <div>
-                <div className="font-semibold">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white p-2 sm:p-4 shadow-lg">
+          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="text-lg sm:text-2xl">⏰</div>
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-sm sm:text-base truncate">
                   Timer Exceeded: {bannerData.itemCode} - {bannerData.lmCode}
                 </div>
-                <div className="text-sm opacity-90">
+                <div className="text-xs sm:text-sm opacity-90">
                   Expected: {bannerData.expectedTime} min | 
-                  Actual: {Math.floor(bannerData.elapsedTime / 60000)}:{(Math.floor((bannerData.elapsedTime % 60000) / 1000)).toString().padStart(2, '0')} | 
-                  Over by: {Math.round((bannerData.elapsedTime / 60000) - bannerData.expectedTime)} minutes
+                  Actual: {Math.floor(bannerData.elapsedTime / 60000)}:{Math.floor((bannerData.elapsedTime % 60000) / 1000).toString().padStart(2, '0')} | 
+                  Over by: {Math.round((bannerData.elapsedTime / 60000) - bannerData.expectedTime)} min
                 </div>
               </div>
             </div>
@@ -1967,7 +1967,7 @@ const ProductionTracker = () => {
                   setShowTimeExceededBanner(false);
                   setBannerData(null);
                 }}
-                className="px-3 py-1 bg-red-700 hover:bg-red-800 rounded text-sm"
+                className="px-2 py-1 sm:px-3 bg-red-700 hover:bg-red-800 rounded text-xs sm:text-sm"
               >
                 Dismiss
               </button>
@@ -1977,7 +1977,7 @@ const ProductionTracker = () => {
                   setBannerData(null);
                   setShowAutoCompletionModal(true);
                 }}
-                className="px-4 py-1 bg-white text-red-600 hover:bg-gray-100 rounded font-medium text-sm"
+                className="px-3 py-1 sm:px-4 bg-white text-red-600 hover:bg-gray-100 rounded font-medium text-xs sm:text-sm"
               >
                 Complete Job
               </button>
@@ -2628,7 +2628,7 @@ const ProductionTracker = () => {
                                   ? 'bg-green-100 text-green-800' 
                                   : 'bg-red-100 text-red-800'
                               }`}>
-                                {Math.floor(job.actualTimeTaken / 60)}:{(job.actualTimeTaken % 60).toString().padStart(2, '0')}
+                                {Math.floor(job.actualTimeTaken / 60)}:{Math.floor(job.actualTimeTaken % 60).toString().padStart(2, '0')}
                               </span>
                             ) : (
                               <span className="text-gray-400">Manual</span>
@@ -2804,39 +2804,39 @@ const ProductionTracker = () => {
 
       {/* Auto-Completion Modal */}
       {showAutoCompletionModal && autoCompletionData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-bold text-gray-800">⏰ Time Exceeded</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm sm:max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-4 sm:p-6 border-b">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800">⏰ Time Exceeded</h2>
               <button
                 onClick={() => {
                   setShowAutoCompletionModal(false);
                   setAutoCompletionData(null);
                   setAutoCompletionUnits('');
                 }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-1 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <X className="h-6 w-6 text-gray-600" />
+                <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
               </button>
             </div>
             
-            <div className="p-6">
-              <div className="text-center mb-6">
-                <div className="text-4xl mb-4">⏱️</div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+            <div className="p-4 sm:p-6">
+              <div className="text-center mb-4 sm:mb-6">
+                <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">⏱️</div>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">
                   {autoCompletionData.itemCode} - {autoCompletionData.lmCode}
                 </h3>
-                <p className="text-sm text-gray-600 mb-2">
-                  Expected Time: {autoCompletionData.expectedTime} minutes
+                <p className="text-xs sm:text-sm text-gray-600 mb-2">
+                  Expected: {autoCompletionData.expectedTime} min
                 </p>
-                <p className="text-sm text-red-600 font-medium">
-                  ⚠️ Timer exceeded expected time by {Math.round((autoCompletionData.elapsedTime / 60000) - autoCompletionData.expectedTime)} minutes
+                <p className="text-xs sm:text-sm text-red-600 font-medium">
+                  ⚠️ Over by {Math.round((autoCompletionData.elapsedTime / 60000) - autoCompletionData.expectedTime)} min
                 </p>
               </div>
               
               {/* Units Input */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="mb-4 sm:mb-6">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   Units Completed
                 </label>
                 <div className="flex space-x-2">
@@ -2844,14 +2844,14 @@ const ProductionTracker = () => {
                     type="number"
                     value={autoCompletionUnits}
                     onChange={(e) => setAutoCompletionUnits(e.target.value)}
-                    placeholder="Enter units completed"
+                    placeholder="Enter units"
                     min="0"
                     max={autoCompletionData.item.quantity}
-                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
                   />
                   <button
                     onClick={() => setAutoCompletionUnits(autoCompletionData.item.quantity.toString())}
-                    className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="px-3 sm:px-4 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
                   >
                     100%
                   </button>
@@ -2862,20 +2862,20 @@ const ProductionTracker = () => {
               </div>
               
               {/* Timer Info */}
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
                 <div className="text-center">
-                  <div className="text-2xl font-mono font-bold text-blue-600 mb-1">
-                    {Math.floor(autoCompletionData.elapsedTime / 60000)}:{(Math.floor((autoCompletionData.elapsedTime % 60000) / 1000)).toString().padStart(2, '0')}
+                  <div className="text-xl sm:text-2xl font-mono font-bold text-blue-600 mb-1">
+                    {Math.floor(autoCompletionData.elapsedTime / 60000)}:{Math.floor((autoCompletionData.elapsedTime % 60000) / 1000).toString().padStart(2, '0')}
                   </div>
-                  <p className="text-sm text-gray-600">Total Time Elapsed</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Total Time Elapsed</p>
                 </div>
               </div>
               
               {/* Action Buttons */}
-              <div className="flex space-x-3">
+              <div className="flex space-x-2 sm:space-x-3">
                 <button
                   onClick={handleAutoCompletionSubmit}
-                  className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-medium"
+                  className="flex-1 bg-green-600 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg hover:bg-green-700 font-medium text-sm"
                 >
                   ✅ Complete Job
                 </button>
@@ -2885,13 +2885,13 @@ const ProductionTracker = () => {
                     setAutoCompletionData(null);
                     setAutoCompletionUnits('');
                   }}
-                  className="flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-400 font-medium"
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 sm:py-3 px-3 sm:px-4 rounded-lg hover:bg-gray-400 font-medium text-sm"
                 >
                   Cancel
                 </button>
               </div>
               
-              <div className="mt-4 text-center text-sm text-gray-600">
+              <div className="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-gray-600">
                 <p>Job will be logged with expected time as actual time</p>
                 <p className="text-xs text-gray-500 mt-1">
                   Real elapsed time will be recorded in timer data
