@@ -186,4 +186,50 @@ export const subscribeToAllDailyData = (userId: string, callback: (data: Record<
     });
     callback(data);
   });
+};
+
+// Admin functions
+export const getAllUsers = async (): Promise<Array<{uid: string, email: string, name: string, isBlocked: boolean}>> => {
+  try {
+    const usersSnapshot = await getDocs(collection(db, 'users'));
+    const users: Array<{uid: string, email: string, name: string, isBlocked: boolean}> = [];
+    
+    usersSnapshot.forEach((doc) => {
+      const data = doc.data();
+      users.push({
+        uid: doc.id,
+        email: data.email || '',
+        name: data.name || '',
+        isBlocked: data.isBlocked || false
+      });
+    });
+    
+    return users;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateUserBlockStatus = async (userId: string, isBlocked: boolean): Promise<void> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await setDoc(userRef, { isBlocked }, { merge: true });
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const resetUserDailyData = async (userId: string, date: string): Promise<void> => {
+  try {
+    const dailyDataRef = doc(db, 'users', userId, 'dailyData', date);
+    await setDoc(dailyDataRef, {
+      date,
+      completedJobs: [],
+      lossTimeEntries: [],
+      isFinished: false,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    throw error;
+  }
 }; 

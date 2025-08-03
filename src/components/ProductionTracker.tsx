@@ -10,7 +10,10 @@ import {
   saveDailyData,
   getAllDailyData,
   saveUserProfile,
-  getUserProfile
+  getUserProfile,
+  getAllUsers,
+  updateUserBlockStatus,
+  resetUserDailyData
 } from '../firebaseService';
 
 // TypeScript interfaces
@@ -53,6 +56,11 @@ const ProductionTracker = () => {
   // Time and access control state
   const [isWithinWorkingHoursState, setIsWithinWorkingHoursState] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false); // You can set this based on user role
+  
+  // Admin panel state
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [allUsers, setAllUsers] = useState<Array<{uid: string, email: string, name: string, isBlocked: boolean}>>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   
   const [completedJobs, setCompletedJobs] = useState<CompletedJob[]>([]);
   const [selectedItem, setSelectedItem] = useState('');
@@ -122,7 +130,7 @@ const ProductionTracker = () => {
         
         // Set admin status based on email (you can modify this logic)
         // For now, let's set admin based on specific email addresses
-        const adminEmails = ['admin@company.com', 'manager@company.com']; // Add your admin emails
+        const adminEmails = ['kailoud639@gmail.com', 'admin@company.com', 'manager@company.com']; // Add your admin emails
         setIsAdmin(adminEmails.includes(profile.email));
       }
     } catch (error) {
@@ -1055,6 +1063,47 @@ const ProductionTracker = () => {
     }
   };
 
+  // Admin panel functions
+  const loadAllUsers = React.useCallback(async () => {
+    if (!isAdmin) return;
+    
+    try {
+      setIsLoadingUsers(true);
+      const users = await getAllUsers();
+      setAllUsers(users);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  }, [isAdmin]);
+
+  const handleBlockUser = async (userId: string, isBlocked: boolean) => {
+    try {
+      await updateUserBlockStatus(userId, isBlocked);
+      // Refresh users list
+      await loadAllUsers();
+    } catch (error) {
+      console.error('Error updating user block status:', error);
+    }
+  };
+
+  const handleResetUserData = async (userId: string, date: string) => {
+    try {
+      await resetUserDailyData(userId, date);
+      alert(`Data reset for user on ${date}`);
+    } catch (error) {
+      console.error('Error resetting user data:', error);
+    }
+  };
+
+  // Load users when admin panel is opened
+  React.useEffect(() => {
+    if (showAdminPanel && isAdmin) {
+      loadAllUsers();
+    }
+  }, [showAdminPanel, isAdmin, loadAllUsers]);
+
   // Progress data for pie chart
   const progressData = [
     { name: 'Productive Time', value: Math.min(completedMinutes, adjustedTarget), color: '#10b981' },
@@ -1191,7 +1240,15 @@ const ProductionTracker = () => {
               <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-800">Production Tracker</h1>
               <p className="text-xs sm:text-sm text-gray-600">
                 Welcome back, {userName.split(' ').map(n => n[0]).join('')}! 👋
-                {isAdmin && <span className="ml-2 text-purple-600 font-medium">(Admin)</span>}
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowAdminPanel(!showAdminPanel)}
+                    className="ml-2 text-purple-600 font-medium hover:text-purple-800 underline cursor-pointer"
+                    title="Admin Panel"
+                  >
+                    (Admin)
+                  </button>
+                )}
               </p>
             </div>
           </div>
@@ -1974,6 +2031,120 @@ const ProductionTracker = () => {
                   <p className="text-gray-500">
                     Choose a date above to view historical production data
                   </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Admin Panel Modal */}
+      {showAdminPanel && isAdmin && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-800">👑 Admin Panel</h2>
+              <button
+                onClick={() => setShowAdminPanel(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="h-6 w-6 text-gray-600" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              {isLoadingUsers ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                  <span className="ml-3 text-gray-600">Loading users...</span>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold text-gray-800">User Management</h3>
+                    <button
+                      onClick={loadAllUsers}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+                  
+                  <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table className="w-full table-auto text-sm">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="px-4 py-3 text-left font-medium text-gray-700">Name</th>
+                          <th className="px-4 py-3 text-left font-medium text-gray-700">Email</th>
+                          <th className="px-4 py-3 text-left font-medium text-gray-700">Status</th>
+                          <th className="px-4 py-3 text-left font-medium text-gray-700">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {allUsers.map((user) => (
+                          <tr key={user.uid} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="px-4 py-3 font-medium text-gray-900">{user.name}</td>
+                            <td className="px-4 py-3 text-gray-700">{user.email}</td>
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                user.isBlocked 
+                                  ? 'bg-red-100 text-red-800' 
+                                  : 'bg-green-100 text-green-800'
+                              }`}>
+                                {user.isBlocked ? 'Blocked' : 'Active'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleBlockUser(user.uid, !user.isBlocked)}
+                                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                                    user.isBlocked
+                                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                                      : 'bg-red-600 hover:bg-red-700 text-white'
+                                  }`}
+                                >
+                                  {user.isBlocked ? 'Unblock' : 'Block'}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const today = new Date().toISOString().split('T')[0];
+                                    if (window.confirm(`Reset ${user.name}'s data for today (${today})?`)) {
+                                      handleResetUserData(user.uid, today);
+                                    }
+                                  }}
+                                  className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-xs font-medium transition-colors"
+                                >
+                                  Reset Today
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const date = window.prompt('Enter date (YYYY-MM-DD) to reset:');
+                                    if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                                      if (window.confirm(`Reset ${user.name}'s data for ${date}?`)) {
+                                        handleResetUserData(user.uid, date);
+                                      }
+                                    } else if (date) {
+                                      window.alert('Please enter a valid date in YYYY-MM-DD format');
+                                    }
+                                  }}
+                                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
+                                >
+                                  Reset Date
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {allUsers.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      No users found
+                    </div>
+                  )}
                 </div>
               )}
             </div>
