@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Clock, Target, CheckCircle, AlertCircle, StopCircle, Plus, Trash2, Download, Calendar, X } from 'lucide-react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 // TypeScript interfaces
 interface ProductionItem {
@@ -434,7 +433,6 @@ const ProductionTracker = () => {
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 20;
-    const contentWidth = pageWidth - (2 * margin);
     
     // Title
     pdf.setFontSize(24);
