@@ -624,6 +624,172 @@ const ProductionTracker = () => {
     pdf.save(fileName);
   };
 
+  const downloadWeeklyPDF = async () => {
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    
+    // Title
+    pdf.setFontSize(24);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Production Tracker - Weekly Summary', pageWidth / 2, 30, { align: 'center' });
+    
+    // Week info
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    const workingDays = getWorkingDays();
+    const weekStart = formatDateForDisplay(workingDays[0]);
+    const weekEnd = formatDateForDisplay(workingDays[3]);
+    pdf.text(`Week: ${weekStart} to ${weekEnd}`, margin, 45);
+    pdf.text(`User: ${userName}`, margin, 55);
+    pdf.text(`Email: ${userEmail}`, margin, 65);
+    
+    let yPosition = 85;
+    
+    // Weekly Summary Stats
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Weekly Summary', margin, yPosition);
+    yPosition += 15;
+    
+    const weekData = getCurrentWeekData();
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Total Minutes: ${weekData.totalCompletedMinutes.toFixed(1)}`, margin, yPosition);
+    yPosition += 8;
+    pdf.text(`Total Jobs: ${weekData.totalJobs}`, margin, yPosition);
+    yPosition += 8;
+    pdf.text(`Total Loss Time: ${weekData.totalLossTime} minutes`, margin, yPosition);
+    yPosition += 8;
+    pdf.text(`Days Completed: ${weekData.daysCompleted}/4`, margin, yPosition);
+    yPosition += 15;
+    
+    // Daily Breakdown Table
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Daily Breakdown', margin, yPosition);
+    yPosition += 10;
+    
+    // Table headers
+    const headers = ['Day', 'Minutes', 'Jobs', 'Loss Time', 'Percentage', 'Status'];
+    const colWidths = [35, 25, 20, 25, 30, 25];
+    let xPos = margin;
+    
+    pdf.setFontSize(10);
+    headers.forEach((header, index) => {
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(header, xPos, yPosition);
+      xPos += colWidths[index];
+    });
+    yPosition += 8;
+    
+    // Table data for each day
+    workingDays.forEach((date, index) => {
+      const dayData = allDailyData[date];
+      const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+      
+      if (yPosition > pageHeight - 40) {
+        pdf.addPage();
+        yPosition = 30;
+      }
+      
+      xPos = margin;
+      pdf.setFont('helvetica', 'normal');
+      
+      // Day name
+      pdf.text(dayNames[index], xPos, yPosition);
+      xPos += colWidths[0];
+      
+      if (dayData) {
+        const completedMinutes = dayData.completedJobs.reduce((sum, job) => sum + job.actualMinutes, 0);
+        const lossTime = dayData.lossTimeEntries.reduce((sum, entry) => sum + entry.minutes, 0);
+        const adjustedTarget = TARGET_MINUTES - lossTime;
+        const percentage = adjustedTarget > 0 ? Math.min((completedMinutes / adjustedTarget) * 100, 100) : 100;
+        
+        // Minutes
+        pdf.text(completedMinutes.toFixed(1), xPos, yPosition);
+        xPos += colWidths[1];
+        
+        // Jobs
+        pdf.text(dayData.completedJobs.length.toString(), xPos, yPosition);
+        xPos += colWidths[2];
+        
+        // Loss Time
+        pdf.text(lossTime.toString(), xPos, yPosition);
+        xPos += colWidths[3];
+        
+        // Percentage with color coding
+        const percentageText = `${percentage.toFixed(1)}%`;
+        pdf.text(percentageText, xPos, yPosition);
+        
+        // Color coding based on percentage
+        if (percentage < 56) {
+          pdf.setTextColor(220, 38, 38); // Red for below 56%
+        } else if (percentage < 70) {
+          pdf.setTextColor(245, 158, 11); // Yellow for 56-69%
+        } else if (percentage < 86) {
+          pdf.setTextColor(132, 204, 22); // Yellowish green for 70-85%
+        } else {
+          pdf.setTextColor(34, 197, 94); // Green for 86%+
+        }
+        pdf.text(percentageText, xPos, yPosition);
+        pdf.setTextColor(0, 0, 0); // Reset to black
+        xPos += colWidths[4];
+        
+        // Status
+        pdf.text(dayData.isFinished ? '✓ Finished' : '○ Pending', xPos, yPosition);
+      } else {
+        // No data for this day
+        pdf.text('0.0', xPos, yPosition);
+        xPos += colWidths[1];
+        pdf.text('0', xPos, yPosition);
+        xPos += colWidths[2];
+        pdf.text('0', xPos, yPosition);
+        xPos += colWidths[3];
+        pdf.text('0.0%', xPos, yPosition);
+        xPos += colWidths[4];
+        pdf.text('○ No Data', xPos, yPosition);
+      }
+      
+      yPosition += 6;
+    });
+    
+    // Color Legend
+    yPosition += 10;
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Percentage Color Legend:', margin, yPosition);
+    yPosition += 8;
+    
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(220, 38, 38); // Red
+    pdf.text('• Below 56%: Red', margin, yPosition);
+    yPosition += 6;
+    pdf.setTextColor(245, 158, 11); // Yellow
+    pdf.text('• 56% - 69%: Yellow', margin, yPosition);
+    yPosition += 6;
+    pdf.setTextColor(132, 204, 22); // Yellowish green
+    pdf.text('• 70% - 85%: Yellowish Green', margin, yPosition);
+    yPosition += 6;
+    pdf.setTextColor(34, 197, 94); // Green
+    pdf.text('• 86% and above: Green', margin, yPosition);
+    pdf.setTextColor(0, 0, 0); // Reset to black
+    
+    // Footer
+    const totalPages = pdf.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Page ${i} of ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+    }
+    
+    // Download the PDF
+    const fileName = `weekly_summary_${userName}_${workingDays[0]}_to_${workingDays[3]}.pdf`;
+    pdf.save(fileName);
+  };
+
   const handleLogin = () => {
     if (!loginEmail || !loginName) {
       alert('Please enter both email and name');
@@ -1237,13 +1403,22 @@ const ProductionTracker = () => {
                   {userName} • {formatDateForDisplay(selectedDate)}
                 </p>
               </div>
-              <button
-                onClick={downloadPDF}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 text-sm rounded-lg flex items-center space-x-1.5 transition-colors self-start sm:self-auto"
-              >
-                <Download className="h-3.5 w-3.5" />
-                <span>PDF</span>
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={downloadPDF}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 text-sm rounded-lg flex items-center space-x-1.5 transition-colors"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Daily</span>
+                </button>
+                <button
+                  onClick={downloadWeeklyPDF}
+                  className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 text-sm rounded-lg flex items-center space-x-1.5 transition-colors"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Weekly</span>
+                </button>
+              </div>
             </div>
             
             {completedJobs.length > 0 && (
