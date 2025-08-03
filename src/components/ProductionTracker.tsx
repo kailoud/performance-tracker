@@ -559,46 +559,12 @@ const ProductionTracker = () => {
         <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
           <div className="text-center mb-6">
             <div className="mb-4">
-              <svg width="80" height="80" viewBox="0 0 80 80" className="mx-auto">
-                {/* Side View Folding Bike Logo */}
-                {/* Main Frame - Side perspective */}
-                <path d="M25 45 L40 25 L55 45" stroke="#2563eb" strokeWidth="4" fill="none" strokeLinecap="round"/>
-                {/* Seat Tube - Angled for perspective */}
-                <path d="M40 25 L40 15" stroke="#2563eb" strokeWidth="4" fill="none" strokeLinecap="round"/>
-                {/* Seat - Side view */}
-                <ellipse cx="40" cy="12" rx="3" ry="2" fill="#1e40af"/>
-                {/* Handlebar - Extended side view */}
-                <path d="M25 45 L20 40" stroke="#2563eb" strokeWidth="4" fill="none" strokeLinecap="round"/>
-                <path d="M18 38 L22 42" stroke="#2563eb" strokeWidth="3" fill="none" strokeLinecap="round"/>
-                {/* Front Wheel - Larger for perspective */}
-                <circle cx="30" cy="58" r="12" stroke="#374151" strokeWidth="3" fill="none"/>
-                {/* Rear Wheel - Smaller for perspective */}
-                <circle cx="60" cy="58" r="10" stroke="#374151" strokeWidth="3" fill="none"/>
-                {/* Wheel Spokes - Perspective spokes */}
-                <line x1="30" y1="46" x2="30" y2="70" stroke="#6b7280" strokeWidth="2"/>
-                <line x1="18" y1="58" x2="42" y2="58" stroke="#6b7280" strokeWidth="2"/>
-                <line x1="60" y1="48" x2="60" y2="68" stroke="#6b7280" strokeWidth="2"/>
-                <line x1="50" y1="58" x2="70" y2="58" stroke="#6b7280" strokeWidth="2"/>
-                {/* Folding Mechanism - Side view */}
-                <circle cx="40" cy="45" r="4" fill="#dc2626"/>
-                <circle cx="40" cy="25" r="4" fill="#dc2626"/>
-                {/* Pedals - Side view */}
-                <path d="M40 45 L35 52" stroke="#374151" strokeWidth="3" fill="none" strokeLinecap="round"/>
-                <path d="M40 45 L45 52" stroke="#374151" strokeWidth="3" fill="none" strokeLinecap="round"/>
-                <circle cx="35" cy="52" r="2.5" fill="#374151"/>
-                <circle cx="45" cy="52" r="2.5" fill="#374151"/>
-                {/* Chain - Side view */}
-                <path d="M40 45 Q50 50 60 58" stroke="#1f2937" strokeWidth="2" fill="none"/>
-                {/* Folding Lines - Perspective lines */}
-                <path d="M40 25 L52 20" stroke="#dc2626" strokeWidth="2" fill="none" strokeDasharray="4,3"/>
-                <path d="M40 45 L52 40" stroke="#dc2626" strokeWidth="2" fill="none" strokeDasharray="4,3"/>
-                {/* Motion lines for dynamic feel */}
-                <path d="M65 35 L70 32" stroke="#2563eb" strokeWidth="1" fill="none" opacity="0.7"/>
-                <path d="M65 38 L70 35" stroke="#2563eb" strokeWidth="1" fill="none" opacity="0.7"/>
-                <path d="M65 41 L70 38" stroke="#2563eb" strokeWidth="1" fill="none" opacity="0.7"/>
-                {/* Ground shadow */}
-                <ellipse cx="45" cy="72" rx="25" ry="3" fill="#e5e7eb" opacity="0.3"/>
-              </svg>
+              <img 
+                src="/bike.png" 
+                alt="Folding Bike Logo" 
+                className="mx-auto w-20 h-20 object-contain"
+                style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%)' }}
+              />
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Production Tracker</h1>
             <p className="text-gray-600">Track your daily 525-minute production target</p>
@@ -650,46 +616,12 @@ const ProductionTracker = () => {
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center space-x-4">
             <div>
-              <svg width="50" height="50" viewBox="0 0 80 80" className="text-blue-600">
-                {/* Side View Folding Bike Logo */}
-                {/* Main Frame - Side perspective */}
-                <path d="M25 45 L40 25 L55 45" stroke="currentColor" strokeWidth="4" fill="none" strokeLinecap="round"/>
-                {/* Seat Tube - Angled for perspective */}
-                <path d="M40 25 L40 15" stroke="currentColor" strokeWidth="4" fill="none" strokeLinecap="round"/>
-                {/* Seat - Side view */}
-                <ellipse cx="40" cy="12" rx="3" ry="2" fill="currentColor"/>
-                {/* Handlebar - Extended side view */}
-                <path d="M25 45 L20 40" stroke="currentColor" strokeWidth="4" fill="none" strokeLinecap="round"/>
-                <path d="M18 38 L22 42" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round"/>
-                {/* Front Wheel - Larger for perspective */}
-                <circle cx="30" cy="58" r="12" stroke="#374151" strokeWidth="3" fill="none"/>
-                {/* Rear Wheel - Smaller for perspective */}
-                <circle cx="60" cy="58" r="10" stroke="#374151" strokeWidth="3" fill="none"/>
-                {/* Wheel Spokes - Perspective spokes */}
-                <line x1="30" y1="46" x2="30" y2="70" stroke="#6b7280" strokeWidth="2"/>
-                <line x1="18" y1="58" x2="42" y2="58" stroke="#6b7280" strokeWidth="2"/>
-                <line x1="60" y1="48" x2="60" y2="68" stroke="#6b7280" strokeWidth="2"/>
-                <line x1="50" y1="58" x2="70" y2="58" stroke="#6b7280" strokeWidth="2"/>
-                {/* Folding Mechanism - Side view */}
-                <circle cx="40" cy="45" r="4" fill="#dc2626"/>
-                <circle cx="40" cy="25" r="4" fill="#dc2626"/>
-                {/* Pedals - Side view */}
-                <path d="M40 45 L35 52" stroke="#374151" strokeWidth="3" fill="none" strokeLinecap="round"/>
-                <path d="M40 45 L45 52" stroke="#374151" strokeWidth="3" fill="none" strokeLinecap="round"/>
-                <circle cx="35" cy="52" r="2.5" fill="#374151"/>
-                <circle cx="45" cy="52" r="2.5" fill="#374151"/>
-                {/* Chain - Side view */}
-                <path d="M40 45 Q50 50 60 58" stroke="#1f2937" strokeWidth="2" fill="none"/>
-                {/* Folding Lines - Perspective lines */}
-                <path d="M40 25 L52 20" stroke="#dc2626" strokeWidth="2" fill="none" strokeDasharray="4,3"/>
-                <path d="M40 45 L52 40" stroke="#dc2626" strokeWidth="2" fill="none" strokeDasharray="4,3"/>
-                {/* Motion lines for dynamic feel */}
-                <path d="M65 35 L70 32" stroke="currentColor" strokeWidth="1" fill="none" opacity="0.7"/>
-                <path d="M65 38 L70 35" stroke="currentColor" strokeWidth="1" fill="none" opacity="0.7"/>
-                <path d="M65 41 L70 38" stroke="currentColor" strokeWidth="1" fill="none" opacity="0.7"/>
-                {/* Ground shadow */}
-                <ellipse cx="45" cy="72" rx="25" ry="3" fill="#e5e7eb" opacity="0.3"/>
-              </svg>
+              <img 
+                src="/bike.png" 
+                alt="Folding Bike Logo" 
+                className="w-12 h-12 object-contain"
+                style={{ filter: 'brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%)' }}
+              />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Production Tracker</h1>
