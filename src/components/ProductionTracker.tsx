@@ -1347,7 +1347,7 @@ const ProductionTracker = () => {
                   {/* Summary Stats */}
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold mb-3">📊 {formatDateForDisplay(selectedHistoryDate)} Summary</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                       <div className="text-center">
                         <div className="text-2xl font-bold text-blue-600">
                           {allDailyData[selectedHistoryDate].completedJobs.reduce((sum, job) => sum + job.actualMinutes, 0).toFixed(1)}
@@ -1368,6 +1368,18 @@ const ProductionTracker = () => {
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold text-purple-600">
+                          {(() => {
+                            const completedMinutes = allDailyData[selectedHistoryDate].completedJobs.reduce((sum, job) => sum + job.actualMinutes, 0);
+                            const lossTime = allDailyData[selectedHistoryDate].lossTimeEntries.reduce((sum, entry) => sum + entry.minutes, 0);
+                            const adjustedTarget = TARGET_MINUTES - lossTime;
+                            const percentage = adjustedTarget > 0 ? Math.min((completedMinutes / adjustedTarget) * 100, 100) : 100;
+                            return percentage.toFixed(1);
+                          })()}%
+                        </div>
+                        <div className="text-sm text-gray-600">Achieved</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-orange-600">
                           {allDailyData[selectedHistoryDate].isFinished ? '✓' : '○'}
                         </div>
                         <div className="text-sm text-gray-600">Status</div>
