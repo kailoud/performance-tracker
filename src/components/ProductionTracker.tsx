@@ -117,18 +117,48 @@ const ProductionTracker = () => {
   const [showLossTimeForm, setShowLossTimeForm] = useState(false);
   
   // Timer state
-  const [timerState, setTimerState] = useState<TimerState>({
-    isActive: false,
-    isPaused: false,
-    startTime: 0,
-    pausedTime: 0,
-    elapsedTime: 0,
-    expectedTime: 0,
-    itemCode: '',
-    lmCode: '',
-    isVisible: false
+  const [timerState, setTimerState] = useState<TimerState>(() => {
+    // Load timer state from localStorage on component mount
+    const savedTimer = localStorage.getItem('productionTimer');
+    if (savedTimer) {
+      const parsed = JSON.parse(savedTimer);
+      // Check if timer was active when saved
+      if (parsed.isActive && !parsed.isPaused) {
+        // Calculate elapsed time since last save
+        const timeSinceLastSave = Date.now() - parsed.lastSaveTime;
+        return {
+          ...parsed,
+          elapsedTime: parsed.elapsedTime + timeSinceLastSave,
+          isVisible: false // Don't show timer on load, user can open it
+        };
+      }
+      return { ...parsed, isVisible: false };
+    }
+    return {
+      isActive: false,
+      isPaused: false,
+      startTime: 0,
+      pausedTime: 0,
+      elapsedTime: 0,
+      expectedTime: 0,
+      itemCode: '',
+      lmCode: '',
+      isVisible: false
+    };
   });
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+  
+  // Auto-completion notification state
+  const [showAutoCompletionModal, setShowAutoCompletionModal] = useState(false);
+  const [autoCompletionData, setAutoCompletionData] = useState<any>(null);
+  const [autoCompletionUnits, setAutoCompletionUnits] = useState('');
+  
+  // Browser notification state
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+  
+  // Banner notification state
+  const [showTimeExceededBanner, setShowTimeExceededBanner] = useState(false);
+  const [bannerData, setBannerData] = useState<any>(null);
   
 
   
@@ -188,8 +218,9 @@ const ProductionTracker = () => {
           setIsLoggedIn(true);
           setUserEmail(user.email || '');
           setUserId(user.uid);
-          loadUserProfile(user.uid);
-          loadAllDailyData(user.uid);
+                  loadUserProfile(user.uid);
+        loadAllDailyData(user.uid);
+        checkActiveTimer(); // Check for active timer on login
         } catch (error) {
           console.error('Error checking user status:', error);
           // If there's an error checking user status, sign out to be safe
@@ -231,6 +262,147 @@ const ProductionTracker = () => {
     }
   };
 
+  // Check for active timer on login
+  const checkActiveTimer = () => {
+    const savedTimer = localStorage.getItem('productionTimer');
+    if (savedTimer) {
+      const parsed = JSON.parse(savedTimer);
+      if (parsed.isActive && parsed.itemCode) {
+        const elapsedMinutes = parsed.elapsedTime / 60000;
+        const expectedMinutes = parsed.expectedTime;
+        
+        // If timer has exceeded expected time, auto-complete the job
+        if (elapsedMinutes >= expectedMinutes) {
+          console.log('Timer exceeded expected time, auto-completing job');
+          autoCompleteJob(parsed);
+        } else {
+          // Show notification about active timer
+          setTimeout(() => {
+            alert(`⏱️ Active timer found for ${parsed.itemCode} - ${parsed.lmCode}\n\nElapsed time: ${Math.floor(elapsedMinutes)}:${Math.floor((elapsedMinutes % 1) * 60).toString().padStart(2, '0')}\n\nClick "Show Timer" to continue tracking.`);
+          }, 1000);
+        }
+      }
+    }
+  };
+
+  // Request notification permission
+  const requestNotificationPermission = async () => {
+    if ('Notification' in window) {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      return permission;
+    }
+    return 'denied';
+  };
+
+  // Show browser notification
+  const showBrowserNotification = (title: string, body: string) => {
+    if ('Notification' in window && notificationPermission === 'granted') {
+      new Notification(title, {
+        body: body,
+        icon: '/bike.png', // Use the app icon
+        badge: '/bike.png',
+        tag: 'timer-notification'
+      });
+    }
+  };
+
+  // Show auto-completion modal when timer exceeds expected time
+  const triggerAutoCompletionModal = (timerData: any) => {
+    const item = productionData.find(p => p.itemCode === timerData.itemCode);
+    if (item) {
+      setAutoCompletionData({ ...timerData, item });
+      setAutoCompletionUnits(item.quantity.toString()); // Default to full quantity
+      setShowAutoCompletionModal(true);
+      
+      // Show banner notification
+      setBannerData({ ...timerData, item });
+      setShowTimeExceededBanner(true);
+      
+      // Show browser notification if page is not visible
+      if (document.hidden) {
+        showBrowserNotification(
+          '⏰ Timer Exceeded',
+          `${timerData.itemCode} - ${timerData.lmCode}\nExpected time exceeded by ${Math.round((timerData.elapsedTime / 60000) - timerData.expectedTime)} minutes`
+        );
+      }
+    }
+  };
+
+  // Handle auto-completion job submission
+  const handleAutoCompletionSubmit = () => {
+    if (!autoCompletionData || !autoCompletionUnits) return;
+    
+    const unitsCompleted = parseInt(autoCompletionUnits);
+    if (unitsCompleted <= 0) {
+      alert('Please enter a valid quantity greater than 0');
+      return;
+    }
+
+    const item = autoCompletionData.item;
+    const completionPercentage = unitsCompleted / item.quantity;
+    const actualMinutes = autoCompletionData.expectedTime; // Use expected time as actual
+    
+    const newJob: CompletedJob = {
+      ...item,
+      unitsCompleted,
+      completionPercentage,
+      actualMinutes,
+      actualTimeTaken: autoCompletionData.elapsedTime / 1000, // Convert to seconds
+      timestamp: new Date().toLocaleTimeString(),
+      id: Date.now()
+    };
+
+    const updatedJobs = [...completedJobs, newJob];
+    setCompletedJobs(updatedJobs);
+
+    // Save to Firebase
+    if (userId && selectedDate) {
+      const dailyData = {
+        date: selectedDate,
+        completedJobs: updatedJobs,
+        lossTimeEntries,
+        isFinished: allDailyData[selectedDate]?.isFinished || false,
+        finishTime: allDailyData[selectedDate]?.finishTime
+      };
+      
+      saveDailyData(userId, selectedDate, dailyData).then(() => {
+        setAllDailyData(prev => ({
+          ...prev,
+          [selectedDate]: dailyData
+        }));
+      }).catch(error => {
+        console.error('Error completing job:', error);
+      });
+    }
+
+    // Clear timer state
+    setTimerState({
+      isActive: false,
+      isPaused: false,
+      startTime: 0,
+      pausedTime: 0,
+      elapsedTime: 0,
+      expectedTime: 0,
+      itemCode: '',
+      lmCode: '',
+      isVisible: false
+    });
+    
+    // Clear localStorage
+    localStorage.removeItem('productionTimer');
+    
+    // Close modal
+    setShowAutoCompletionModal(false);
+    setAutoCompletionData(null);
+    setAutoCompletionUnits('');
+  };
+
+  // Auto-complete job when timer exceeds expected time (legacy function for immediate completion)
+  const autoCompleteJob = (timerData: any) => {
+    triggerAutoCompletionModal(timerData);
+  };
+
   // Load all daily data for user
   const loadAllDailyData = async (uid: string) => {
     try {
@@ -242,6 +414,7 @@ const ProductionTracker = () => {
   };
   
   const productionData: ProductionItem[] = [
+    { itemCode: "TEST-001", lmCode: "TEST-1MIN", quantity: 10, time: 1 }, // Test item for quick timer testing
     { itemCode: "B102823", lmCode: "AHOOK-TI", quantity: 100, time: 33.3 },
     { itemCode: "B105003", lmCode: "AL-SPTQRA-BK", quantity: 12, time: 9 },
     { itemCode: "B100128", lmCode: "BRCALA-B75F", quantity: 100, time: 60 },
@@ -1414,12 +1587,17 @@ const ProductionTracker = () => {
   // Timer functions
   const startTimer = () => {
     if (!timerState.isActive) {
+      // Request notification permission when starting timer
+      if (notificationPermission === 'default') {
+        requestNotificationPermission();
+      }
+      
       const now = Date.now();
       setTimerState(prev => ({
         ...prev,
         isActive: true,
         startTime: now,
-        elapsedTime: 0
+        elapsedTime: prev.elapsedTime // Keep existing elapsed time if resuming
       }));
       
       const interval = setInterval(() => {
@@ -1529,6 +1707,9 @@ const ProductionTracker = () => {
       isVisible: false
     });
     
+    // Clear localStorage when timer is completed
+    localStorage.removeItem('productionTimer');
+    
     // Reset form
     setSelectedItem('');
     setCompletedQuantity('');
@@ -1556,10 +1737,69 @@ const ProductionTracker = () => {
     };
   }, [timerInterval]);
 
-  // Debug timer state changes
+  // Save timer state to localStorage whenever it changes
+  const saveTimerState = (state: TimerState) => {
+    const timerToSave = {
+      ...state,
+      lastSaveTime: Date.now()
+    };
+    localStorage.setItem('productionTimer', JSON.stringify(timerToSave));
+  };
+
+  // Debug timer state changes and save to localStorage
   useEffect(() => {
     console.log('Timer state changed:', timerState);
+    saveTimerState(timerState);
   }, [timerState]);
+
+  // Handle page visibility changes to save timer state
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && timerState.isActive) {
+        // Page is hidden (user switched tabs or closed browser), save timer state
+        console.log('Page hidden, saving timer state');
+        saveTimerState(timerState);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Also save timer state before page unload
+    const handleBeforeUnload = () => {
+      if (timerState.isActive) {
+        console.log('Page unloading, saving timer state');
+        saveTimerState(timerState);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [timerState]);
+
+  // Periodic check for timers that exceed expected time
+  useEffect(() => {
+    if (timerState.isActive && !timerState.isPaused) {
+      const checkInterval = setInterval(() => {
+        const elapsedMinutes = timerState.elapsedTime / 60000;
+        const expectedMinutes = timerState.expectedTime;
+        
+        if (elapsedMinutes >= expectedMinutes) {
+          console.log('Timer exceeded expected time during active session, showing notification');
+          // Show notification popup
+          if (!showAutoCompletionModal) {
+            triggerAutoCompletionModal(timerState);
+          }
+          clearInterval(checkInterval);
+        }
+      }, 10000); // Check every 10 seconds
+      
+      return () => clearInterval(checkInterval);
+    }
+  }, [timerState.isActive, timerState.isPaused, timerState.elapsedTime, timerState.expectedTime, showAutoCompletionModal]);
 
 
 
@@ -1697,6 +1937,47 @@ const ProductionTracker = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-0 sm:p-6 min-h-screen bg-gray-50">
+      {/* Time Exceeded Banner */}
+      {showTimeExceededBanner && bannerData && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white p-4 shadow-lg">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="text-2xl">⏰</div>
+              <div>
+                <div className="font-semibold">
+                  Timer Exceeded: {bannerData.itemCode} - {bannerData.lmCode}
+                </div>
+                <div className="text-sm opacity-90">
+                  Expected: {bannerData.expectedTime} min | 
+                  Actual: {Math.floor(bannerData.elapsedTime / 60000)}:{(Math.floor((bannerData.elapsedTime % 60000) / 1000)).toString().padStart(2, '0')} | 
+                  Over by: {Math.round((bannerData.elapsedTime / 60000) - bannerData.expectedTime)} minutes
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  setShowTimeExceededBanner(false);
+                  setBannerData(null);
+                }}
+                className="px-3 py-1 bg-red-700 hover:bg-red-800 rounded text-sm"
+              >
+                Dismiss
+              </button>
+              <button
+                onClick={() => {
+                  setShowTimeExceededBanner(false);
+                  setBannerData(null);
+                  setShowAutoCompletionModal(true);
+                }}
+                className="px-4 py-1 bg-white text-red-600 hover:bg-gray-100 rounded font-medium text-sm"
+              >
+                Complete Job
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="bg-white rounded-none sm:rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
@@ -2103,6 +2384,16 @@ const ProductionTracker = () => {
               Log Completion
             </button>
             
+            {/* Show Timer Button - only visible if there's an active timer */}
+            {timerState.isActive && timerState.itemCode && (
+              <button
+                onClick={() => setTimerState(prev => ({ ...prev, isVisible: true }))}
+                className="w-full mt-2 bg-green-600 text-white py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base rounded-lg hover:bg-green-700 transition-colors"
+              >
+                ⏱️ Show Active Timer
+              </button>
+            )}
+            
             {/* Time restriction warning for non-admin users */}
             {(!isWithinWorkingHoursState && !isAdmin) && (
               <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -2416,6 +2707,12 @@ const ProductionTracker = () => {
                     {timerState.elapsedTime / 60000 > timerState.expectedTime ? (
                       <div className="text-red-600 text-sm font-medium">
                         ⚠️ Over expected time by {Math.round((timerState.elapsedTime / 60000) - timerState.expectedTime)} minutes
+                        <br />
+                        <span className="text-xs">Job will be auto-completed soon</span>
+                      </div>
+                    ) : timerState.elapsedTime / 60000 > timerState.expectedTime * 0.8 ? (
+                      <div className="text-yellow-600 text-sm font-medium">
+                        ⏰ Approaching expected time ({Math.round(timerState.expectedTime - (timerState.elapsedTime / 60000))} minutes remaining)
                       </div>
                     ) : (
                       <div className="text-green-600 text-sm font-medium">
@@ -2491,6 +2788,106 @@ const ProductionTracker = () => {
                 <p>Timer tracks time from item selection to completion</p>
                 <p className="text-xs text-gray-500 mt-1">
                   You can close this and log manually, or use the timer to track actual time
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Auto-Completion Modal */}
+      {showAutoCompletionModal && autoCompletionData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-bold text-gray-800">⏰ Time Exceeded</h2>
+              <button
+                onClick={() => {
+                  setShowAutoCompletionModal(false);
+                  setAutoCompletionData(null);
+                  setAutoCompletionUnits('');
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="h-6 w-6 text-gray-600" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <div className="text-4xl mb-4">⏱️</div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  {autoCompletionData.itemCode} - {autoCompletionData.lmCode}
+                </h3>
+                <p className="text-sm text-gray-600 mb-2">
+                  Expected Time: {autoCompletionData.expectedTime} minutes
+                </p>
+                <p className="text-sm text-red-600 font-medium">
+                  ⚠️ Timer exceeded expected time by {Math.round((autoCompletionData.elapsedTime / 60000) - autoCompletionData.expectedTime)} minutes
+                </p>
+              </div>
+              
+              {/* Units Input */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Units Completed
+                </label>
+                <div className="flex space-x-2">
+                  <input
+                    type="number"
+                    value={autoCompletionUnits}
+                    onChange={(e) => setAutoCompletionUnits(e.target.value)}
+                    placeholder="Enter units completed"
+                    min="0"
+                    max={autoCompletionData.item.quantity}
+                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={() => setAutoCompletionUnits(autoCompletionData.item.quantity.toString())}
+                    className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    100%
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Target: {autoCompletionData.item.quantity} units
+                </p>
+              </div>
+              
+              {/* Timer Info */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="text-center">
+                  <div className="text-2xl font-mono font-bold text-blue-600 mb-1">
+                    {Math.floor(autoCompletionData.elapsedTime / 60000)}:{(Math.floor((autoCompletionData.elapsedTime % 60000) / 1000)).toString().padStart(2, '0')}
+                  </div>
+                  <p className="text-sm text-gray-600">Total Time Elapsed</p>
+                </div>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleAutoCompletionSubmit}
+                  className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-medium"
+                >
+                  ✅ Complete Job
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAutoCompletionModal(false);
+                    setAutoCompletionData(null);
+                    setAutoCompletionUnits('');
+                  }}
+                  className="flex-1 bg-gray-300 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-400 font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+              
+              <div className="mt-4 text-center text-sm text-gray-600">
+                <p>Job will be logged with expected time as actual time</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Real elapsed time will be recorded in timer data
                 </p>
               </div>
             </div>
