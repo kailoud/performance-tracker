@@ -8,12 +8,9 @@ import {
   signOutUser, 
   onAuthChange,
   saveDailyData,
-  getDailyData,
   getAllDailyData,
   saveUserProfile,
-  getUserProfile,
-  subscribeToDailyData,
-  subscribeToAllDailyData
+  getUserProfile
 } from '../firebaseService';
 
 // TypeScript interfaces
@@ -104,7 +101,6 @@ const ProductionTracker = () => {
         setUserEmail('');
         setUserName('');
         setUserId('');
-        // @ts-expect-error
         setAllDailyData({});
       }
       setIsLoading(false);
