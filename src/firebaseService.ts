@@ -196,12 +196,15 @@ export const getAllUsers = async (): Promise<Array<{uid: string, email: string, 
     
     usersSnapshot.forEach((doc) => {
       const data = doc.data();
-      users.push({
-        uid: doc.id,
-        email: data.email || '',
-        name: data.name || '',
-        isBlocked: data.isBlocked || false
-      });
+      // Filter out deleted users
+      if (!data.isDeleted) {
+        users.push({
+          uid: doc.id,
+          email: data.email || '',
+          name: data.name || '',
+          isBlocked: data.isBlocked || false
+        });
+      }
     });
     
     return users;
@@ -229,6 +232,19 @@ export const resetUserDailyData = async (userId: string, date: string): Promise<
       isFinished: false,
       updatedAt: serverTimestamp()
     });
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const deleteUser = async (userId: string): Promise<void> => {
+  try {
+    // Delete user profile
+    const userRef = doc(db, 'users', userId);
+    await setDoc(userRef, { isDeleted: true, deletedAt: serverTimestamp() }, { merge: true });
+    
+    // Note: We're marking the user as deleted rather than completely removing the document
+    // This preserves data integrity and allows for potential recovery
   } catch (error) {
     throw error;
   }

@@ -13,7 +13,8 @@ import {
   getUserProfile,
   getAllUsers,
   updateUserBlockStatus,
-  resetUserDailyData
+  resetUserDailyData,
+  deleteUser
 } from '../firebaseService';
 
 // TypeScript interfaces
@@ -61,6 +62,13 @@ const ProductionTracker = () => {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [allUsers, setAllUsers] = useState<Array<{uid: string, email: string, name: string, isBlocked: boolean}>>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  
+  // User data editing state
+  const [showUserDataEditor, setShowUserDataEditor] = useState(false);
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState<{uid: string, email: string, name: string} | null>(null);
+  const [editingUserData, setEditingUserData] = useState<Record<string, DailyData>>({});
+  const [editingSelectedDate, setEditingSelectedDate] = useState<string>('');
+  const [isLoadingUserData, setIsLoadingUserData] = useState(false);
   
   const [completedJobs, setCompletedJobs] = useState<CompletedJob[]>([]);
   const [selectedItem, setSelectedItem] = useState('');
@@ -1097,6 +1105,100 @@ const ProductionTracker = () => {
     }
   };
 
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    try {
+      const confirmed = window.confirm(
+        `Are you sure you want to delete user "${userName}"?\n\n` +
+        `This action will:\n` +
+        `• Mark the user as deleted\n` +
+        `• Remove them from the user list\n` +
+        `• Preserve their data for potential recovery\n\n` +
+        `This action cannot be undone easily.`
+      );
+      
+      if (confirmed) {
+        await deleteUser(userId);
+        // Refresh the users list
+        await loadAllUsers();
+        window.alert(`User "${userName}" has been deleted successfully.`);
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      window.alert('Error deleting user. Please try again.');
+    }
+  };
+
+  // User data editing functions
+  const handleEditUserData = async (user: {uid: string, email: string, name: string}) => {
+    try {
+      setIsLoadingUserData(true);
+      setSelectedUserForEdit(user);
+      
+      // Load user's daily data
+      const userData = await getAllDailyData(user.uid);
+      setEditingUserData(userData);
+      
+      // Set to today's date or first available date
+      const today = new Date().toISOString().split('T')[0];
+      const availableDates = Object.keys(userData);
+      setEditingSelectedDate(availableDates.includes(today) ? today : (availableDates[0] || today));
+      
+      setShowUserDataEditor(true);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      window.alert('Error loading user data. Please try again.');
+    } finally {
+      setIsLoadingUserData(false);
+    }
+  };
+
+  const handleSaveUserData = async () => {
+    if (!selectedUserForEdit || !editingSelectedDate) return;
+    
+    try {
+      const currentData = editingUserData[editingSelectedDate];
+      if (currentData) {
+        await saveDailyData(selectedUserForEdit.uid, editingSelectedDate, currentData);
+        window.alert('User data saved successfully!');
+      }
+    } catch (error) {
+      console.error('Error saving user data:', error);
+      window.alert('Error saving user data. Please try again.');
+    }
+  };
+
+  const handleDeleteJob = (jobId: number) => {
+    if (!selectedUserForEdit || !editingSelectedDate) return;
+    
+    const currentData = editingUserData[editingSelectedDate];
+    if (currentData) {
+      const updatedJobs = currentData.completedJobs.filter(job => job.id !== jobId);
+      setEditingUserData(prev => ({
+        ...prev,
+        [editingSelectedDate]: {
+          ...currentData,
+          completedJobs: updatedJobs
+        }
+      }));
+    }
+  };
+
+  const handleDeleteLossTime = (entryId: number) => {
+    if (!selectedUserForEdit || !editingSelectedDate) return;
+    
+    const currentData = editingUserData[editingSelectedDate];
+    if (currentData) {
+      const updatedLossTime = currentData.lossTimeEntries.filter(entry => entry.id !== entryId);
+      setEditingUserData(prev => ({
+        ...prev,
+        [editingSelectedDate]: {
+          ...currentData,
+          lossTimeEntries: updatedLossTime
+        }
+      }));
+    }
+  };
+
   // Load users when admin panel is opened
   React.useEffect(() => {
     if (showAdminPanel && isAdmin) {
@@ -2084,7 +2186,15 @@ const ProductionTracker = () => {
                         {allUsers.map((user) => (
                           <tr key={user.uid} className="border-b border-gray-100 hover:bg-gray-50">
                             <td className="px-4 py-3 font-medium text-gray-900">{user.name}</td>
-                            <td className="px-4 py-3 text-gray-700">{user.email}</td>
+                            <td className="px-4 py-3 text-gray-700">
+                              <button
+                                onClick={() => handleEditUserData(user)}
+                                className="text-blue-600 hover:text-blue-800 underline cursor-pointer"
+                                title="Click to edit user data"
+                              >
+                                {user.email}
+                              </button>
+                            </td>
                             <td className="px-4 py-3">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 user.isBlocked 
@@ -2132,6 +2242,13 @@ const ProductionTracker = () => {
                                 >
                                   Reset Date
                                 </button>
+                                <button
+                                  onClick={() => handleDeleteUser(user.uid, user.name)}
+                                  className="px-3 py-1 bg-red-800 hover:bg-red-900 text-white rounded text-xs font-medium transition-colors"
+                                  title="Delete user permanently"
+                                >
+                                  🗑️ Delete
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -2143,6 +2260,186 @@ const ProductionTracker = () => {
                   {allUsers.length === 0 && (
                     <div className="text-center py-8 text-gray-500">
                       No users found
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* User Data Editor Modal */}
+      {showUserDataEditor && selectedUserForEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-800">
+                📝 Edit Data for {selectedUserForEdit.name}
+              </h2>
+              <button
+                onClick={() => setShowUserDataEditor(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="h-6 w-6 text-gray-600" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              {isLoadingUserData ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-gray-600">Loading user data...</span>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Date Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+                    <select
+                      value={editingSelectedDate}
+                      onChange={(e) => setEditingSelectedDate(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      {Object.keys(editingUserData).map(date => (
+                        <option key={date} value={date}>
+                          {formatDateForDisplay(date)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  {/* Current Data Display */}
+                  {editingSelectedDate && editingUserData[editingSelectedDate] && (
+                    <div className="space-y-6">
+                      {/* Completed Jobs */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-4">Completed Jobs</h3>
+                        {editingUserData[editingSelectedDate].completedJobs.length > 0 ? (
+                          <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                            <table className="w-full table-auto text-sm">
+                              <thead>
+                                <tr className="bg-gray-50">
+                                  <th className="px-4 py-3 text-left font-medium text-gray-700">Item Code</th>
+                                  <th className="px-4 py-3 text-left font-medium text-gray-700">LM Code</th>
+                                  <th className="px-4 py-3 text-left font-medium text-gray-700">Units</th>
+                                  <th className="px-4 py-3 text-left font-medium text-gray-700">Minutes</th>
+                                  <th className="px-4 py-3 text-left font-medium text-gray-700">Time</th>
+                                  <th className="px-4 py-3 text-left font-medium text-gray-700">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {editingUserData[editingSelectedDate].completedJobs.map((job, index) => (
+                                  <tr key={job.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                    <td className="px-4 py-3 font-medium text-gray-900">{job.itemCode}</td>
+                                    <td className="px-4 py-3 text-gray-700">{job.lmCode}</td>
+                                    <td className="px-4 py-3 font-medium text-blue-600">{job.unitsCompleted}</td>
+                                    <td className="px-4 py-3 text-gray-700">{job.actualMinutes.toFixed(1)}</td>
+                                    <td className="px-4 py-3 text-xs text-gray-500">{job.timestamp}</td>
+                                    <td className="px-4 py-3">
+                                      <button
+                                        onClick={() => handleDeleteJob(job.id)}
+                                        className="text-red-600 hover:text-red-800 text-xs font-medium"
+                                        title="Delete this job"
+                                      >
+                                        🗑️ Delete
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 text-center py-4">No completed jobs for this date</p>
+                        )}
+                      </div>
+                      
+                      {/* Loss Time Entries */}
+                      <div>
+                        <h3 className="text-lg font-semibold mb-4 text-red-700">Loss Time Entries</h3>
+                        {editingUserData[editingSelectedDate].lossTimeEntries.length > 0 ? (
+                          <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                            <table className="w-full table-auto text-sm">
+                              <thead>
+                                <tr className="bg-red-50">
+                                  <th className="px-4 py-3 text-left font-medium text-gray-700">Reason</th>
+                                  <th className="px-4 py-3 text-left font-medium text-gray-700">Minutes Lost</th>
+                                  <th className="px-4 py-3 text-left font-medium text-gray-700">Time</th>
+                                  <th className="px-4 py-3 text-left font-medium text-gray-700">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {editingUserData[editingSelectedDate].lossTimeEntries.map((entry, index) => (
+                                  <tr key={entry.id} className="border-b border-gray-100 hover:bg-red-50">
+                                    <td className="px-4 py-3 font-medium text-red-700">{entry.reason}</td>
+                                    <td className="px-4 py-3 text-red-600 font-medium">{entry.minutes}</td>
+                                    <td className="px-4 py-3 text-xs text-gray-500">{entry.timestamp}</td>
+                                    <td className="px-4 py-3">
+                                      <button
+                                        onClick={() => handleDeleteLossTime(entry.id)}
+                                        className="text-red-600 hover:text-red-800 text-xs font-medium"
+                                        title="Delete this loss time entry"
+                                      >
+                                        🗑️ Delete
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 text-center py-4">No loss time entries for this date</p>
+                        )}
+                      </div>
+                      
+                      {/* Summary */}
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h4 className="font-semibold mb-2">Summary for {formatDateForDisplay(editingSelectedDate)}</h4>
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium">Completed Minutes:</span>
+                            <span className="ml-2 text-blue-600">
+                              {editingUserData[editingSelectedDate].completedJobs.reduce((sum, job) => sum + job.actualMinutes, 0).toFixed(1)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="font-medium">Loss Time:</span>
+                            <span className="ml-2 text-red-600">
+                              {editingUserData[editingSelectedDate].lossTimeEntries.reduce((sum, entry) => sum + entry.minutes, 0)} minutes
+                            </span>
+                          </div>
+                          <div>
+                            <span className="font-medium">Status:</span>
+                            <span className={`ml-2 ${editingUserData[editingSelectedDate].isFinished ? 'text-green-600' : 'text-yellow-600'}`}>
+                              {editingUserData[editingSelectedDate].isFinished ? 'Finished' : 'In Progress'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Save Button */}
+                      <div className="flex justify-end space-x-3">
+                        <button
+                          onClick={() => setShowUserDataEditor(false)}
+                          className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleSaveUserData}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+                        >
+                          Save Changes
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {editingSelectedDate && !editingUserData[editingSelectedDate] && (
+                    <div className="text-center py-8 text-gray-500">
+                      No data available for {formatDateForDisplay(editingSelectedDate)}
                     </div>
                   )}
                 </div>
