@@ -402,7 +402,9 @@ const ProductionTracker = () => {
   React.useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      setIsWithinWorkingHoursState(isWithinWorkingHours(now));
+      const isWorkingDayToday = isWorkingDay(now);
+      const isWithinHours = isWithinWorkingHours(now);
+      setIsWithinWorkingHoursState(isWorkingDayToday && isWithinHours);
     };
     
     updateTime(); // Initial call
@@ -1726,7 +1728,7 @@ const ProductionTracker = () => {
                 <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
                 <div>
                   <p className="text-sm font-medium text-yellow-800">Outside Working Hours</p>
-                  <p className="text-xs text-yellow-700">Access is only available between 06:55 AM and 16:35 PM on working days</p>
+                  <p className="text-xs text-yellow-700">Access is only available between 06:55 AM and 16:35 PM, Monday to Thursday</p>
                 </div>
               </div>
             </div>
@@ -1946,9 +1948,9 @@ const ProductionTracker = () => {
               <button
                 onClick={() => setShowScanner(true)}
                 disabled={!isWithinWorkingHoursState && !isAdmin}
-                className={`px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg flex items-center space-x-1 ${
+                className={`px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg flex items-center space-x-1 transition-colors ${
                   (!isWithinWorkingHoursState && !isAdmin) 
-                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50 transform scale-95' 
                     : 'bg-green-600 hover:bg-green-700 text-white'
                 }`}
               >
@@ -2047,7 +2049,7 @@ const ProductionTracker = () => {
             <button
               onClick={handleSubmit}
               disabled={(!selectedItem && !getCurrentItem()) || !completedQuantity || (!isWithinWorkingHoursState && !isAdmin)}
-              className="w-full bg-blue-600 text-white py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-blue-600 text-white py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors disabled:opacity-50 disabled:transform disabled:scale-95"
             >
               Log Completion
             </button>
@@ -2058,7 +2060,7 @@ const ProductionTracker = () => {
                 <div className="flex items-center">
                   <AlertCircle className="h-4 w-4 text-yellow-600 mr-2" />
                   <span className="text-xs text-yellow-700">
-                    Logging is only available during working hours (06:55 AM - 16:35 PM) for non-admin users
+                    Logging is only available during working hours (06:55 AM - 16:35 PM, Monday to Thursday) for non-admin users
                   </span>
                 </div>
               </div>
@@ -2071,7 +2073,7 @@ const ProductionTracker = () => {
                 <button
                   onClick={() => setShowLossTimeForm(!showLossTimeForm)}
                   disabled={!isWithinWorkingHoursState && !isAdmin}
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg flex items-center space-x-1 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg flex items-center space-x-1 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50 disabled:transform disabled:scale-95 transition-colors"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Add Loss Time</span>
@@ -2110,7 +2112,7 @@ const ProductionTracker = () => {
                     <button
                       onClick={handleLossTimeSubmit}
                       disabled={!selectedLossReason || !lossTimeMinutes || (!isWithinWorkingHoursState && !isAdmin)}
-                      className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:bg-gray-400"
+                      className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:opacity-50 disabled:transform disabled:scale-95 disabled:cursor-not-allowed transition-colors"
                     >
                       Log Loss Time
                     </button>
@@ -2121,7 +2123,7 @@ const ProductionTracker = () => {
                         <div className="flex items-center">
                           <AlertCircle className="h-4 w-4 text-yellow-600 mr-2" />
                           <span className="text-xs text-yellow-700">
-                            Loss time logging is only available during working hours (06:55 AM - 16:35 PM) for non-admin users
+                            Loss time logging is only available during working hours (06:55 AM - 16:35 PM, Monday to Thursday) for non-admin users
                           </span>
                         </div>
                       </div>
