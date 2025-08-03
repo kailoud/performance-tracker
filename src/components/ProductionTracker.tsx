@@ -687,24 +687,57 @@ const ProductionTracker = () => {
 
   // Handle item selection from suggestions
   const handleItemSelect = (item: ProductionItem) => {
+    console.log('Item selected:', item); // Debug log
     setSearchInput(item.itemCode);
     setSelectedItem(item.itemCode);
     setShowSuggestions(false);
     setFilteredItems([]);
     
     // Show timer popup for the selected item
-    setTimerState(prev => ({
-      ...prev,
-      isVisible: true,
-      expectedTime: item.time,
-      itemCode: item.itemCode,
-      lmCode: item.lmCode,
-      isActive: false,
-      isPaused: false,
-      startTime: 0,
-      pausedTime: 0,
-      elapsedTime: 0
-    }));
+    setTimerState(prev => {
+      console.log('Setting timer state:', { ...prev, isVisible: true, expectedTime: item.time, itemCode: item.itemCode, lmCode: item.lmCode }); // Debug log
+      return {
+        ...prev,
+        isVisible: true,
+        expectedTime: item.time,
+        itemCode: item.itemCode,
+        lmCode: item.lmCode,
+        isActive: false,
+        isPaused: false,
+        startTime: 0,
+        pausedTime: 0,
+        elapsedTime: 0
+      };
+    });
+  };
+
+  // Handle dropdown item selection
+  const handleDropdownSelect = (itemCode: string) => {
+    console.log('Dropdown item selected:', itemCode); // Debug log
+    setSelectedItem(itemCode);
+    
+    if (itemCode) {
+      const item = productionData.find(p => p.itemCode === itemCode);
+      if (item) {
+        console.log('Found item for dropdown:', item); // Debug log
+        // Show timer popup for the selected item
+        setTimerState(prev => {
+          console.log('Setting timer state from dropdown:', { ...prev, isVisible: true, expectedTime: item.time, itemCode: item.itemCode, lmCode: item.lmCode }); // Debug log
+          return {
+            ...prev,
+            isVisible: true,
+            expectedTime: item.time,
+            itemCode: item.itemCode,
+            lmCode: item.lmCode,
+            isActive: false,
+            isPaused: false,
+            startTime: 0,
+            pausedTime: 0,
+            elapsedTime: 0
+          };
+        });
+      }
+    }
   };
 
   const handleLossTimeSubmit = async () => {
@@ -1523,6 +1556,11 @@ const ProductionTracker = () => {
     };
   }, [timerInterval]);
 
+  // Debug timer state changes
+  useEffect(() => {
+    console.log('Timer state changed:', timerState);
+  }, [timerState]);
+
 
 
 
@@ -1977,7 +2015,7 @@ const ProductionTracker = () => {
               {searchMode === 'dropdown' ? (
                 <select
                   value={selectedItem}
-                  onChange={(e) => setSelectedItem(e.target.value)}
+                  onChange={(e) => handleDropdownSelect(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select an item...</option>
