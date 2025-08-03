@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Clock, Target, CheckCircle, AlertCircle, StopCircle, Plus, Trash2, Download, Calendar, X, LogOut, Timer, Play, Pause, Square } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -220,6 +220,7 @@ const ProductionTracker = () => {
           setUserId(user.uid);
                   loadUserProfile(user.uid);
         loadAllDailyData(user.uid);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         checkActiveTimer(); // Check for active timer on login
         } catch (error) {
           console.error('Error checking user status:', error);
@@ -263,7 +264,8 @@ const ProductionTracker = () => {
   };
 
   // Check for active timer on login
-  const checkActiveTimer = () => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const checkActiveTimer = useCallback(() => {
     const savedTimer = localStorage.getItem('productionTimer');
     if (savedTimer) {
       const parsed = JSON.parse(savedTimer);
@@ -283,7 +285,8 @@ const ProductionTracker = () => {
         }
       }
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Request notification permission
   const requestNotificationPermission = async () => {
@@ -308,7 +311,8 @@ const ProductionTracker = () => {
   };
 
   // Show auto-completion modal when timer exceeds expected time
-  const triggerAutoCompletionModal = (timerData: any) => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const triggerAutoCompletionModal = useCallback((timerData: any) => {
     const item = productionData.find(p => p.itemCode === timerData.itemCode);
     if (item) {
       setAutoCompletionData({ ...timerData, item });
@@ -327,7 +331,8 @@ const ProductionTracker = () => {
         );
       }
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showBrowserNotification]);
 
   // Handle auto-completion job submission
   const handleAutoCompletionSubmit = () => {
@@ -1799,7 +1804,8 @@ const ProductionTracker = () => {
       
       return () => clearInterval(checkInterval);
     }
-  }, [timerState.isActive, timerState.isPaused, timerState.elapsedTime, timerState.expectedTime, showAutoCompletionModal]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timerState.isActive, timerState.isPaused, timerState.elapsedTime, timerState.expectedTime, showAutoCompletionModal, triggerAutoCompletionModal]);
 
 
 
