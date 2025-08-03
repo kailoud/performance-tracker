@@ -1,7 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Clock, Target, CheckCircle, AlertCircle, StopCircle, Plus, Trash2, Download, Calendar, X } from 'lucide-react';
+import { Clock, Target, CheckCircle, AlertCircle, StopCircle, Plus, Trash2, Download, Calendar, X, LogOut } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { 
+  signIn, 
+  signUp, 
+  signOutUser, 
+  onAuthChange,
+  saveDailyData,
+  getDailyData,
+  getAllDailyData,
+  saveUserProfile,
+  getUserProfile,
+  subscribeToDailyData,
+  subscribeToAllDailyData
+} from '../firebaseService';
 
 // TypeScript interfaces
 interface ProductionItem {
@@ -52,6 +65,11 @@ const ProductionTracker = () => {
   const [loginEmail, setLoginEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [loginName, setLoginName] = useState('');
+  const [userId, setUserId] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [loginPassword, setLoginPassword] = useState('');
   
   // Loss Time tracking
   const [lossTimeEntries, setLossTimeEntries] = useState<LossTimeEntry[]>([]);
@@ -71,6 +89,50 @@ const ProductionTracker = () => {
     'Waiting for Parts', 'Waiting Jobs', 'Cleaning', 'Maintenance', 
     'Machine Error', 'Needle Change', 'Full Track', 'Back Rack', 'Other'
   ];
+
+  // Firebase authentication effect
+  useEffect(() => {
+    const unsubscribe = onAuthChange((user: any) => {
+      if (user) {
+        setIsLoggedIn(true);
+        setUserEmail(user.email || '');
+        setUserId(user.uid);
+        loadUserProfile(user.uid);
+        loadAllDailyData(user.uid);
+      } else {
+        setIsLoggedIn(false);
+        setUserEmail('');
+        setUserName('');
+        setUserId('');
+        setAllDailyData({} as any);
+      }
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Load user profile
+  const loadUserProfile = async (uid: string) => {
+    try {
+      const profile = await getUserProfile(uid);
+      if (profile) {
+        setUserName(profile.name || '');
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  };
+
+  // Load all daily data for user
+  const loadAllDailyData = async (uid: string) => {
+    try {
+      const data = await getAllDailyData(uid);
+      setAllDailyData(data);
+    } catch (error) {
+      console.error('Error loading daily data:', error);
+    }
+  };
   
   const productionData: ProductionItem[] = [
     { itemCode: "B102823", lmCode: "AHOOK-TI", quantity: 100, time: 33.3 },
@@ -323,7 +385,9 @@ const ProductionTracker = () => {
   const completedPercentage = adjustedTarget > 0 ? Math.min((completedMinutes / adjustedTarget) * 100, 100) : 100;
   const remainingMinutes = Math.max(adjustedTarget - completedMinutes, 0);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!userId || !selectedDate) return;
+    
     let item;
     
     if (searchMode === 'dropdown') {
@@ -356,7 +420,29 @@ const ProductionTracker = () => {
       id: Date.now()
     };
 
-    setCompletedJobs(prev => [...prev, newJob]);
+    const updatedJobs = [...completedJobs, newJob];
+    setCompletedJobs(updatedJobs);
+
+    // Save to Firebase
+    try {
+      const dailyData = {
+        date: selectedDate,
+        completedJobs: updatedJobs,
+        lossTimeEntries,
+        isFinished: allDailyData[selectedDate]?.isFinished || false,
+        finishTime: allDailyData[selectedDate]?.finishTime
+      };
+      await saveDailyData(userId, selectedDate, dailyData);
+      
+      // Update local state
+      setAllDailyData(prev => ({
+        ...prev,
+        [selectedDate]: dailyData
+      }));
+    } catch (error) {
+      console.error('Error saving job:', error);
+    }
+
     setSelectedItem('');
     setCompletedQuantity('');
     setSearchInput('');
@@ -410,8 +496,8 @@ const ProductionTracker = () => {
     setFilteredItems([]);
   };
 
-  const handleLossTimeSubmit = () => {
-    if (!selectedLossReason || !lossTimeMinutes) return;
+  const handleLossTimeSubmit = async () => {
+    if (!selectedLossReason || !lossTimeMinutes || !userId || !selectedDate) return;
 
     const minutes = parseInt(lossTimeMinutes);
     if (minutes <= 0) {
@@ -426,7 +512,29 @@ const ProductionTracker = () => {
       id: Date.now()
     };
 
-    setLossTimeEntries(prev => [...prev, newLossEntry]);
+    const updatedLossEntries = [...lossTimeEntries, newLossEntry];
+    setLossTimeEntries(updatedLossEntries);
+
+    // Save to Firebase
+    try {
+      const dailyData = {
+        date: selectedDate,
+        completedJobs,
+        lossTimeEntries: updatedLossEntries,
+        isFinished: allDailyData[selectedDate]?.isFinished || false,
+        finishTime: allDailyData[selectedDate]?.finishTime
+      };
+      await saveDailyData(userId, selectedDate, dailyData);
+      
+      // Update local state
+      setAllDailyData(prev => ({
+        ...prev,
+        [selectedDate]: dailyData
+      }));
+    } catch (error) {
+      console.error('Error saving loss time:', error);
+    }
+
     setSelectedLossReason('');
     setLossTimeMinutes('');
     setShowLossTimeForm(false);
@@ -436,39 +544,50 @@ const ProductionTracker = () => {
     setLossTimeEntries(prev => prev.filter(entry => entry.id !== id));
   };
 
-  const finishWorkDay = () => {
+  const finishWorkDay = async () => {
+    if (!userId || !selectedDate) return;
+    
     const finishTime = new Date().toLocaleTimeString();
     
-    // Save current day as finished
-    setAllDailyData(prev => ({
-      ...prev,
-      [selectedDate]: {
-        date: selectedDate,
-        completedJobs,
-        lossTimeEntries,
-        isFinished: true,
-        finishTime
-      }
-    }));
+    const dailyData = {
+      date: selectedDate,
+      completedJobs,
+      lossTimeEntries,
+      isFinished: true,
+      finishTime
+    };
 
-    // Find next working day
-    const workingDays = getWorkingDays();
-    const currentIndex = workingDays.indexOf(selectedDate);
-    const nextDay = workingDays[currentIndex + 1] || workingDays[0]; // Loop back to Monday if it's Thursday
+    // Save to Firebase
+    try {
+      await saveDailyData(userId, selectedDate, dailyData);
+      
+      // Update local state
+      setAllDailyData(prev => ({
+        ...prev,
+        [selectedDate]: dailyData
+      }));
 
-    // Switch to next day and reset data
-    setSelectedDate(nextDay);
-    setCompletedJobs([]);
-    setLossTimeEntries([]);
-    setSelectedItem('');
-    setCompletedQuantity('');
-    setSearchInput('');
-    setSelectedLossReason('');
-    setLossTimeMinutes('');
-    setShowLossTimeForm(false);
+      // Find next working day
+      const workingDays = getWorkingDays();
+      const currentIndex = workingDays.indexOf(selectedDate);
+      const nextDay = workingDays[currentIndex + 1] || workingDays[0]; // Loop back to Monday if it's Thursday
 
-    // Show success message
-    alert(`Work day finished! Data saved for ${formatDateForDisplay(selectedDate)}. Switched to ${formatDateForDisplay(nextDay)}.`);
+      // Switch to next day and reset data
+      setSelectedDate(nextDay);
+      setCompletedJobs([]);
+      setLossTimeEntries([]);
+      setSelectedItem('');
+      setCompletedQuantity('');
+      setSearchInput('');
+      setSelectedLossReason('');
+      setLossTimeMinutes('');
+      setShowLossTimeForm(false);
+
+      // Show success message
+      alert(`Work day finished! Data saved for ${formatDateForDisplay(selectedDate)}. Switched to ${formatDateForDisplay(nextDay)}.`);
+    } catch (error) {
+      console.error('Error finishing work day:', error);
+    }
   };
 
   const downloadPDF = async () => {
@@ -790,33 +909,60 @@ const ProductionTracker = () => {
     pdf.save(fileName);
   };
 
-  const handleLogin = () => {
-    if (!loginEmail || !loginName) {
-      alert('Please enter both email and name');
+  const handleLogin = async () => {
+    if (!loginEmail || !loginName || !loginPassword) {
+      setAuthError('Please enter email, name, and password');
       return;
     }
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(loginEmail)) {
-      alert('Please enter a valid email address');
+      setAuthError('Please enter a valid email address');
       return;
     }
 
-    setUserEmail(loginEmail);
-    setUserName(loginName);
-    setIsLoggedIn(true);
+    if (loginPassword.length < 6) {
+      setAuthError('Password must be at least 6 characters long');
+      return;
+    }
+
+    try {
+      setAuthError('');
+      setIsLoading(true);
+      
+      console.log('Starting authentication...', { isSignUp, loginEmail, loginName });
+      
+      if (isSignUp) {
+        // Create new account
+        console.log('Creating account with password');
+        const user = await signUp(loginEmail, loginPassword);
+        console.log('Account created:', user);
+        await saveUserProfile(user.uid, { name: loginName, email: loginEmail });
+        console.log('User profile saved');
+      } else {
+        // Sign in existing user
+        console.log('Signing in with password');
+        await signIn(loginEmail, loginPassword);
+        console.log('Sign in successful');
+      }
+      
+      setLoginEmail('');
+      setLoginName('');
+      setLoginPassword('');
+      setIsSignUp(false);
+    } catch (error: any) {
+      console.error('Authentication error:', error);
+      setAuthError(error.message || 'Authentication failed');
+      setIsLoading(false);
+    }
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserEmail('');
-    setUserName('');
-    setLoginEmail('');
-    setLoginName('');
-    setCompletedJobs([]);
-    setLossTimeEntries([]);
-    setSelectedDate('');
-    setAllDailyData({});
+  const handleLogout = async () => {
+    try {
+      await signOutUser();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   // Progress data for pie chart
@@ -827,6 +973,18 @@ const ProductionTracker = () => {
 
   const filteredProgressData = progressData.filter(item => item.value > 0);
   const isTargetReached = completedMinutes >= adjustedTarget;
+
+  // Show loading screen
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
+        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // If not logged in, show login screen
   if (!isLoggedIn) {
@@ -845,6 +1003,12 @@ const ProductionTracker = () => {
             <p className="text-sm sm:text-base text-gray-600">Track your daily 525-minute production target</p>
           </div>
           
+          {authError && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              {authError}
+            </div>
+          )}
+          
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
@@ -854,6 +1018,7 @@ const ProductionTracker = () => {
                 onChange={(e) => setLoginName(e.target.value)}
                 placeholder="Enter your full name"
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                disabled={isLoading}
               />
             </div>
             
@@ -865,19 +1030,46 @@ const ProductionTracker = () => {
                 onChange={(e) => setLoginEmail(e.target.value)}
                 placeholder="Enter your email address"
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                disabled={isLoading}
               />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                disabled={isLoading}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {isSignUp ? "Create a password for your account" : "Enter your password"}
+              </p>
             </div>
             
             <button
               onClick={handleLogin}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              disabled={isLoading}
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Start Tracking
+              {isLoading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}
             </button>
+            
+            <div className="text-center">
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-blue-600 hover:text-blue-700 text-sm"
+                disabled={isLoading}
+              >
+                {isSignUp ? 'Already have an account? Sign In' : 'New user? Create Account'}
+              </button>
+            </div>
           </div>
           
           <div className="mt-6 text-center">
-            <p className="text-xs text-gray-500">🔒 Your data is stored locally during this session only</p>
+            <p className="text-xs text-gray-500">🔒 Your data is securely stored in the cloud</p>
           </div>
         </div>
       </div>
@@ -920,6 +1112,15 @@ const ProductionTracker = () => {
               title="View Historical Data"
             >
               <Calendar className="h-4 w-4" />
+            </button>
+            
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="p-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 transition-colors"
+              title="Logout"
+            >
+              <LogOut className="h-4 w-4" />
             </button>
             
             {selectedDate && (
