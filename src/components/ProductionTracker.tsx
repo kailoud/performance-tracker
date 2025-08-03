@@ -420,7 +420,6 @@ const ProductionTracker = () => {
   };
   
   const productionData: ProductionItem[] = [
-    { itemCode: "TEST-001", lmCode: "TEST-1MIN", quantity: 10, time: 1 }, // Test item for quick timer testing
     { itemCode: "B102823", lmCode: "AHOOK-TI", quantity: 100, time: 33.3 },
     { itemCode: "B105003", lmCode: "AL-SPTQRA-BK", quantity: 12, time: 9 },
     { itemCode: "B100128", lmCode: "BRCALA-B75F", quantity: 100, time: 60 },
@@ -533,26 +532,18 @@ const ProductionTracker = () => {
 
   // Time and access control functions
   const isWithinWorkingHours = (date: Date): boolean => {
-    // Temporarily disabled for testing - always return true
-    return true;
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const currentTime = hours * 60 + minutes;
+    const startTime = 6 * 60 + 55; // 06:55 AM
+    const endTime = 16 * 60 + 35; // 16:35 PM (4:35 PM)
     
-    // Original logic (commented out for testing):
-    // const hours = date.getHours();
-    // const minutes = date.getMinutes();
-    // const currentTime = hours * 60 + minutes;
-    // const startTime = 6 * 60 + 55; // 06:55 AM
-    // const endTime = 16 * 60 + 35; // 16:35 PM (4:35 PM)
-    // 
-    // return currentTime >= startTime && currentTime <= endTime;
+    return currentTime >= startTime && currentTime <= endTime;
   };
 
   const isWorkingDay = (date: Date): boolean => {
-    // Temporarily disabled for testing - always return true
-    return true;
-    
-    // Original logic (commented out for testing):
-    // const day = date.getDay();
-    // return day >= 1 && day <= 4; // Monday (1) to Thursday (4)
+    const day = date.getDay();
+    return day >= 1 && day <= 4; // Monday (1) to Thursday (4)
   };
 
   const canAccessDate = (dateString: string): boolean => {
