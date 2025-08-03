@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Clock, Target, CheckCircle, AlertCircle, StopCircle, Plus, Trash2, Download, Calendar, X, LogOut, Camera, Timer, Play, Pause, Square } from 'lucide-react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import jsPDF from 'jspdf';
 import { 
   signIn, 
@@ -118,6 +119,7 @@ const ProductionTracker = () => {
   const [showScanner, setShowScanner] = useState(false);
   const [scannedBarcode, setScannedBarcode] = useState('');
   const [showTimerModal, setShowTimerModal] = useState(false);
+  const [scannerInstance, setScannerInstance] = useState<Html5QrcodeScanner | null>(null);
   const [timerState, setTimerState] = useState<TimerState>({
     isActive: false,
     isPaused: false,
@@ -1491,6 +1493,12 @@ const ProductionTracker = () => {
       }));
       setShowTimerModal(true);
       setShowScanner(false);
+      
+      // Stop the scanner
+      if (scannerInstance) {
+        scannerInstance.clear();
+        setScannerInstance(null);
+      }
     } else {
       alert('Item not found for barcode: ' + barcode);
     }
@@ -1498,6 +1506,40 @@ const ProductionTracker = () => {
 
   const handleManualBarcodeInput = (barcode: string) => {
     handleBarcodeScan(barcode);
+  };
+
+  const startCameraScanner = () => {
+    setShowScanner(true);
+    
+    // Initialize the scanner after a short delay to ensure the modal is rendered
+    setTimeout(() => {
+      const scanner = new Html5QrcodeScanner(
+        "reader",
+        { 
+          fps: 10, 
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0
+        },
+        false
+      );
+      
+      scanner.render((decodedText) => {
+        handleBarcodeScan(decodedText);
+      }, (error) => {
+        // Handle scan errors silently
+        console.log('Scan error:', error);
+      });
+      
+      setScannerInstance(scanner);
+    }, 100);
+  };
+
+  const closeScanner = () => {
+    setShowScanner(false);
+    if (scannerInstance) {
+      scannerInstance.clear();
+      setScannerInstance(null);
+    }
   };
 
   // Cleanup timer on unmount
@@ -1946,7 +1988,7 @@ const ProductionTracker = () => {
                 🔍 Quick Search
               </button>
               <button
-                onClick={() => setShowScanner(true)}
+                onClick={startCameraScanner}
                 className="px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg flex items-center space-x-1 transition-colors bg-green-600 hover:bg-green-700 text-white"
               >
                 <Camera className="h-3 w-3" />
@@ -2963,11 +3005,11 @@ const ProductionTracker = () => {
       {/* Barcode Scanner Modal */}
       {showScanner && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b">
               <h2 className="text-xl font-bold text-gray-800">📱 Barcode Scanner</h2>
               <button
-                onClick={() => setShowScanner(false)}
+                onClick={closeScanner}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="h-6 w-6 text-gray-600" />
@@ -2979,8 +3021,13 @@ const ProductionTracker = () => {
                 <Camera className="h-16 w-16 text-blue-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Scan Barcode</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Point your camera at the barcode on the box to scan the item code
+                  Point your camera at the QR code to scan the item code
                 </p>
+              </div>
+              
+              {/* Camera Scanner */}
+              <div className="mb-6">
+                <div id="reader" className="w-full"></div>
               </div>
               
               {/* Manual Input Option */}
@@ -3009,20 +3056,9 @@ const ProductionTracker = () => {
                 </div>
               </div>
               
-              {/* Camera Placeholder */}
-              <div className="bg-gray-100 rounded-lg p-8 text-center">
-                <div className="text-4xl mb-2">📷</div>
-                <p className="text-sm text-gray-600">
-                  Camera access would be implemented here for actual barcode scanning
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
-                  For now, use the manual input above to test the feature
-                </p>
-              </div>
-              
-              <div className="mt-6 text-center">
+              <div className="text-center">
                 <button
-                  onClick={() => setShowScanner(false)}
+                  onClick={closeScanner}
                   className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg"
                 >
                   Cancel
