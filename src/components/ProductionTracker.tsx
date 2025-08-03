@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Clock, Target, CheckCircle, AlertCircle, StopCircle, Plus, Trash2, Download } from 'lucide-react';
+import { Clock, Target, CheckCircle, AlertCircle, StopCircle, Plus, Trash2, Download, Calendar, X } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -59,6 +59,10 @@ const ProductionTracker = () => {
   const [selectedLossReason, setSelectedLossReason] = useState('');
   const [lossTimeMinutes, setLossTimeMinutes] = useState('');
   const [showLossTimeForm, setShowLossTimeForm] = useState(false);
+  
+  // Calendar modal state
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [selectedHistoryDate, setSelectedHistoryDate] = useState<string>('');
 
   const lossReasons = [
     'Waiting for Parts', 'Waiting Jobs', 'Cleaning', 'Maintenance', 
@@ -201,6 +205,71 @@ const ProductionTracker = () => {
 
   const getCurrentDateKey = (): string => {
     return new Date().toISOString().split('T')[0];
+  };
+
+  // Check if the current week is complete (all working days finished)
+  const isWeekComplete = (): boolean => {
+    const workingDays = getWorkingDays();
+    return workingDays.every(day => allDailyData[day]?.isFinished);
+  };
+
+  // Get the current week's data for summary
+  const getCurrentWeekData = () => {
+    const workingDays = getWorkingDays();
+    const weekData = workingDays.map(day => allDailyData[day]).filter(Boolean);
+    
+    const totalCompletedMinutes = weekData.reduce((sum, day) => 
+      sum + day.completedJobs.reduce((jobSum, job) => jobSum + job.actualMinutes, 0), 0
+    );
+    
+    const totalLossTime = weekData.reduce((sum, day) => 
+      sum + day.lossTimeEntries.reduce((entrySum, entry) => entrySum + entry.minutes, 0), 0
+    );
+    
+    const totalJobs = weekData.reduce((sum, day) => sum + day.completedJobs.length, 0);
+    
+    return {
+      totalCompletedMinutes,
+      totalLossTime,
+      totalJobs,
+      daysCompleted: weekData.length
+    };
+  };
+
+  // Reset function to start a new week
+  const resetWeek = () => {
+    const workingDays = getWorkingDays();
+    const nextWeekStart = new Date(workingDays[0]);
+    nextWeekStart.setDate(nextWeekStart.getDate() + 7); // Move to next Monday
+    
+    const nextWeekDays: string[] = [];
+    for (let i = 0; i < 4; i++) {
+      const date = new Date(nextWeekStart);
+      date.setDate(nextWeekStart.getDate() + i);
+      nextWeekDays.push(date.toISOString().split('T')[0]);
+    }
+    
+    // Clear current week data and switch to next week
+    setAllDailyData(prev => {
+      const newData = { ...prev };
+      workingDays.forEach(day => {
+        delete newData[day];
+      });
+      return newData;
+    });
+    
+    // Switch to the first day of next week
+    setSelectedDate(nextWeekDays[0]);
+    setCompletedJobs([]);
+    setLossTimeEntries([]);
+    setSelectedItem('');
+    setCompletedQuantity('');
+    setSearchInput('');
+    setSelectedLossReason('');
+    setLossTimeMinutes('');
+    setShowLossTimeForm(false);
+    
+    alert(`Week completed! Starting new week: ${formatDateForDisplay(nextWeekDays[0])} to ${formatDateForDisplay(nextWeekDays[3])}`);
   };
 
   // Initialize selected date if not set
@@ -633,6 +702,15 @@ const ProductionTracker = () => {
                 Logout
               </button>
             </div>
+            {/* Calendar Icon for Historical Data */}
+            <button
+              onClick={() => setShowCalendarModal(true)}
+              className="p-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors"
+              title="View Historical Data"
+            >
+              <Calendar className="h-5 w-5" />
+            </button>
+            
             {selectedDate && (
               <button
                 onClick={finishWorkDay}
@@ -644,6 +722,16 @@ const ProductionTracker = () => {
                 }`}
               >
                 {allDailyData[selectedDate]?.isFinished ? 'Day Finished' : 'Finish Work Day'}
+              </button>
+            )}
+            
+            {/* Week Reset Button - appears when all working days are finished */}
+            {isWeekComplete() && (
+              <button
+                onClick={resetWeek}
+                className="px-4 py-2 rounded-lg font-medium bg-purple-600 hover:bg-purple-700 text-white transition-colors ml-2"
+              >
+                🎉 Start New Week
               </button>
             )}
           </div>
@@ -703,6 +791,58 @@ const ProductionTracker = () => {
             })}
           </div>
         </div>
+        
+        {/* Weekly Summary - shows when week is complete */}
+        {isWeekComplete() && (
+          <div className="mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 p-6 rounded-lg border border-purple-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-purple-800">🎉 Week Complete!</h3>
+              <div className="text-sm text-purple-600">
+                All {getWorkingDays().length} working days finished
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-white p-3 rounded-lg shadow-sm">
+                <div className="text-2xl font-bold text-purple-600">
+                  {getCurrentWeekData().totalCompletedMinutes.toFixed(1)}
+                </div>
+                <div className="text-sm text-purple-600">Total Minutes</div>
+              </div>
+              
+              <div className="bg-white p-3 rounded-lg shadow-sm">
+                <div className="text-2xl font-bold text-purple-600">
+                  {getCurrentWeekData().totalJobs}
+                </div>
+                <div className="text-sm text-purple-600">Total Jobs</div>
+              </div>
+              
+              <div className="bg-white p-3 rounded-lg shadow-sm">
+                <div className="text-2xl font-bold text-purple-600">
+                  {getCurrentWeekData().totalLossTime}
+                </div>
+                <div className="text-sm text-purple-600">Loss Time</div>
+              </div>
+              
+              <div className="bg-white p-3 rounded-lg shadow-sm">
+                <div className="text-2xl font-bold text-purple-600">
+                  {getCurrentWeekData().daysCompleted}
+                </div>
+                <div className="text-sm text-purple-600">Days Completed</div>
+              </div>
+            </div>
+            
+            <div className="mt-4 text-center">
+              <p className="text-purple-700 mb-2">Ready to start a new week?</p>
+              <button
+                onClick={resetWeek}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              >
+                🚀 Start New Week
+              </button>
+            </div>
+          </div>
+        )}
         
         {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
@@ -1081,6 +1221,165 @@ const ProductionTracker = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
+      
+      {/* Calendar Modal for Historical Data */}
+      {showCalendarModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-800">📅 Historical Data</h2>
+              <button
+                onClick={() => {
+                  setShowCalendarModal(false);
+                  setSelectedHistoryDate('');
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="h-6 w-6 text-gray-600" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              {/* Date Selection */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Date to View</label>
+                <input
+                  type="date"
+                  value={selectedHistoryDate}
+                  onChange={(e) => setSelectedHistoryDate(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              {/* Historical Data Display */}
+              {selectedHistoryDate && allDailyData[selectedHistoryDate] && (
+                <div className="space-y-6">
+                  {/* Summary Stats */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3">📊 {formatDateForDisplay(selectedHistoryDate)} Summary</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {allDailyData[selectedHistoryDate].completedJobs.reduce((sum, job) => sum + job.actualMinutes, 0).toFixed(1)}
+                        </div>
+                        <div className="text-sm text-gray-600">Minutes</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">
+                          {allDailyData[selectedHistoryDate].completedJobs.length}
+                        </div>
+                        <div className="text-sm text-gray-600">Jobs</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-red-600">
+                          {allDailyData[selectedHistoryDate].lossTimeEntries.reduce((sum, entry) => sum + entry.minutes, 0)}
+                        </div>
+                        <div className="text-sm text-gray-600">Loss Time</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-purple-600">
+                          {allDailyData[selectedHistoryDate].isFinished ? '✓' : '○'}
+                        </div>
+                        <div className="text-sm text-gray-600">Status</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Completed Jobs */}
+                  {allDailyData[selectedHistoryDate].completedJobs.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">✅ Completed Jobs</h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full table-auto text-sm">
+                          <thead>
+                            <tr className="bg-gray-50">
+                              <th className="px-4 py-2 text-left">Item Code</th>
+                              <th className="px-4 py-2 text-left">LM Code</th>
+                              <th className="px-4 py-2 text-left">Units</th>
+                              <th className="px-4 py-2 text-left">Minutes</th>
+                              <th className="px-4 py-2 text-left">Time</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {allDailyData[selectedHistoryDate].completedJobs.map((job, index) => (
+                              <tr key={index} className="border-b border-gray-100">
+                                <td className="px-4 py-2 font-medium">{job.itemCode}</td>
+                                <td className="px-4 py-2">{job.lmCode}</td>
+                                <td className="px-4 py-2 font-medium text-blue-600">{job.unitsCompleted}</td>
+                                <td className="px-4 py-2">{job.actualMinutes.toFixed(1)}</td>
+                                <td className="px-4 py-2 text-xs">{job.timestamp}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Loss Time Entries */}
+                  {allDailyData[selectedHistoryDate].lossTimeEntries.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3 text-red-700">⚠️ Loss Time Entries</h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full table-auto text-sm">
+                          <thead>
+                            <tr className="bg-red-50">
+                              <th className="px-4 py-2 text-left">Reason</th>
+                              <th className="px-4 py-2 text-left">Minutes Lost</th>
+                              <th className="px-4 py-2 text-left">Time</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {allDailyData[selectedHistoryDate].lossTimeEntries.map((entry, index) => (
+                              <tr key={index} className="border-b border-gray-100">
+                                <td className="px-4 py-2 font-medium text-red-700">{entry.reason}</td>
+                                <td className="px-4 py-2 text-red-600">{entry.minutes}</td>
+                                <td className="px-4 py-2 text-xs">{entry.timestamp}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Finish Time */}
+                  {allDailyData[selectedHistoryDate].isFinished && (
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <h3 className="text-lg font-semibold text-green-700 mb-2">🏁 Work Day Finished</h3>
+                      <p className="text-green-600">
+                        Completed at: {allDailyData[selectedHistoryDate].finishTime}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* No Data Message */}
+              {selectedHistoryDate && !allDailyData[selectedHistoryDate] && (
+                <div className="text-center py-8">
+                  <div className="text-6xl mb-4">📅</div>
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">No Data Available</h3>
+                  <p className="text-gray-500">
+                    No production data was recorded for {formatDateForDisplay(selectedHistoryDate)}
+                  </p>
+                </div>
+              )}
+              
+              {/* Instructions */}
+              {!selectedHistoryDate && (
+                <div className="text-center py-8">
+                  <div className="text-6xl mb-4">📅</div>
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">Select a Date</h3>
+                  <p className="text-gray-500">
+                    Choose a date above to view historical production data
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
