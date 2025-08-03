@@ -354,18 +354,26 @@ const ProductionTracker = () => {
 
   // Time and access control functions
   const isWithinWorkingHours = (date: Date): boolean => {
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const currentTime = hours * 60 + minutes;
-    const startTime = 6 * 60 + 55; // 06:55 AM
-    const endTime = 16 * 60 + 35; // 16:35 PM (4:35 PM)
+    // Temporarily disabled for testing - always return true
+    return true;
     
-    return currentTime >= startTime && currentTime <= endTime;
+    // Original logic (commented out for testing):
+    // const hours = date.getHours();
+    // const minutes = date.getMinutes();
+    // const currentTime = hours * 60 + minutes;
+    // const startTime = 6 * 60 + 55; // 06:55 AM
+    // const endTime = 16 * 60 + 35; // 16:35 PM (4:35 PM)
+    // 
+    // return currentTime >= startTime && currentTime <= endTime;
   };
 
   const isWorkingDay = (date: Date): boolean => {
-    const day = date.getDay();
-    return day >= 1 && day <= 4; // Monday (1) to Thursday (4)
+    // Temporarily disabled for testing - always return true
+    return true;
+    
+    // Original logic (commented out for testing):
+    // const day = date.getDay();
+    // return day >= 1 && day <= 4; // Monday (1) to Thursday (4)
   };
 
   const canAccessDate = (dateString: string): boolean => {
