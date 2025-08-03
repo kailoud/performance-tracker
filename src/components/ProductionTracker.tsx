@@ -244,24 +244,8 @@ const ProductionTracker = () => {
     });
 
     return () => unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Load user profile
-  const loadUserProfile = async (uid: string) => {
-    try {
-      const profile = await getUserProfile(uid);
-      if (profile) {
-        setUserName(profile.name || '');
-        
-        // Set admin status based on email (you can modify this logic)
-        // For now, let's set admin based on specific email addresses
-        const adminEmails = ['kailoud639@gmail.com', 'admin@company.com', 'manager@company.com']; // Add your admin emails
-        setIsAdmin(adminEmails.includes(profile.email));
-      }
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-    }
-  };
 
   // Check for active timer on login
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -287,6 +271,23 @@ const ProductionTracker = () => {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Load user profile
+  const loadUserProfile = async (uid: string) => {
+    try {
+      const profile = await getUserProfile(uid);
+      if (profile) {
+        setUserName(profile.name || '');
+        
+        // Set admin status based on email (you can modify this logic)
+        // For now, let's set admin based on specific email addresses
+        const adminEmails = ['kailoud639@gmail.com', 'admin@company.com', 'manager@company.com']; // Add your admin emails
+        setIsAdmin(adminEmails.includes(profile.email));
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  };
 
   // Request notification permission
   const requestNotificationPermission = async () => {
