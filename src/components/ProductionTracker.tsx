@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Clock, Target, CheckCircle, AlertCircle, StopCircle, Plus, Trash2, Download, Calendar, X, LogOut } from 'lucide-react';
+import { Clock, Target, CheckCircle, AlertCircle, StopCircle, Plus, Trash2, Download, Calendar, X, LogOut, Timer, Play, Pause, Square } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { 
   signIn, 
@@ -33,6 +33,19 @@ interface CompletedJob extends ProductionItem {
   actualMinutes: number;
   timestamp: string;
   id: number;
+  actualTimeTaken?: number; // in seconds, optional for timer tracking
+}
+
+interface TimerState {
+  isActive: boolean;
+  isPaused: boolean;
+  startTime: number;
+  pausedTime: number;
+  elapsedTime: number;
+  expectedTime: number; // in minutes
+  itemCode: string;
+  lmCode: string;
+  isVisible: boolean;
 }
 
 
@@ -102,6 +115,20 @@ const ProductionTracker = () => {
   const [selectedLossReason, setSelectedLossReason] = useState('');
   const [lossTimeMinutes, setLossTimeMinutes] = useState('');
   const [showLossTimeForm, setShowLossTimeForm] = useState(false);
+  
+  // Timer state
+  const [timerState, setTimerState] = useState<TimerState>({
+    isActive: false,
+    isPaused: false,
+    startTime: 0,
+    pausedTime: 0,
+    elapsedTime: 0,
+    expectedTime: 0,
+    itemCode: '',
+    lmCode: '',
+    isVisible: false
+  });
+  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
   
 
   
@@ -577,6 +604,7 @@ const ProductionTracker = () => {
       unitsCompleted,
       completionPercentage,
       actualMinutes,
+      actualTimeTaken: timerState.isActive ? timerState.elapsedTime / 1000 : undefined,
       timestamp: new Date().toLocaleTimeString(),
       id: Date.now()
     };
@@ -655,6 +683,20 @@ const ProductionTracker = () => {
     setSelectedItem(item.itemCode);
     setShowSuggestions(false);
     setFilteredItems([]);
+    
+    // Show timer popup for the selected item
+    setTimerState(prev => ({
+      ...prev,
+      isVisible: true,
+      expectedTime: item.time,
+      itemCode: item.itemCode,
+      lmCode: item.lmCode,
+      isActive: false,
+      isPaused: false,
+      startTime: 0,
+      pausedTime: 0,
+      elapsedTime: 0
+    }));
   };
 
   const handleLossTimeSubmit = async () => {
@@ -1327,6 +1369,151 @@ const ProductionTracker = () => {
     setEditingField('');
     setEditingValue('');
   };
+
+  // Timer functions
+  const startTimer = () => {
+    if (!timerState.isActive) {
+      const now = Date.now();
+      setTimerState(prev => ({
+        ...prev,
+        isActive: true,
+        startTime: now,
+        elapsedTime: 0
+      }));
+      
+      const interval = setInterval(() => {
+        setTimerState(prev => ({
+          ...prev,
+          elapsedTime: Date.now() - prev.startTime
+        }));
+      }, 100);
+      
+      setTimerInterval(interval);
+    }
+  };
+
+  const pauseTimer = () => {
+    if (timerState.isActive && !timerState.isPaused) {
+      setTimerState(prev => ({
+        ...prev,
+        isPaused: true,
+        pausedTime: prev.elapsedTime
+      }));
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        setTimerInterval(null);
+      }
+    }
+  };
+
+  const resumeTimer = () => {
+    if (timerState.isActive && timerState.isPaused) {
+      const now = Date.now();
+      setTimerState(prev => ({
+        ...prev,
+        isPaused: false,
+        startTime: now - prev.pausedTime
+      }));
+      
+      const interval = setInterval(() => {
+        setTimerState(prev => ({
+          ...prev,
+          elapsedTime: Date.now() - prev.startTime
+        }));
+      }, 100);
+      
+      setTimerInterval(interval);
+    }
+  };
+
+  const stopTimer = () => {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      setTimerInterval(null);
+    }
+    
+    const actualTimeTaken = timerState.elapsedTime / 1000; // Convert to seconds
+    
+    // Create completed job with actual time taken
+    const item = productionData.find(p => p.itemCode === timerState.itemCode);
+    if (item) {
+      const unitsCompleted = parseInt(completedQuantity) || item.quantity;
+      const completionPercentage = unitsCompleted / item.quantity;
+      const actualMinutes = actualTimeTaken / 60; // Convert seconds to minutes
+      
+      const newJob: CompletedJob = {
+        ...item,
+        unitsCompleted,
+        completionPercentage,
+        actualMinutes,
+        actualTimeTaken,
+        timestamp: new Date().toLocaleTimeString(),
+        id: Date.now()
+      };
+
+      const updatedJobs = [...completedJobs, newJob];
+      setCompletedJobs(updatedJobs);
+
+      // Save to Firebase
+      if (userId && selectedDate) {
+        const dailyData = {
+          date: selectedDate,
+          completedJobs: updatedJobs,
+          lossTimeEntries,
+          isFinished: allDailyData[selectedDate]?.isFinished || false,
+          finishTime: allDailyData[selectedDate]?.finishTime
+        };
+        
+        saveDailyData(userId, selectedDate, dailyData).then(() => {
+          setAllDailyData(prev => ({
+            ...prev,
+            [selectedDate]: dailyData
+          }));
+        }).catch(error => {
+          console.error('Error saving job:', error);
+        });
+      }
+    }
+    
+    // Reset timer state
+    setTimerState({
+      isActive: false,
+      isPaused: false,
+      startTime: 0,
+      pausedTime: 0,
+      elapsedTime: 0,
+      expectedTime: 0,
+      itemCode: '',
+      lmCode: '',
+      isVisible: false
+    });
+    
+    // Reset form
+    setSelectedItem('');
+    setCompletedQuantity('');
+    setSearchInput('');
+  };
+
+  const closeTimer = () => {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      setTimerInterval(null);
+    }
+    
+    setTimerState(prev => ({
+      ...prev,
+      isVisible: false
+    }));
+  };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    };
+  }, [timerInterval]);
 
 
 
@@ -2080,6 +2267,7 @@ const ProductionTracker = () => {
                         <th className="px-3 py-3 text-left font-medium text-gray-700">Item Code</th>
                         <th className="px-3 py-3 text-left font-medium text-gray-700">LM Code</th>
                         <th className="px-3 py-3 text-left font-medium text-gray-700">Units</th>
+                        <th className="px-3 py-3 text-left font-medium text-gray-700">Timer</th>
                         <th className="px-3 py-3 text-left font-medium text-gray-700">Time</th>
                       </tr>
                     </thead>
@@ -2089,6 +2277,19 @@ const ProductionTracker = () => {
                           <td className="px-3 py-3 font-medium text-gray-900">{job.itemCode}</td>
                           <td className="px-3 py-3 text-gray-700">{job.lmCode}</td>
                           <td className="px-3 py-3 font-medium text-blue-600">{job.unitsCompleted}</td>
+                          <td className="px-3 py-3 text-xs text-gray-500">
+                            {job.actualTimeTaken ? (
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                job.actualTimeTaken / 60 <= job.time 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {Math.floor(job.actualTimeTaken / 60)}:{(job.actualTimeTaken % 60).toString().padStart(2, '0')}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">Manual</span>
+                            )}
+                          </td>
                           <td className="px-3 py-3 text-xs text-gray-500">{job.timestamp}</td>
                         </tr>
                       ))}
@@ -2130,6 +2331,127 @@ const ProductionTracker = () => {
           </div>
         )}
       
+      {/* Timer Modal */}
+      {timerState.isVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-bold text-gray-800">⏱️ Job Timer</h2>
+              <button
+                onClick={closeTimer}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="h-6 w-6 text-gray-600" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <Timer className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  {timerState.itemCode} - {timerState.lmCode}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Expected Time: {timerState.expectedTime} minutes
+                </p>
+              </div>
+              
+              {/* Timer Display */}
+              <div className="bg-gray-50 rounded-lg p-6 mb-6 text-center">
+                <div className="text-4xl font-mono font-bold text-blue-600 mb-2">
+                  {Math.floor(timerState.elapsedTime / 60000).toString().padStart(2, '0')}:
+                  {Math.floor((timerState.elapsedTime % 60000) / 1000).toString().padStart(2, '0')}
+                </div>
+                <p className="text-sm text-gray-600">Elapsed Time</p>
+                
+                {/* Time Status */}
+                {timerState.elapsedTime > 0 && (
+                  <div className="mt-2">
+                    {timerState.elapsedTime / 60000 > timerState.expectedTime ? (
+                      <div className="text-red-600 text-sm font-medium">
+                        ⚠️ Over expected time by {Math.round((timerState.elapsedTime / 60000) - timerState.expectedTime)} minutes
+                      </div>
+                    ) : (
+                      <div className="text-green-600 text-sm font-medium">
+                        ✅ Within expected time
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* Timer Controls */}
+              <div className="flex justify-center space-x-4 mb-6">
+                {!timerState.isActive ? (
+                  <button
+                    onClick={startTimer}
+                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center space-x-2"
+                  >
+                    <Play className="h-5 w-5" />
+                    <span>Start Timer</span>
+                  </button>
+                ) : timerState.isPaused ? (
+                  <button
+                    onClick={resumeTimer}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                  >
+                    <Play className="h-5 w-5" />
+                    <span>Resume</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={pauseTimer}
+                    className="px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 flex items-center space-x-2"
+                  >
+                    <Pause className="h-5 w-5" />
+                    <span>Pause</span>
+                  </button>
+                )}
+                
+                {timerState.isActive && (
+                  <button
+                    onClick={stopTimer}
+                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center space-x-2"
+                  >
+                    <Square className="h-5 w-5" />
+                    <span>Complete Job</span>
+                  </button>
+                )}
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="mb-6">
+                <div className="flex justify-between text-sm text-gray-600 mb-2">
+                  <span>Progress</span>
+                  <span>
+                    {Math.round((timerState.elapsedTime / 60000) / timerState.expectedTime * 100)}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      timerState.elapsedTime / 60000 > timerState.expectedTime 
+                        ? 'bg-red-600' 
+                        : 'bg-blue-600'
+                    }`}
+                    style={{ 
+                      width: `${Math.min((timerState.elapsedTime / 60000) / timerState.expectedTime * 100, 100)}%` 
+                    }}
+                  ></div>
+                </div>
+              </div>
+              
+              <div className="text-center text-sm text-gray-600">
+                <p>Timer tracks time from item selection to completion</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  You can close this and log manually, or use the timer to track actual time
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Calendar Modal for Historical Data */}
       {showCalendarModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

@@ -42,6 +42,7 @@ interface CompletedJob {
   actualMinutes: number;
   timestamp: string;
   id: number;
+  actualTimeTaken?: number; // in seconds, optional for timer tracking
 }
 
 interface LossTimeEntry {
