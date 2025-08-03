@@ -3112,7 +3112,6 @@ const ProductionTracker = () => {
                   
                   {/* Calendar Days */}
                   {(() => {
-                    const workingDays = getWorkingDays();
                     const currentWeekStart = new Date();
                     currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay() + 1); // Monday
                     
