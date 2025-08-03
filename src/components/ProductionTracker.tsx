@@ -549,33 +549,42 @@ const ProductionTracker = () => {
   const canAccessDate = (dateString: string): boolean => {
     const date = new Date(dateString);
     const today = new Date();
+    const todayString = today.toISOString().split('T')[0];
     
     // Check if it's a working day
     if (!isWorkingDay(date)) return false;
     
-    // Check if it's today and within working hours
-    if (dateString === today.toISOString().split('T')[0]) {
-      return isWithinWorkingHours(today);
-    }
+    // Admin can access all dates
+    if (isAdmin) return true;
     
     // For past dates, always allow access
     if (date < today) return true;
     
-    // For future dates, only allow if admin or if it's the next working day
+    // For today, only allow access during working hours
+    if (dateString === todayString) {
+      return isWithinWorkingHours(today);
+    }
+    
+    // For future dates, implement sequential access
     const workingDays = getWorkingDays();
-    const todayIndex = workingDays.indexOf(today.toISOString().split('T')[0]);
+    const todayIndex = workingDays.indexOf(todayString);
     const dateIndex = workingDays.indexOf(dateString);
     
     if (todayIndex === -1 || dateIndex === -1) return false;
     
-    // Allow access to next day only if current day is finished
+    // Only allow access to the next sequential working day
     if (dateIndex === todayIndex + 1) {
+      // Check if current day is finished
       const currentDayData = allDailyData[workingDays[todayIndex]];
-      return currentDayData?.isFinished || isAdmin;
+      if (currentDayData?.isFinished) {
+        // Current day is finished, allow access to next day during working hours
+        return isWithinWorkingHours(today);
+      }
+      return false; // Current day not finished, no access to next day
     }
     
-    // For dates beyond next day, only admin can access
-    return isAdmin;
+    // For dates beyond the next sequential day, no access
+    return false;
   };
 
   // Update current time every minute
