@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Scanner Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .barcode-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .barcode-section h3 {
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        .barcode-section p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .barcode-section img {
+            display: block;
+            margin: 0 auto;
+            max-width: 200px;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .item-details {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+        .item-details strong {
+            color: #1e40af;
+        }
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .instructions h2 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .instructions ol {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Barcode Scanner Test</h1>
+        
+        <div class="instructions">
+            <h2>How to Test:</h2>
+            <ol>
+                <li>Open your mobile browser and go to the Production Tracker app</li>
+                <li>Login and navigate to "Log Completed Work"</li>
+                <li>Click the "📱 Barcode Scanner" button</li>
+                <li>Use your phone's camera to scan one of these barcodes</li>
+                <li>Or manually enter the item code in the scanner modal</li>
+                <li>Verify that the timer opens with the correct item details</li>
+            </ol>
+        </div>
+
+        <div class="barcode-section">
+            <h3>Item Code: B102823</h3>
+            <p>LM Code: AHOOK-TI</p>
+            <p>Target: 100 units in 33.3 minutes</p>
+            <img src="sample_barcode.png" alt="Barcode for B102823">
+            <div class="item-details">
+                <strong>Expected Behavior:</strong> Timer should open showing 33.3 minutes expected time
+            </div>
+        </div>
+
+        <div class="barcode-section">
+            <h3>Item Code: B105003</h3>
+            <p>LM Code: AL-SPTQRA-BK</p>
+            <p>Target: 12 units in 9 minutes</p>
+            <img src="sample_barcode_2.png" alt="Barcode for B105003">
+            <div class="item-details">
+                <strong>Expected Behavior:</strong> Timer should open showing 9 minutes expected time
+            </div>
+        </div>
+
+        <div class="barcode-section">
+            <h3>Item Code: B100128</h3>
+            <p>LM Code: BRCALA-B75F</p>
+            <p>Target: 100 units in 60 minutes</p>
+            <img src="sample_barcode_3.png" alt="Barcode for B100128">
+            <div class="item-details">
+                <strong>Expected Behavior:</strong> Timer should open showing 60 minutes expected time
+            </div>
+        </div>
+
+        <div class="barcode-section">
+            <h3>Item Code: B101984</h3>
+            <p>LM Code: CHPUA</p>
+            <p>Target: 120 units in 90 minutes</p>
+            <img src="sample_barcode_4.png" alt="Barcode for B101984">
+            <div class="item-details">
+                <strong>Expected Behavior:</strong> Timer should open showing 90 minutes expected time
+            </div>
+        </div>
+
+        <div class="barcode-section">
+            <h3>Manual Testing</h3>
+            <p>You can also test by manually entering these codes in the scanner modal:</p>
+            <ul>
+                <li><strong>B102823</strong> - AHOOK-TI (33.3 min)</li>
+                <li><strong>B105003</strong> - AL-SPTQRA-BK (9 min)</li>
+                <li><strong>B100128</strong> - BRCALA-B75F (60 min)</li>
+                <li><strong>B101984</strong> - CHPUA (90 min)</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 
