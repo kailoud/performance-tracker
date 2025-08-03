@@ -16,6 +16,8 @@ import {
   resetUserDailyData,
   deleteUser
 } from '../firebaseService';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 // TypeScript interfaces
 interface ProductionItem {
@@ -114,13 +116,60 @@ const ProductionTracker = () => {
 
   // Firebase authentication effect
   useEffect(() => {
-    const unsubscribe = onAuthChange((user: any) => {
+    const unsubscribe = onAuthChange(async (user: any) => {
       if (user) {
-        setIsLoggedIn(true);
-        setUserEmail(user.email || '');
-        setUserId(user.uid);
-        loadUserProfile(user.uid);
-        loadAllDailyData(user.uid);
+        try {
+          // Check if user is deleted or blocked
+          const userRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userRef);
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            
+            if (userData.isDeleted) {
+              // Sign out deleted user
+              await signOutUser();
+              setAuthError('This account has been deleted. Please sign up again.');
+              setIsLoggedIn(false);
+              setUserEmail('');
+              setUserName('');
+              setUserId('');
+              setAllDailyData({});
+              setIsLoading(false);
+              return;
+            }
+            
+            if (userData.isBlocked) {
+              // Sign out blocked user
+              await signOutUser();
+              setAuthError('This account has been blocked. Please contact an administrator.');
+              setIsLoggedIn(false);
+              setUserEmail('');
+              setUserName('');
+              setUserId('');
+              setAllDailyData({});
+              setIsLoading(false);
+              return;
+            }
+          }
+          
+          // User is valid, proceed with login
+          setIsLoggedIn(true);
+          setUserEmail(user.email || '');
+          setUserId(user.uid);
+          loadUserProfile(user.uid);
+          loadAllDailyData(user.uid);
+        } catch (error) {
+          console.error('Error checking user status:', error);
+          // If there's an error checking user status, sign out to be safe
+          await signOutUser();
+          setAuthError('Error verifying account status. Please try again.');
+          setIsLoggedIn(false);
+          setUserEmail('');
+          setUserName('');
+          setUserId('');
+          setAllDailyData({});
+        }
       } else {
         setIsLoggedIn(false);
         setUserEmail('');

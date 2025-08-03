@@ -70,6 +70,27 @@ export const signUp = async (email: string, password: string): Promise<User> => 
 export const signIn = async (email: string, password: string): Promise<User> => {
   try {
     const userCredential: UserCredential = await signInWithEmailAndPassword(auth, email, password);
+    
+    // Check if user is deleted or blocked
+    const userRef = doc(db, 'users', userCredential.user.uid);
+    const userDoc = await getDoc(userRef);
+    
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      
+      if (userData.isDeleted) {
+        // Sign out the user and throw error
+        await signOut(auth);
+        throw new Error('This account has been deleted. Please sign up again.');
+      }
+      
+      if (userData.isBlocked) {
+        // Sign out the user and throw error
+        await signOut(auth);
+        throw new Error('This account has been blocked. Please contact an administrator.');
+      }
+    }
+    
     return userCredential.user;
   } catch (error) {
     throw error;
