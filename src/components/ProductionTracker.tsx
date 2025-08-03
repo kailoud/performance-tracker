@@ -2172,7 +2172,7 @@ const ProductionTracker = () => {
             <div>
               <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-800">Production Tracker</h1>
               <p className="text-xs sm:text-sm text-gray-600">
-                Welcome back, {userName.split(' ').map(n => n[0]).join('')}! 👋
+                Welcome back, {userName.substring(0, 3).toUpperCase()}! 👋
                 {isAdmin && (
                   <button
                     onClick={() => setShowAdminPanel(!showAdminPanel)}
