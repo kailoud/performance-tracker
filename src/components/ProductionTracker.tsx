@@ -629,11 +629,11 @@ const ProductionTracker = () => {
               <img 
                 src="/bike.png" 
                 alt="Folding Bike Logo" 
-                className="mx-auto w-20 h-20 object-contain"
+                className="mx-auto w-16 h-16 sm:w-20 sm:h-20 object-contain"
               />
             </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Production Tracker</h1>
-            <p className="text-gray-600">Track your daily 525-minute production target</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Production Tracker</h1>
+            <p className="text-sm sm:text-base text-gray-600">Track your daily 525-minute production target</p>
           </div>
           
           <div className="space-y-4">
@@ -685,12 +685,12 @@ const ProductionTracker = () => {
               <img 
                 src="/bike.png" 
                 alt="Folding Bike Logo" 
-                className="w-12 h-12 object-contain"
+                className="w-8 h-8 sm:w-12 sm:h-12 object-contain"
               />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">Production Tracker</h1>
-              <p className="text-gray-600">Welcome back, {userName}! 👋</p>
+              <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Production Tracker</h1>
+              <p className="text-sm sm:text-base text-gray-600">Welcome back, {userName}! 👋</p>
             </div>
           </div>
           <div className="text-right flex items-center space-x-4">
@@ -703,17 +703,17 @@ const ProductionTracker = () => {
             {/* Calendar Icon for Historical Data */}
             <button
               onClick={() => setShowCalendarModal(true)}
-              className="p-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors"
+              className="p-1.5 sm:p-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors"
               title="View Historical Data"
             >
-              <Calendar className="h-5 w-5" />
+              <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
             
             {selectedDate && (
               <button
                 onClick={finishWorkDay}
                 disabled={allDailyData[selectedDate]?.isFinished}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg font-medium transition-colors ${
                   allDailyData[selectedDate]?.isFinished
                     ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
                     : 'bg-green-600 hover:bg-green-700 text-white'
@@ -727,7 +727,7 @@ const ProductionTracker = () => {
             {isWeekComplete() && (
               <button
                 onClick={resetWeek}
-                className="px-4 py-2 rounded-lg font-medium bg-purple-600 hover:bg-purple-700 text-white transition-colors ml-2"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg font-medium bg-purple-600 hover:bg-purple-700 text-white transition-colors ml-2"
               >
                 🎉 Start New Week
               </button>
@@ -737,8 +737,8 @@ const ProductionTracker = () => {
 
         {/* Date Selection */}
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-3">Select Working Day</h3>
-          <div className="flex flex-wrap gap-2">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-3">Select Working Day</h3>
+          <div className="flex flex-wrap gap-1 sm:gap-2">
             {getWorkingDays().map((date) => {
               const isSelected = selectedDate === date;
               const hasData = allDailyData[date];
@@ -754,7 +754,7 @@ const ProductionTracker = () => {
                       setTimeout(() => setIsSwitchingDate(false), 100);
                     }
                   }}
-                  className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                  className={`px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg border-2 transition-all ${
                     isSelected
                       ? 'bg-blue-600 text-white border-blue-600'
                       : hasData || isToday
@@ -764,14 +764,14 @@ const ProductionTracker = () => {
                     hasData ? 'font-semibold' : ''
                   } ${allDailyData[date]?.isFinished ? 'border-green-500 bg-green-50' : ''}`}
                 >
-                  <div className="text-sm">
+                  <div className="text-xs sm:text-sm">
                     {formatDateForDisplay(date)}
                   </div>
                   {hasData ? (
                     <div className="text-xs mt-1">
                       {allDailyData[date].completedJobs.length} jobs
                       {allDailyData[date].isFinished && (
-                        <span className="text-green-600 font-bold"> ✓ Finished</span>
+                        <span className="text-green-600 font-bold"> ✓</span>
                       )}
                     </div>
                   ) : (
@@ -843,43 +843,43 @@ const ProductionTracker = () => {
         )}
         
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6">
+          <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
             <div className="flex items-center">
-              <Target className="h-8 w-8 text-blue-600 mr-3" />
+              <Target className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-2 sm:mr-3" />
               <div>
-                <p className="text-sm text-blue-600">Target</p>
-                <p className="text-xl font-bold text-blue-800">{TARGET_MINUTES} min</p>
+                <p className="text-xs sm:text-sm text-blue-600">Target</p>
+                <p className="text-lg sm:text-xl font-bold text-blue-800">{TARGET_MINUTES} min</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-green-50 p-4 rounded-lg">
+          <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
             <div className="flex items-center">
-              <CheckCircle className="h-8 w-8 text-green-600 mr-3" />
+              <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mr-2 sm:mr-3" />
               <div>
-                <p className="text-sm text-green-600">Completed</p>
-                <p className="text-xl font-bold text-green-800">{completedMinutes.toFixed(1)} min</p>
+                <p className="text-xs sm:text-sm text-green-600">Completed</p>
+                <p className="text-lg sm:text-xl font-bold text-green-800">{completedMinutes.toFixed(1)} min</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-yellow-50 p-4 rounded-lg">
+          <div className="bg-yellow-50 p-3 sm:p-4 rounded-lg">
             <div className="flex items-center">
-              <AlertCircle className="h-8 w-8 text-yellow-600 mr-3" />
+              <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 mr-2 sm:mr-3" />
               <div>
-                <p className="text-sm text-yellow-600">Remaining</p>
-                <p className="text-xl font-bold text-yellow-800">{remainingMinutes.toFixed(1)} min</p>
+                <p className="text-xs sm:text-sm text-yellow-600">Remaining</p>
+                <p className="text-lg sm:text-xl font-bold text-yellow-800">{remainingMinutes.toFixed(1)} min</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-purple-50 p-4 rounded-lg">
+          <div className="bg-purple-50 p-3 sm:p-4 rounded-lg">
             <div className="flex items-center">
-              <Clock className="h-8 w-8 text-purple-600 mr-3" />
+              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 mr-2 sm:mr-3" />
               <div>
-                <p className="text-sm text-purple-600">Progress</p>
-                <p className="text-xl font-bold text-purple-800">{completedPercentage.toFixed(1)}%</p>
+                <p className="text-xs sm:text-sm text-purple-600">Progress</p>
+                <p className="text-lg sm:text-xl font-bold text-purple-800">{completedPercentage.toFixed(1)}%</p>
               </div>
             </div>
           </div>
@@ -887,12 +887,12 @@ const ProductionTracker = () => {
 
         {/* Loss Time Alert */}
         {lossTimeTotal > 0 && (
-          <div className="bg-red-50 p-4 rounded-lg mb-4 border border-red-200">
+          <div className="bg-red-50 p-3 sm:p-4 rounded-lg mb-4 border border-red-200">
             <div className="flex items-center">
-              <StopCircle className="h-8 w-8 text-red-600 mr-3" />
+              <StopCircle className="h-6 w-6 sm:h-8 sm:w-8 text-red-600 mr-2 sm:mr-3" />
               <div>
-                <p className="text-sm text-red-600">Loss Time Today</p>
-                <p className="text-xl font-bold text-red-800">{lossTimeTotal} min</p>
+                <p className="text-xs sm:text-sm text-red-600">Loss Time Today</p>
+                <p className="text-lg sm:text-xl font-bold text-red-800">{lossTimeTotal} min</p>
                 <p className="text-xs text-red-500">Adjusted Target: {adjustedTarget} minutes (was {TARGET_MINUTES})</p>
               </div>
             </div>
@@ -902,16 +902,16 @@ const ProductionTracker = () => {
         {/* Progress Bar */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">Daily Progress</span>
+            <span className="text-xs sm:text-sm font-medium text-gray-700">Daily Progress</span>
             {allDailyData[selectedDate]?.isFinished && (
-              <span className="text-sm font-medium text-green-600 flex items-center">
+              <span className="text-xs sm:text-sm font-medium text-green-600 flex items-center">
                 ✓ Work Day Finished at {allDailyData[selectedDate].finishTime}
               </span>
             )}
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3">
+          <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3">
             <div 
-              className={`h-3 rounded-full transition-all duration-300 ${
+              className={`h-2 sm:h-3 rounded-full transition-all duration-300 ${
                 allDailyData[selectedDate]?.isFinished ? 'bg-green-600' : 'bg-blue-600'
               }`}
               style={{ width: `${completedPercentage}%` }}
@@ -920,23 +920,23 @@ const ProductionTracker = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Input Form */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Log Completed Work</h2>
+        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4">Log Completed Work</h2>
           
           <div className="space-y-4">
             {/* Search Mode Toggle */}
-            <div className="flex space-x-4 mb-4">
+            <div className="flex space-x-2 sm:space-x-4 mb-4">
               <button
                 onClick={() => {setSearchMode('dropdown'); setSearchInput(''); setSelectedItem('');}}
-                className={`px-4 py-2 rounded-lg ${searchMode === 'dropdown' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                className={`px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg ${searchMode === 'dropdown' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
               >
                 📋 Dropdown
               </button>
               <button
                 onClick={() => {setSearchMode('search'); setSelectedItem(''); setSearchInput('');}}
-                className={`px-4 py-2 rounded-lg ${searchMode === 'search' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                className={`px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg ${searchMode === 'search' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
               >
                 🔍 Quick Search
               </button>
@@ -1002,7 +1002,7 @@ const ProductionTracker = () => {
             <button
               onClick={handleSubmit}
               disabled={(!selectedItem && !getCurrentItem()) || !completedQuantity}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-blue-600 text-white py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               Log Completion
             </button>
@@ -1090,8 +1090,8 @@ const ProductionTracker = () => {
         </div>
 
         {/* Progress Chart */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Progress Status</h2>
+        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4">Progress Status</h2>
           
           <div className="h-64 relative">
             {isTargetReached && (
@@ -1136,13 +1136,13 @@ const ProductionTracker = () => {
           </div>
           
           <div className="mt-4 text-center">
-            <p className="text-lg font-semibold text-gray-700">
+            <p className="text-base sm:text-lg font-semibold text-gray-700">
               {completedMinutes.toFixed(1)} / {adjustedTarget} minutes
-              {lossTimeTotal > 0 && <span className="text-sm text-red-600"> (Target reduced by {lossTimeTotal} min)</span>}
+              {lossTimeTotal > 0 && <span className="text-xs sm:text-sm text-red-600"> (Target reduced by {lossTimeTotal} min)</span>}
             </p>
-            <p className="text-sm text-gray-500">{completedJobs.length} tasks completed</p>
+            <p className="text-xs sm:text-sm text-gray-500">{completedJobs.length} tasks completed</p>
             {lossTimeTotal > 0 && (
-              <p className="text-sm text-red-600 font-medium">{lossTimeTotal} minutes lost time</p>
+              <p className="text-xs sm:text-sm text-red-600 font-medium">{lossTimeTotal} minutes lost time</p>
             )}
           </div>
         </div>
