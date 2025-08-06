@@ -20,6 +20,30 @@ import {
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
+// Helper function to remove undefined values from objects
+const removeUndefinedValues = (obj: any): any => {
+  const cleaned: any = {};
+  for (const key in obj) {
+    if (obj[key] !== undefined) {
+      if (Array.isArray(obj[key])) {
+        // For arrays, clean each item
+        cleaned[key] = obj[key].map((item: any) => 
+          typeof item === 'object' && item !== null 
+            ? removeUndefinedValues(item) 
+            : item
+        ).filter((item: any) => item !== undefined);
+      } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+        // For objects, recursively clean
+        cleaned[key] = removeUndefinedValues(obj[key]);
+      } else {
+        // For primitive values, just copy if not undefined
+        cleaned[key] = obj[key];
+      }
+    }
+  }
+  return cleaned;
+};
+
 // TypeScript interfaces
 interface ProductionItem {
   itemCode: string;
@@ -553,30 +577,6 @@ const ProductionTracker = () => {
   ];
 
   const TARGET_MINUTES = 525;
-
-  // Helper function to remove undefined values from objects
-  const removeUndefinedValues = (obj: any): any => {
-    const cleaned: any = {};
-    for (const key in obj) {
-      if (obj[key] !== undefined) {
-        if (Array.isArray(obj[key])) {
-          // For arrays, clean each item
-          cleaned[key] = obj[key].map((item: any) => 
-            typeof item === 'object' && item !== null 
-              ? removeUndefinedValues(item) 
-              : item
-          ).filter((item: any) => item !== undefined);
-        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-          // For objects, recursively clean
-          cleaned[key] = removeUndefinedValues(obj[key]);
-        } else {
-          // For primitive values, just copy if not undefined
-          cleaned[key] = obj[key];
-        }
-      }
-    }
-    return cleaned;
-  };
 
   // Time and access control functions
   const isWithinWorkingHours = (date: Date): boolean => {
