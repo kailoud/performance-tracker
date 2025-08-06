@@ -1690,17 +1690,22 @@ const ProductionTracker = () => {
       await updateUserBlockStatus(userId, isBlocked);
       // Refresh users list
       await loadAllUsers();
+      alert(`✅ User ${isBlocked ? 'blocked' : 'unblocked'} successfully`);
     } catch (error) {
       console.error('Error updating user block status:', error);
+      alert(`❌ Error updating user status: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const handleResetUserData = async (userId: string, date: string) => {
     try {
       await resetUserDailyData(userId, date);
-      alert(`Data reset for user on ${date}`);
+      alert(`✅ Data successfully reset for user on ${date}`);
+      // Refresh the users list to reflect any changes
+      await loadAllUsers();
     } catch (error) {
       console.error('Error resetting user data:', error);
+      alert(`❌ Error resetting user data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -1719,11 +1724,11 @@ const ProductionTracker = () => {
         await deleteUser(userId);
         // Refresh the users list
         await loadAllUsers();
-        window.alert(`User "${userName}" has been deleted successfully.`);
+        window.alert(`✅ User "${userName}" has been deleted successfully.`);
       }
     } catch (error) {
       console.error('Error deleting user:', error);
-      window.alert('Error deleting user. Please try again.');
+      window.alert(`❌ Error deleting user: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -3739,12 +3744,26 @@ const ProductionTracker = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-semibold text-gray-800">User Management</h3>
-                    <button
-                      onClick={loadAllUsers}
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm"
-                    >
-                      Refresh
-                    </button>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => {
+                          const today = new Date().toISOString().split('T')[0];
+                          if (window.confirm(`🔄 Reset ALL users' data for today (${today})?\n\nThis will affect ${allUsers.length} users.`)) {
+                            allUsers.forEach(user => handleResetUserData(user.uid, today));
+                          }
+                        }}
+                        className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg text-sm"
+                        title="Reset today's data for all users"
+                      >
+                        🔄 Reset All Today
+                      </button>
+                      <button
+                        onClick={loadAllUsers}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm"
+                      >
+                        🔄 Refresh
+                      </button>
+                    </div>
                   </div>
                   
                   <div className="overflow-x-auto border border-gray-200 rounded-lg">
@@ -3780,46 +3799,65 @@ const ProductionTracker = () => {
                               </span>
                             </td>
                             <td className="px-4 py-3">
-                              <div className="flex space-x-2">
+                              <div className="flex flex-wrap gap-1">
                                 <button
                                   onClick={() => handleBlockUser(user.uid, !user.isBlocked)}
-                                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                                     user.isBlocked
                                       ? 'bg-green-600 hover:bg-green-700 text-white'
                                       : 'bg-red-600 hover:bg-red-700 text-white'
                                   }`}
                                 >
-                                  {user.isBlocked ? 'Unblock' : 'Block'}
+                                  {user.isBlocked ? '✅ Unblock' : '🚫 Block'}
                                 </button>
                                 <button
                                   onClick={() => {
                                     const today = new Date().toISOString().split('T')[0];
-                                    if (window.confirm(`Reset ${user.name}'s data for today (${today})?`)) {
+                                    if (window.confirm(`🔄 Reset ${user.name}'s data for today (${today})?`)) {
                                       handleResetUserData(user.uid, today);
                                     }
                                   }}
-                                  className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-xs font-medium transition-colors"
+                                  className="px-2 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-xs font-medium transition-colors"
+                                  title="Reset today's data for this user"
                                 >
-                                  Reset Today
+                                  🔄 Today
                                 </button>
                                 <button
                                   onClick={() => {
-                                    const date = window.prompt('Enter date (YYYY-MM-DD) to reset:');
+                                    const date = window.prompt('📅 Enter date (YYYY-MM-DD) to reset:');
                                     if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-                                      if (window.confirm(`Reset ${user.name}'s data for ${date}?`)) {
+                                      if (window.confirm(`🔄 Reset ${user.name}'s data for ${date}?`)) {
                                         handleResetUserData(user.uid, date);
                                       }
                                     } else if (date) {
-                                      window.alert('Please enter a valid date in YYYY-MM-DD format');
+                                      window.alert('❌ Please enter a valid date in YYYY-MM-DD format');
                                     }
                                   }}
-                                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
+                                  className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
+                                  title="Reset data for a specific date"
                                 >
-                                  Reset Date
+                                  📅 Date
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const dates = ['Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+                                    const thisWeek = dates.map((_, i) => {
+                                      const d = new Date();
+                                      const monday = new Date(d.setDate(d.getDate() - d.getDay() + 1));
+                                      return new Date(monday.getTime() + i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                                    });
+                                    if (window.confirm(`🗓️ Reset ${user.name}'s data for the entire current week?\n\nDates: ${thisWeek.join(', ')}`)) {
+                                      thisWeek.forEach(date => handleResetUserData(user.uid, date));
+                                    }
+                                  }}
+                                  className="px-2 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded text-xs font-medium transition-colors"
+                                  title="Reset all data for current week"
+                                >
+                                  🗓️ Week
                                 </button>
                                 <button
                                   onClick={() => handleDeleteUser(user.uid, user.name)}
-                                  className="px-3 py-1 bg-red-800 hover:bg-red-900 text-white rounded text-xs font-medium transition-colors"
+                                  className="px-2 py-1 bg-red-800 hover:bg-red-900 text-white rounded text-xs font-medium transition-colors"
                                   title="Delete user permanently"
                                 >
                                   🗑️ Delete
