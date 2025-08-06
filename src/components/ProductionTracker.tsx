@@ -2498,30 +2498,29 @@ const ProductionTracker = () => {
         {/* Mobile Header */}
         <div className="sm:hidden">
           {/* Top Bar */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <div className="flex items-center space-x-3">
+          <div className="px-4 py-3 border-b border-gray-100">
+            {/* Centered Logo and Title */}
+            <div className="flex flex-col items-center text-center mb-2">
               <img 
                 src="/bike.png" 
                 alt="Logo" 
-                className="w-8 h-8 object-contain"
+                className="w-10 h-10 object-contain mb-1"
               />
-              <div>
-                <h1 className="text-lg font-semibold text-gray-900">Production Tracker</h1>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <span>{userName || userEmail.split('@')[0]}</span>
-                  {isAdmin && (
-                    <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">
-                      Admin
-                    </span>
-                  )}
-                </div>
+              <h1 className="text-lg font-semibold text-gray-900">Production Tracker</h1>
+              <div className="flex items-center space-x-2 text-sm text-gray-600 mt-0.5">
+                <span>{userName || userEmail.split('@')[0]}</span>
+                {isAdmin && (
+                  <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">
+                    Admin
+                  </span>
+                )}
               </div>
             </div>
             
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Button - Top Right */}
             <button
               onClick={() => setShowQRModal(true)}
-              className="p-2 rounded-lg bg-gray-50 text-gray-600"
+              className="absolute top-3 right-4 p-2 rounded-lg bg-gray-50 text-gray-600"
             >
               <QrCode className="h-5 w-5" />
             </button>
@@ -2600,53 +2599,130 @@ const ProductionTracker = () => {
           </div>
         </div>
 
-        {/* Compact Working Days - Mobile First */}
+        {/* Compact Working Days with Calendar - Mobile First */}
         <div className="bg-white">
-          {/* Mobile Compact Days */}
+          {/* Mobile Compact Days with Calendar */}
           <div className="sm:hidden px-4 py-3 border-b border-gray-100">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-gray-700">Working Days</h3>
               <span className="text-xs text-gray-500">Tap to select</span>
             </div>
-            <div className="flex space-x-2 overflow-x-auto pb-1">
-              {getWorkingDays().map(date => {
-                const dayData = allDailyData[date];
-                const isSelected = selectedDate === date;
-                const canAccess = canAccessDate(date);
-                const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
-                const dayNumber = new Date(date).getDate();
-                
-                return (
-                  <button
-                    key={date}
-                    onClick={() => {
-                      if (date !== selectedDate && canAccess) {
-                        setSelectedDate(date);
-                      }
-                    }}
-                    disabled={!canAccess}
-                    className={`flex-shrink-0 flex flex-col items-center px-3 py-2 rounded-lg border transition-all ${
-                      isSelected
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                        : canAccess
-                        ? 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
-                        : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
-                    }`}
-                  >
-                    <span className="text-xs font-medium">{dayName}</span>
-                    <span className="text-lg font-semibold">{dayNumber}</span>
-                    {dayData && (
-                      <div className="flex items-center mt-0.5">
-                        {dayData.isFinished ? (
-                          <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-                        ) : dayData.completedJobs?.length > 0 ? (
-                          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-                        ) : null}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
+            
+            <div className="flex items-start justify-between space-x-4">
+              {/* Compact Working Days - 50% size */}
+              <div className="flex space-x-1.5 overflow-x-auto flex-1">
+                {getWorkingDays().map(date => {
+                  const dayData = allDailyData[date];
+                  const isSelected = selectedDate === date;
+                  const canAccess = canAccessDate(date);
+                  const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
+                  const dayNumber = new Date(date).getDate();
+                  const jobCount = dayData?.completedJobs?.length || 0;
+                  
+                  return (
+                    <button
+                      key={date}
+                      onClick={() => {
+                        if (date !== selectedDate && canAccess) {
+                          setSelectedDate(date);
+                        }
+                      }}
+                      disabled={!canAccess}
+                      className={`flex-shrink-0 flex flex-col items-center px-2 py-1.5 rounded-md border transition-all text-xs ${
+                        isSelected
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                          : canAccess
+                          ? 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                          : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                      }`}
+                    >
+                      <span className="font-medium text-xs">{dayName}</span>
+                      <span className="font-semibold text-sm">{dayNumber}</span>
+                      {jobCount > 0 && (
+                        <span className={`text-xs mt-0.5 px-1 py-0.5 rounded-full ${
+                          isSelected ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {jobCount}
+                        </span>
+                      )}
+                      {dayData?.isFinished && (
+                        <div className={`w-1 h-1 rounded-full mt-0.5 ${
+                          isSelected ? 'bg-green-300' : 'bg-green-500'
+                        }`}></div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {/* Professional Mini Calendar */}
+              <div className="bg-gray-50 rounded-lg p-2 w-24">
+                <div className="text-center mb-1">
+                  <div className="text-xs font-medium text-gray-600">
+                    {new Date(selectedDate || new Date()).toLocaleDateString('en-US', { month: 'short' })}
+                  </div>
+                  <div className="text-lg font-bold text-gray-900">
+                    {new Date(selectedDate || new Date()).getFullYear()}
+                  </div>
+                </div>
+                <div className="grid grid-cols-7 gap-0.5 text-xs">
+                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                    <div key={i} className="text-center text-gray-400 font-medium py-0.5">
+                      {day}
+                    </div>
+                  ))}
+                  {(() => {
+                    const currentDate = new Date(selectedDate || new Date());
+                    const year = currentDate.getFullYear();
+                    const month = currentDate.getMonth();
+                    const firstDay = new Date(year, month, 1).getDay();
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+                    const today = new Date().getDate();
+                    const isCurrentMonth = new Date().getMonth() === month && new Date().getFullYear() === year;
+                    const selectedDay = currentDate.getDate();
+                    
+                    const days = [];
+                    
+                    // Empty cells for days before month starts
+                    for (let i = 0; i < firstDay; i++) {
+                      days.push(<div key={`empty-${i}`} className="h-4"></div>);
+                    }
+                    
+                    // Days of the month
+                    for (let day = 1; day <= daysInMonth; day++) {
+                      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                      const isWorkingDay = getWorkingDays().includes(dateStr);
+                      const isToday = isCurrentMonth && day === today;
+                      const isSelected = day === selectedDay;
+                      
+                      days.push(
+                        <button
+                          key={day}
+                          onClick={() => {
+                            if (isWorkingDay) {
+                              setSelectedDate(dateStr);
+                            }
+                          }}
+                          className={`h-4 w-4 text-xs flex items-center justify-center rounded-sm transition-colors ${
+                            isSelected
+                              ? 'bg-blue-600 text-white'
+                              : isWorkingDay
+                              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                              : isToday
+                              ? 'bg-gray-200 text-gray-700'
+                              : 'text-gray-400'
+                          }`}
+                          disabled={!isWorkingDay}
+                        >
+                          {day}
+                        </button>
+                      );
+                    }
+                    
+                    return days;
+                  })()}
+                </div>
+              </div>
             </div>
           </div>
 
