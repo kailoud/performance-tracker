@@ -3721,7 +3721,6 @@ const ProductionTracker = () => {
                       // Monday(1) to Thursday(4) are working days
                       const isWorkingDay = dayOfWeek >= 1 && dayOfWeek <= 4;
                       const hasData = allDailyData[dateString];
-                      const isAccessible = canAccessDate(dateString);
                       const isSelected = selectedHistoryDate === dateString;
                       const isToday = isCurrentMonth && todayDate === day;
                       
