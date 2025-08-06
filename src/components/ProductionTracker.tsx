@@ -350,8 +350,8 @@ const ProductionTracker = () => {
     if ('Notification' in window && notificationPermission === 'granted') {
       new Notification(title, {
         body: body,
-        icon: '/bike.png', // Use the app icon
-        badge: '/bike.png',
+        icon: '/bike1.png', // Use the app icon
+        badge: '/bike1.png',
         tag: 'timer-notification'
       });
     }
@@ -2141,7 +2141,7 @@ const ProductionTracker = () => {
           <div className="text-center mb-6">
             <div className="mb-4">
               <img 
-                src="/bike.png" 
+                src="/bike1.png" 
                 alt="Folding Bike Logo" 
                 className="mx-auto w-16 h-16 sm:w-20 sm:h-20 object-contain"
               />
@@ -2375,7 +2375,7 @@ const ProductionTracker = () => {
             <div className="flex items-center space-x-4">
               {/* Logo moved to the side */}
               <img 
-                src="/bike.png" 
+                src="/bike1.png" 
                 alt="Company Logo" 
                 className="w-8 h-8 object-contain"
               />
@@ -2505,7 +2505,7 @@ const ProductionTracker = () => {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-3">
                 <img 
-                  src="/bike.png" 
+                  src="/bike1.png" 
                   alt="Logo" 
                   className="w-8 h-8 object-contain"
                 />
