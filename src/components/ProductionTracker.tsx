@@ -94,7 +94,6 @@ const ProductionTracker = () => {
   // Date selection state
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [allDailyData, setAllDailyData] = useState<Record<string, DailyData>>({});
-  const [isSwitchingDate, setIsSwitchingDate] = useState(false);
   
   // Time and access control state
   const [isWithinWorkingHoursState, setIsWithinWorkingHoursState] = useState(false);
@@ -211,7 +210,6 @@ const ProductionTracker = () => {
   // Data saving state
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [saveTimeoutId, setSaveTimeoutId] = useState<NodeJS.Timeout | null>(null);
   
   // Data loading state to prevent percentage fluctuation on refresh
   const [isDataLoading, setIsDataLoading] = useState(false);
@@ -408,31 +406,7 @@ const ProductionTracker = () => {
     const updatedJobs = [...completedJobs, newJob];
     setCompletedJobs(updatedJobs);
 
-    // Save to Firebase
-    if (userId && selectedDate) {
-      const dailyData: any = {
-        date: selectedDate,
-        completedJobs: updatedJobs,
-        lossTimeEntries,
-        isFinished: allDailyData[selectedDate]?.isFinished || false
-      };
-      
-      // Only add finishTime if it exists (avoid undefined values)
-      const existingFinishTime = allDailyData[selectedDate]?.finishTime;
-      if (existingFinishTime) {
-        dailyData.finishTime = existingFinishTime;
-      }
-      
-      const cleanedData = removeUndefinedValues(dailyData);
-      saveDailyData(userId, selectedDate, cleanedData).then(() => {
-        setAllDailyData(prev => ({
-          ...prev,
-          [selectedDate]: dailyData
-        }));
-      }).catch(error => {
-        console.error('Error completing job:', error);
-      });
-    }
+    // Update local state only - user will manually save later
 
     // Clear timer state
     setTimerState({
@@ -804,61 +778,58 @@ const ProductionTracker = () => {
     }
   }, [selectedDate, allDailyData, isDataLoading]);
 
-  // Save data when it changes (with debouncing)
-  React.useEffect(() => {
-    if (selectedDate && !isSwitchingDate && !isDataLoading && userId && (completedJobs.length > 0 || lossTimeEntries.length > 0)) {
-      // Clear any existing timeout
-      if (saveTimeoutId) {
-        clearTimeout(saveTimeoutId);
+  // Manual save function
+  const handleManualSave = async () => {
+    if (!selectedDate || !userId) return;
+    
+    try {
+      setIsSaving(true);
+      
+      // Update local state
+      setAllDailyData(prev => {
+        const currentData = prev[selectedDate];
+        const dailyData: any = {
+          date: selectedDate,
+          completedJobs,
+          lossTimeEntries,
+          isFinished: currentData?.isFinished || false
+        };
+
+        // Only add finishTime if it exists (avoid undefined values)
+        if (currentData?.finishTime) {
+          dailyData.finishTime = currentData.finishTime;
+        }
+
+        return {
+          ...prev,
+          [selectedDate]: dailyData
+        };
+      });
+
+      // Save to Firebase
+      const currentData = allDailyData[selectedDate];
+      const dailyData: any = {
+        date: selectedDate,
+        completedJobs,
+        lossTimeEntries,
+        isFinished: currentData?.isFinished || false
+      };
+
+      if (currentData?.finishTime) {
+        dailyData.finishTime = currentData.finishTime;
       }
 
-      // Debounce the save operation
-      const timeoutId = setTimeout(() => {
-        // Create new data structure without depending on allDailyData inside effect
-        setAllDailyData(prev => {
-          const currentData = prev[selectedDate];
-          const dailyData: any = {
-            date: selectedDate,
-            completedJobs,
-            lossTimeEntries,
-            isFinished: currentData?.isFinished || false
-          };
-
-          // Only add finishTime if it exists (avoid undefined values)
-          if (currentData?.finishTime) {
-            dailyData.finishTime = currentData.finishTime;
-          }
-
-          // Save to Firebase automatically with status indicator
-          setIsSaving(true);
-          const cleanedData = removeUndefinedValues(dailyData);
-          saveDailyData(userId, selectedDate, cleanedData)
-            .then(() => {
-              setLastSaved(new Date());
-              setIsSaving(false);
-            })
-            .catch(error => {
-              console.error('Error auto-saving data:', error);
-              setIsSaving(false);
-            });
-
-          return {
-            ...prev,
-            [selectedDate]: dailyData
-          };
-        });
-      }, 1000); // 1 second delay
-
-      setSaveTimeoutId(timeoutId);
-
-      // Cleanup function
-      return () => {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
-      };
+      const cleanedData = removeUndefinedValues(dailyData);
+      await saveDailyData(userId, selectedDate, cleanedData);
+      
+      setLastSaved(new Date());
+      setIsSaving(false);
+    } catch (error) {
+      console.error('Error saving data:', error);
+      setIsSaving(false);
+      alert('Error saving data. Please try again.');
     }
-  }, [completedJobs, lossTimeEntries, selectedDate, isSwitchingDate, isDataLoading, userId, saveTimeoutId]);
+  };
 
   const completedMinutes = completedJobs.reduce((sum, job) => sum + job.actualMinutes, 0);
   const lossTimeTotal = lossTimeEntries.reduce((sum, entry) => sum + entry.minutes, 0);
@@ -904,20 +875,6 @@ const ProductionTracker = () => {
 
     const updatedJobs = [...completedJobs, newJob];
     setCompletedJobs(updatedJobs);
-
-    // Update local state immediately for better UX
-    setAllDailyData(prev => ({
-      ...prev,
-      [selectedDate]: {
-        date: selectedDate,
-        completedJobs: updatedJobs,
-        lossTimeEntries,
-        isFinished: prev[selectedDate]?.isFinished || false,
-        finishTime: prev[selectedDate]?.finishTime
-      }
-    }));
-
-    // The debounced auto-save will handle Firebase saving
 
     setSelectedItem('');
     setCompletedQuantity('');
@@ -1043,20 +1000,6 @@ const ProductionTracker = () => {
 
     const updatedLossEntries = [...lossTimeEntries, newLossEntry];
     setLossTimeEntries(updatedLossEntries);
-
-    // Update local state immediately for better UX
-    setAllDailyData(prev => ({
-      ...prev,
-      [selectedDate]: {
-        date: selectedDate,
-        completedJobs,
-        lossTimeEntries: updatedLossEntries,
-        isFinished: prev[selectedDate]?.isFinished || false,
-        finishTime: prev[selectedDate]?.finishTime
-      }
-    }));
-
-    // The debounced auto-save will handle Firebase saving
 
     setSelectedLossReason('');
     setLossTimeMinutes('');
@@ -1985,31 +1928,7 @@ const ProductionTracker = () => {
       const updatedJobs = [...completedJobs, newJob];
       setCompletedJobs(updatedJobs);
 
-      // Save to Firebase
-      if (userId && selectedDate) {
-        const dailyData: any = {
-          date: selectedDate,
-          completedJobs: updatedJobs,
-          lossTimeEntries,
-          isFinished: allDailyData[selectedDate]?.isFinished || false
-        };
-        
-        // Only add finishTime if it exists (avoid undefined values)
-        const existingFinishTime = allDailyData[selectedDate]?.finishTime;
-        if (existingFinishTime) {
-          dailyData.finishTime = existingFinishTime;
-        }
-        
-        const cleanedData = removeUndefinedValues(dailyData);
-        saveDailyData(userId, selectedDate, cleanedData).then(() => {
-          setAllDailyData(prev => ({
-            ...prev,
-            [selectedDate]: dailyData
-          }));
-        }).catch(error => {
-          console.error('Error saving job:', error);
-        });
-      }
+      // Update local state only - user will manually save later
     }
     
     // Reset timer state
@@ -2499,6 +2418,20 @@ const ProductionTracker = () => {
                   ✅ Saved {lastSaved.toLocaleTimeString()}
                 </div>
               )}
+              
+              {/* Manual Save Button */}
+              <button
+                onClick={handleManualSave}
+                disabled={isSaving || (!completedJobs.length && !lossTimeEntries.length)}
+                className={`text-xs px-2 py-1 rounded-lg font-medium transition-colors ${
+                  isSaving || (!completedJobs.length && !lossTimeEntries.length)
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+                title="Save progress to Firebase"
+              >
+                {isSaving ? '💾 Saving...' : '💾 Save'}
+              </button>
             </div>
             
             {/* QR Code Button */}
@@ -2583,9 +2516,7 @@ const ProductionTracker = () => {
                   key={date}
                   onClick={() => {
                     if (date !== selectedDate && canAccess) {
-                      setIsSwitchingDate(true);
                       setSelectedDate(date);
-                      setTimeout(() => setIsSwitchingDate(false), 100);
                     }
                   }}
                   disabled={!canAccess}
