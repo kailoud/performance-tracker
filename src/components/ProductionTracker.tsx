@@ -176,6 +176,10 @@ const ProductionTracker = () => {
   // QR Code modal state
   const [showQRModal, setShowQRModal] = useState(false);
   
+  // Network connectivity state
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [networkIssues, setNetworkIssues] = useState<string[]>([]);
+  
   // Search suggestions state
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredItems, setFilteredItems] = useState<ProductionItem[]>([]);
@@ -2040,6 +2044,61 @@ const ProductionTracker = () => {
     }
   }, [showAdminPanel, isAdmin, loadAllUsers]);
 
+  // Network connectivity monitoring
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      setNetworkIssues([]);
+    };
+    
+    const handleOffline = () => {
+      setIsOnline(false);
+      setNetworkIssues(['You are currently offline']);
+    };
+
+    // Test network connectivity and detect potential blocking
+    const testConnectivity = async () => {
+      if (!navigator.onLine) {
+        setIsOnline(false);
+        setNetworkIssues(['You are currently offline']);
+        return;
+      }
+
+      const issues: string[] = [];
+      
+      try {
+        // Test basic connectivity to a reliable service
+        const response = await fetch('https://httpbin.org/get', { 
+          method: 'GET',
+          mode: 'no-cors',
+          cache: 'no-cache'
+        });
+        // If we get here, basic connectivity works
+      } catch (error) {
+        issues.push('Network connectivity issues detected');
+      }
+
+      // Check if we're on a restricted network
+      const hostname = window.location.hostname;
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        issues.push('Running on localhost - share your IP address for external access');
+      }
+
+      setNetworkIssues(issues);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    // Initial connectivity test
+    testConnectivity();
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   // Progress data for pie chart
   const progressData = [
     { name: 'Productive Time', value: Math.min(completedMinutes, adjustedTarget), color: '#10b981' },
@@ -2262,6 +2321,37 @@ const ProductionTracker = () => {
           </div>
         </div>
       )}
+      {/* Offline Banner */}
+      {!isOnline && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <div className="flex items-center">
+            <AlertCircle className="h-5 w-5 text-red-600 mr-3" />
+            <div>
+              <h3 className="font-semibold text-red-800">You're currently offline</h3>
+              <p className="text-sm text-red-600 mt-1">
+                Your data will be saved locally and synced when you're back online.
+                Check your internet connection or try switching to mobile data.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Network Issues Banner */}
+      {networkIssues.length > 0 && isOnline && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <div className="flex items-center">
+            <AlertCircle className="h-5 w-5 text-yellow-600 mr-3" />
+            <div>
+              <h3 className="font-semibold text-yellow-800">Network connectivity issues detected</h3>
+              <p className="text-sm text-yellow-600 mt-1">
+                Some features may not work properly. Click the QR code button for troubleshooting tips.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white rounded-none sm:rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
@@ -2296,6 +2386,17 @@ const ProductionTracker = () => {
               <button onClick={handleLogout} className="text-xs sm:text-sm text-red-600 hover:text-red-800 underline">
                 Logout
               </button>
+              {/* Network Status Indicator */}
+              {networkIssues.length > 0 && (
+                <div className="text-xs text-yellow-600 mt-1">
+                  ⚠️ Network issues
+                </div>
+              )}
+              {!isOnline && (
+                <div className="text-xs text-red-600 mt-1">
+                  🔴 Offline
+                </div>
+              )}
             </div>
             
             {/* QR Code Button */}
@@ -3235,6 +3336,40 @@ const ProductionTracker = () => {
                   <li>3. Tap the notification that appears</li>
                   <li>4. Access the Production Tracker on your phone!</li>
                 </ol>
+              </div>
+              
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <h4 className="font-semibold text-yellow-800 mb-2">⚠️ WiFi Network Blocking the Site?</h4>
+                <div className="text-xs text-yellow-700 space-y-2">
+                  <p><strong>Quick fixes to try:</strong></p>
+                  <ul className="space-y-1 pl-4">
+                    <li>• Use your phone's <strong>mobile data</strong> instead of WiFi</li>
+                    <li>• Try accessing via <strong>HTTPS</strong>: {window.location.origin.replace('http:', 'https:')}</li>
+                    <li>• Create a mobile hotspot from your phone</li>
+                    <li>• Use a different WiFi network if available</li>
+                  </ul>
+                  
+                  <div className="mt-3 pt-2 border-t border-yellow-300">
+                    <p><strong>For IT/Admin teams:</strong></p>
+                    <ul className="space-y-1 pl-4">
+                      <li>• Whitelist domain: <code className="bg-yellow-100 px-1 rounded">{window.location.hostname}</code></li>
+                      <li>• Allow ports: 80 (HTTP), 443 (HTTPS), 3000 (dev)</li>
+                      <li>• Check firewall/content filter settings</li>
+                      <li>• Verify DNS resolution is working</li>
+                    </ul>
+                  </div>
+                  
+                  {networkIssues.length > 0 && (
+                    <div className="mt-3 pt-2 border-t border-yellow-300">
+                      <p><strong>Detected issues:</strong></p>
+                      <ul className="space-y-1 pl-4">
+                        {networkIssues.map((issue, index) => (
+                          <li key={index}>• {issue}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
