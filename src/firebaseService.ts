@@ -149,6 +149,7 @@ export const getDailyData = async (userId: string, date: string): Promise<DailyD
 
 export const getAllDailyData = async (userId: string): Promise<Record<string, DailyData>> => {
   try {
+    console.log(`Firebase: Getting all daily data for user ${userId}`);
     const q = query(
       collection(db, 'users', userId, 'dailyData'),
       orderBy('updatedAt', 'desc')
@@ -156,12 +157,18 @@ export const getAllDailyData = async (userId: string): Promise<Record<string, Da
     const querySnapshot: QuerySnapshot = await getDocs(q);
     const data: Record<string, DailyData> = {};
     
+    console.log(`Firebase: Found ${querySnapshot.size} documents for user ${userId}`);
+    
     querySnapshot.forEach((doc) => {
-      data[doc.id] = doc.data() as DailyData;
+      const docData = doc.data() as DailyData;
+      data[doc.id] = docData;
+      console.log(`Firebase: Document ${doc.id}:`, docData);
     });
     
+    console.log(`Firebase: Final data for user ${userId}:`, data);
     return data;
   } catch (error) {
+    console.error(`Firebase: Error getting data for user ${userId}:`, error);
     throw error;
   }
 };
@@ -256,7 +263,27 @@ export const updateUserBlockStatus = async (userId: string, isBlocked: boolean):
 export const resetUserDailyData = async (userId: string, date: string): Promise<void> => {
   try {
     console.log(`Firebase: Resetting daily data for user ${userId} on date ${date}`);
+    
+    // Check if we can access the user's data first
+    console.log('Firebase: Checking user access...');
+    const userRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userRef);
+    console.log('Firebase: User exists:', userDoc.exists());
+    if (userDoc.exists()) {
+      console.log('Firebase: User data:', userDoc.data());
+    }
+    
     const dailyDataRef = doc(db, 'users', userId, 'dailyData', date);
+    console.log('Firebase: Document path:', dailyDataRef.path);
+    
+    // Check if document already exists
+    console.log('Firebase: Checking if document exists...');
+    const existingDoc = await getDoc(dailyDataRef);
+    console.log('Firebase: Document exists:', existingDoc.exists());
+    if (existingDoc.exists()) {
+      console.log('Firebase: Existing document data:', existingDoc.data());
+    }
+    
     const resetData = {
       date,
       completedJobs: [],
@@ -265,10 +292,28 @@ export const resetUserDailyData = async (userId: string, date: string): Promise<
       updatedAt: serverTimestamp()
     };
     console.log('Firebase: Setting document with data:', resetData);
+    
     await setDoc(dailyDataRef, resetData);
     console.log(`Firebase: Successfully reset data for user ${userId} on date ${date}`);
+    
+    // Verify the write worked
+    console.log('Firebase: Verifying write...');
+    const verifyDoc = await getDoc(dailyDataRef);
+    console.log('Firebase: Document after write exists:', verifyDoc.exists());
+    if (verifyDoc.exists()) {
+      console.log('Firebase: Document after write data:', verifyDoc.data());
+    }
+    
   } catch (error) {
     console.error(`Firebase: Error resetting data for user ${userId} on date ${date}:`, error);
+    
+    // More detailed error logging
+    if (error instanceof Error) {
+      console.error('Firebase: Error name:', error.name);
+      console.error('Firebase: Error message:', error.message);
+      console.error('Firebase: Error code:', (error as any).code);
+    }
+    
     throw error;
   }
 };

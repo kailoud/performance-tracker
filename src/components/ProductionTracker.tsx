@@ -1652,15 +1652,53 @@ const ProductionTracker = () => {
 
   const handleResetUserData = async (userId: string, date: string) => {
     try {
+      console.log(`=== RESET OPERATION START ===`);
+      console.log(`Admin: ${userEmail}`);
+      console.log(`Target User ID: ${userId}`);
+      console.log(`Target Date: ${date}`);
+      console.log(`Is Admin: ${isAdmin}`);
+      console.log(`Admin Emails: ${JSON.stringify(['kailoud639@gmail.com'])}`);
+      
+      // Check if admin has permission
+      const adminEmails = ['kailoud639@gmail.com'];
+      if (!adminEmails.includes(userEmail)) {
+        throw new Error('Insufficient permissions: Not an admin');
+      }
+      
       console.log(`Admin attempting to reset data for user ${userId} on date ${date}`);
+      
+      // First, let's check if the user exists and has data for this date
+      console.log('Checking if user has data for this date...');
+      const existingData = await getAllDailyData(userId);
+      console.log('Existing user data:', existingData);
+      console.log(`Data for ${date}:`, existingData[date]);
+      
       await resetUserDailyData(userId, date);
       console.log(`Successfully reset data for user ${userId} on date ${date}`);
+      
+      // Verify the reset worked
+      console.log('Verifying reset...');
+      const verifyData = await getAllDailyData(userId);
+      console.log('Data after reset:', verifyData[date]);
+      
       alert(`✅ Data successfully reset for user on ${date}`);
+      
       // Refresh the users list to reflect any changes
+      console.log('Refreshing user list...');
       await loadAllUsers();
+      console.log(`=== RESET OPERATION COMPLETE ===`);
     } catch (error) {
+      console.error('=== RESET OPERATION FAILED ===');
       console.error('Error resetting user data:', error);
       console.error('Full error details:', error);
+      
+      // More detailed error information
+      if (error instanceof Error) {
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+      
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       alert(`❌ Error resetting user data: ${errorMessage}\n\nCheck the console for more details.`);
     }
@@ -1695,14 +1733,25 @@ const ProductionTracker = () => {
       setIsLoadingUserData(true);
       setSelectedUserForEdit(user);
       
+      console.log(`Admin: Loading data for user ${user.email} (${user.uid})`);
+      
       // Load user's daily data
       const userData = await getAllDailyData(user.uid);
+      console.log('Admin: Loaded user data:', userData);
+      console.log('Admin: Available dates:', Object.keys(userData));
+      
       setEditingUserData(userData as Record<string, DailyData>);
       
       // Set to today's date or first available date
       const today = new Date().toISOString().split('T')[0];
       const availableDates = Object.keys(userData);
-      setEditingSelectedDate(availableDates.includes(today) ? today : (availableDates[0] || today));
+      const selectedDate = availableDates.includes(today) ? today : (availableDates[0] || today);
+      
+      console.log(`Admin: Today's date: ${today}`);
+      console.log(`Admin: Selected date for viewing: ${selectedDate}`);
+      console.log(`Admin: Data for selected date:`, userData[selectedDate]);
+      
+      setEditingSelectedDate(selectedDate);
       
       setShowUserDataEditor(true);
     } catch (error) {
@@ -2520,9 +2569,13 @@ const ProductionTracker = () => {
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <span>{userName || userEmail.split('@')[0]}</span>
                     {isAdmin && (
-                      <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">
+                      <button
+                        onClick={() => setShowAdminPanel(!showAdminPanel)}
+                        className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200 transition-colors"
+                        title="Open Admin Panel"
+                      >
                         Admin
-                      </span>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -3958,12 +4011,12 @@ const ProductionTracker = () => {
         </div>
       )}
       
-      {/* Admin Panel Modal */}
+      {/* Admin Panel Modal - Mobile Friendly */}
       {showAdminPanel && isAdmin && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-2xl font-bold text-gray-800">👑 Admin Panel</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-4 sm:p-6 border-b">
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-800">👑 Admin Panel</h2>
               <button
                 onClick={() => setShowAdminPanel(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -3972,7 +4025,7 @@ const ProductionTracker = () => {
               </button>
             </div>
             
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {isLoadingUsers ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
@@ -4149,7 +4202,11 @@ const ProductionTracker = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
                     <select
                       value={editingSelectedDate}
-                      onChange={(e) => setEditingSelectedDate(e.target.value)}
+                      onChange={(e) => {
+                        console.log(`Admin: Date changed to ${e.target.value}`);
+                        console.log(`Admin: Data for new date:`, editingUserData[e.target.value]);
+                        setEditingSelectedDate(e.target.value);
+                      }}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     >
                       {Object.keys(editingUserData).map(date => (
