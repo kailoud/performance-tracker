@@ -382,13 +382,18 @@ const ProductionTracker = () => {
 
     // Save to Firebase
     if (userId && selectedDate) {
-      const dailyData = {
+      const dailyData: any = {
         date: selectedDate,
         completedJobs: updatedJobs,
         lossTimeEntries,
-        isFinished: allDailyData[selectedDate]?.isFinished || false,
-        finishTime: allDailyData[selectedDate]?.finishTime
+        isFinished: allDailyData[selectedDate]?.isFinished || false
       };
+      
+      // Only add finishTime if it exists (avoid undefined values)
+      const existingFinishTime = allDailyData[selectedDate]?.finishTime;
+      if (existingFinishTime) {
+        dailyData.finishTime = existingFinishTime;
+      }
       
       saveDailyData(userId, selectedDate, dailyData).then(() => {
         setAllDailyData(prev => ({
@@ -770,13 +775,18 @@ const ProductionTracker = () => {
   // Save data when it changes
   React.useEffect(() => {
     if (selectedDate && !isSwitchingDate && userId && (completedJobs.length > 0 || lossTimeEntries.length > 0)) {
-      const dailyData = {
+      const dailyData: any = {
         date: selectedDate,
         completedJobs,
         lossTimeEntries,
-        isFinished: allDailyData[selectedDate]?.isFinished || false,
-        finishTime: allDailyData[selectedDate]?.finishTime
+        isFinished: allDailyData[selectedDate]?.isFinished || false
       };
+
+      // Only add finishTime if it exists (avoid undefined values)
+      const existingFinishTime = allDailyData[selectedDate]?.finishTime;
+      if (existingFinishTime) {
+        dailyData.finishTime = existingFinishTime;
+      }
 
       // Update local state
       setAllDailyData(prev => ({
@@ -847,13 +857,19 @@ const ProductionTracker = () => {
     // Save to Firebase
     try {
       setIsSaving(true);
-      const dailyData = {
+      const dailyData: any = {
         date: selectedDate,
         completedJobs: updatedJobs,
         lossTimeEntries,
-        isFinished: allDailyData[selectedDate]?.isFinished || false,
-        finishTime: allDailyData[selectedDate]?.finishTime
+        isFinished: allDailyData[selectedDate]?.isFinished || false
       };
+      
+      // Only add finishTime if it exists (avoid undefined values)
+      const existingFinishTime = allDailyData[selectedDate]?.finishTime;
+      if (existingFinishTime) {
+        dailyData.finishTime = existingFinishTime;
+      }
+      
       await saveDailyData(userId, selectedDate, dailyData);
       
       // Update local state
@@ -997,13 +1013,19 @@ const ProductionTracker = () => {
     // Save to Firebase
     try {
       setIsSaving(true);
-      const dailyData = {
+      const dailyData: any = {
         date: selectedDate,
         completedJobs,
         lossTimeEntries: updatedLossEntries,
-        isFinished: allDailyData[selectedDate]?.isFinished || false,
-        finishTime: allDailyData[selectedDate]?.finishTime
+        isFinished: allDailyData[selectedDate]?.isFinished || false
       };
+      
+      // Only add finishTime if it exists (avoid undefined values)
+      const existingFinishTime = allDailyData[selectedDate]?.finishTime;
+      if (existingFinishTime) {
+        dailyData.finishTime = existingFinishTime;
+      }
+      
       await saveDailyData(userId, selectedDate, dailyData);
       
       // Update local state
