@@ -2391,99 +2391,115 @@ const ProductionTracker = () => {
             </div>
           </div>
           
-          <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3">
-            <div className="text-left sm:text-right">
-              <p className="text-xs sm:text-sm text-gray-500">{userEmail.split('@')[0]}@...</p>
-              <button onClick={handleLogout} className="text-xs sm:text-sm text-red-600 hover:text-red-800 underline">
-                Logout
-              </button>
-              {/* Network Status Indicator */}
-              {networkIssues.length > 0 && (
-                <div className="text-xs text-yellow-600 mt-1">
-                  ⚠️ Network issues
-                </div>
-              )}
-              {!isOnline && (
-                <div className="text-xs text-red-600 mt-1">
-                  🔴 Offline
-                </div>
-              )}
-              {/* Save Status Indicator */}
-              {isSaving ? (
-                <div className="text-xs text-blue-600 mt-1 animate-pulse">
-                  💾 Saving...
-                </div>
-              ) : lastSaved && (
-                <div className="text-xs text-green-600 mt-1 transition-opacity duration-300">
-                  ✅ Saved {lastSaved.toLocaleTimeString()}
-                </div>
-              )}
+          {/* Professional Header Layout */}
+          <div className="flex items-center justify-between">
+            {/* User Info Section */}
+            <div className="flex items-center space-x-4">
+              <div className="text-sm">
+                <span className="text-gray-600">Welcome back,</span>
+                <span className="font-medium text-gray-800 ml-1">{userName || userEmail.split('@')[0]}</span>
+              </div>
               
-              {/* Manual Save Button */}
+              {/* Status Indicators */}
+              <div className="flex items-center space-x-3">
+                {!isOnline && (
+                  <div className="flex items-center space-x-1 text-red-600">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <span className="text-xs">Offline</span>
+                  </div>
+                )}
+                
+                {networkIssues.length > 0 && (
+                  <div className="flex items-center space-x-1 text-yellow-600">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                    <span className="text-xs">Connection Issues</span>
+                  </div>
+                )}
+                
+                {/* Save Status */}
+                {isSaving ? (
+                  <div className="flex items-center space-x-1 text-blue-600">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs">Saving</span>
+                  </div>
+                ) : lastSaved && (
+                  <div className="flex items-center space-x-1 text-green-600">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-xs">Saved at {lastSaved.toLocaleTimeString()}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Action Buttons Section */}
+            <div className="flex items-center space-x-2">
+              {/* Save Button */}
               <button
                 onClick={handleManualSave}
                 disabled={isSaving || (!completedJobs.length && !lossTimeEntries.length)}
-                className={`text-xs px-2 py-1 rounded-lg font-medium transition-colors ${
+                className={`flex items-center space-x-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
                   isSaving || (!completedJobs.length && !lossTimeEntries.length)
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md'
                 }`}
                 title="Save progress to Firebase"
               >
-                {isSaving ? '💾 Saving...' : '💾 Save'}
+                <span>{isSaving ? 'Saving...' : 'Save Progress'}</span>
               </button>
+              
+              {/* Utility Buttons */}
+              <div className="flex items-center space-x-1 border-l pl-2">
+                <button
+                  onClick={() => setShowQRModal(true)}
+                  className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors"
+                  title="QR Code for Mobile"
+                >
+                  <QrCode className="h-4 w-4" />
+                </button>
+                
+                <button
+                  onClick={() => setShowCalendarModal(true)}
+                  className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors"
+                  title="View History"
+                >
+                  <Calendar className="h-4 w-4" />
+                </button>
+                
+                <button
+                  onClick={handleLogout}
+                  className="p-2 rounded-md bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+              
+              {/* Day Actions */}
+              <div className="flex items-center space-x-2 border-l pl-2">
+                {selectedDate && (
+                  <button
+                    onClick={finishWorkDay}
+                    disabled={allDailyData[selectedDate]?.isFinished || (!isWithinWorkingHoursState && !isAdmin)}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      allDailyData[selectedDate]?.isFinished || (!isWithinWorkingHoursState && !isAdmin)
+                        ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                        : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
+                    }`}
+                  >
+                    {allDailyData[selectedDate]?.isFinished ? 'Day Completed' : 'Finish Day'}
+                  </button>
+                )}
+                
+                {isWeekComplete() && (
+                  <button
+                    onClick={resetWeek}
+                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition-colors"
+                  >
+                    Start New Week
+                  </button>
+                )}
+              </div>
             </div>
-            
-            {/* QR Code Button */}
-            <button
-              onClick={() => setShowQRModal(true)}
-              className="p-1.5 rounded-lg bg-green-100 hover:bg-green-200 text-green-600 transition-colors"
-              title="Show QR Code for Mobile Access"
-            >
-              <QrCode className="h-4 w-4" />
-            </button>
-            
-            {/* Calendar Icon for Historical Data */}
-            <button
-              onClick={() => setShowCalendarModal(true)}
-              className="p-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors"
-              title="View Historical Data"
-            >
-              <Calendar className="h-4 w-4" />
-            </button>
-            
-            {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              className="p-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 transition-colors"
-              title="Logout"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
-            
-            {selectedDate && (
-              <button
-                onClick={finishWorkDay}
-                disabled={allDailyData[selectedDate]?.isFinished || (!isWithinWorkingHoursState && !isAdmin)}
-                className={`px-2 py-1 text-xs rounded-lg font-medium transition-colors ${
-                  allDailyData[selectedDate]?.isFinished || (!isWithinWorkingHoursState && !isAdmin)
-                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                    : 'bg-green-600 hover:bg-green-700 text-white'
-                }`}
-              >
-                {allDailyData[selectedDate]?.isFinished ? 'Finished' : 'Finish Day'}
-              </button>
-            )}
-            
-            {/* Week Reset Button - appears when all working days are finished */}
-            {isWeekComplete() && (
-              <button
-                onClick={resetWeek}
-                className="px-2 py-1 text-xs rounded-lg font-medium bg-purple-600 hover:bg-purple-700 text-white transition-colors"
-              >
-                🎉 New Week
-              </button>
-            )}
           </div>
         </div>
 
