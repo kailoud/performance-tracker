@@ -211,6 +211,7 @@ const ProductionTracker = () => {
   // Data saving state
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [saveTimeoutId, setSaveTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   const lossReasons = [
     'Waiting for Parts', 'Waiting Jobs', 'Cleaning', 'Maintenance', 
@@ -797,43 +798,59 @@ const ProductionTracker = () => {
     }
   }, [selectedDate, allDailyData]);
 
-  // Save data when it changes
+  // Save data when it changes (with debouncing)
   React.useEffect(() => {
     if (selectedDate && !isSwitchingDate && userId && (completedJobs.length > 0 || lossTimeEntries.length > 0)) {
-      const dailyData: any = {
-        date: selectedDate,
-        completedJobs,
-        lossTimeEntries,
-        isFinished: allDailyData[selectedDate]?.isFinished || false
-      };
-
-      // Only add finishTime if it exists (avoid undefined values)
-      const existingFinishTime = allDailyData[selectedDate]?.finishTime;
-      if (existingFinishTime) {
-        dailyData.finishTime = existingFinishTime;
+      // Clear any existing timeout
+      if (saveTimeoutId) {
+        clearTimeout(saveTimeoutId);
       }
 
-      // Update local state
-      setAllDailyData(prev => ({
-        ...prev,
-        [selectedDate]: dailyData
-      }));
+      // Debounce the save operation
+      const timeoutId = setTimeout(() => {
+        const dailyData: any = {
+          date: selectedDate,
+          completedJobs,
+          lossTimeEntries,
+          isFinished: allDailyData[selectedDate]?.isFinished || false
+        };
 
-      // Save to Firebase automatically with status indicator
-      setIsSaving(true);
-      const cleanedData = removeUndefinedValues(dailyData);
-      saveDailyData(userId, selectedDate, cleanedData)
-        .then(() => {
-          setLastSaved(new Date());
-          setIsSaving(false);
-        })
-        .catch(error => {
-          console.error('Error auto-saving data:', error);
-          setIsSaving(false);
-          // You could show a notification here if needed
-        });
+        // Only add finishTime if it exists (avoid undefined values)
+        const existingFinishTime = allDailyData[selectedDate]?.finishTime;
+        if (existingFinishTime) {
+          dailyData.finishTime = existingFinishTime;
+        }
+
+        // Update local state
+        setAllDailyData(prev => ({
+          ...prev,
+          [selectedDate]: dailyData
+        }));
+
+        // Save to Firebase automatically with status indicator
+        setIsSaving(true);
+        const cleanedData = removeUndefinedValues(dailyData);
+        saveDailyData(userId, selectedDate, cleanedData)
+          .then(() => {
+            setLastSaved(new Date());
+            setIsSaving(false);
+          })
+          .catch(error => {
+            console.error('Error auto-saving data:', error);
+            setIsSaving(false);
+          });
+      }, 1000); // 1 second delay
+
+      setSaveTimeoutId(timeoutId);
+
+      // Cleanup function
+      return () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      };
     }
-  }, [completedJobs, lossTimeEntries, selectedDate, isSwitchingDate, userId, allDailyData]);
+  }, [completedJobs, lossTimeEntries, selectedDate, isSwitchingDate, userId, saveTimeoutId]);
 
   const completedMinutes = completedJobs.reduce((sum, job) => sum + job.actualMinutes, 0);
   const lossTimeTotal = lossTimeEntries.reduce((sum, entry) => sum + entry.minutes, 0);
@@ -880,37 +897,19 @@ const ProductionTracker = () => {
     const updatedJobs = [...completedJobs, newJob];
     setCompletedJobs(updatedJobs);
 
-    // Save to Firebase
-    try {
-      setIsSaving(true);
-      const dailyData: any = {
+    // Update local state immediately for better UX
+    setAllDailyData(prev => ({
+      ...prev,
+      [selectedDate]: {
         date: selectedDate,
         completedJobs: updatedJobs,
         lossTimeEntries,
-        isFinished: allDailyData[selectedDate]?.isFinished || false
-      };
-      
-      // Only add finishTime if it exists (avoid undefined values)
-      const existingFinishTime = allDailyData[selectedDate]?.finishTime;
-      if (existingFinishTime) {
-        dailyData.finishTime = existingFinishTime;
+        isFinished: prev[selectedDate]?.isFinished || false,
+        finishTime: prev[selectedDate]?.finishTime
       }
-      
-      const cleanedData = removeUndefinedValues(dailyData);
-      await saveDailyData(userId, selectedDate, cleanedData);
-      
-      // Update local state
-      setAllDailyData(prev => ({
-        ...prev,
-        [selectedDate]: dailyData
-      }));
-      
-      setLastSaved(new Date());
-      setIsSaving(false);
-    } catch (error) {
-      console.error('Error saving job:', error);
-      setIsSaving(false);
-    }
+    }));
+
+    // The debounced auto-save will handle Firebase saving
 
     setSelectedItem('');
     setCompletedQuantity('');
@@ -1037,37 +1036,19 @@ const ProductionTracker = () => {
     const updatedLossEntries = [...lossTimeEntries, newLossEntry];
     setLossTimeEntries(updatedLossEntries);
 
-    // Save to Firebase
-    try {
-      setIsSaving(true);
-      const dailyData: any = {
+    // Update local state immediately for better UX
+    setAllDailyData(prev => ({
+      ...prev,
+      [selectedDate]: {
         date: selectedDate,
         completedJobs,
         lossTimeEntries: updatedLossEntries,
-        isFinished: allDailyData[selectedDate]?.isFinished || false
-      };
-      
-      // Only add finishTime if it exists (avoid undefined values)
-      const existingFinishTime = allDailyData[selectedDate]?.finishTime;
-      if (existingFinishTime) {
-        dailyData.finishTime = existingFinishTime;
+        isFinished: prev[selectedDate]?.isFinished || false,
+        finishTime: prev[selectedDate]?.finishTime
       }
-      
-      const cleanedData = removeUndefinedValues(dailyData);
-      await saveDailyData(userId, selectedDate, cleanedData);
-      
-      // Update local state
-      setAllDailyData(prev => ({
-        ...prev,
-        [selectedDate]: dailyData
-      }));
-      
-      setLastSaved(new Date());
-      setIsSaving(false);
-    } catch (error) {
-      console.error('Error saving loss time:', error);
-      setIsSaving(false);
-    }
+    }));
+
+    // The debounced auto-save will handle Firebase saving
 
     setSelectedLossReason('');
     setLossTimeMinutes('');
@@ -2496,13 +2477,12 @@ const ProductionTracker = () => {
                 </div>
               )}
               {/* Save Status Indicator */}
-              {isSaving && (
-                <div className="text-xs text-blue-600 mt-1">
+              {isSaving ? (
+                <div className="text-xs text-blue-600 mt-1 animate-pulse">
                   💾 Saving...
                 </div>
-              )}
-              {lastSaved && !isSaving && (
-                <div className="text-xs text-green-600 mt-1">
+              ) : lastSaved && (
+                <div className="text-xs text-green-600 mt-1 transition-opacity duration-300">
                   ✅ Saved {lastSaved.toLocaleTimeString()}
                 </div>
               )}
