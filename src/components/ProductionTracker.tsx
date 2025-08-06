@@ -2369,31 +2369,31 @@ const ProductionTracker = () => {
         {/* Desktop Header */}
         <div className="hidden sm:block px-6 py-4">
           <div className="flex items-center justify-between">
-            {/* Left Side - Branding & User Info */}
-            <div className="flex items-center space-x-6">
-              {/* Logo & Title */}
-              <div className="flex items-center space-x-3">
-                <img 
-                  src="/bike.png" 
-                  alt="Company Logo" 
-                  className="w-10 h-10 object-contain"
-                />
-                <div>
-                  <h1 className="text-xl font-semibold text-gray-900">Production Tracker</h1>
-                  <div className="flex items-center space-x-3 mt-0.5">
-                    <span className="text-sm text-gray-600">
-                      {userName || userEmail.split('@')[0]}
-                    </span>
-                    {isAdmin && (
-                      <button
-                        onClick={() => setShowAdminPanel(!showAdminPanel)}
-                        className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors"
-                        title="Admin Panel"
-                      >
-                        Admin
-                      </button>
-                    )}
-                  </div>
+            {/* Left Side - Logo positioned to the side */}
+            <div className="flex items-center space-x-4">
+              {/* Logo moved to the side */}
+              <img 
+                src="/bike.png" 
+                alt="Company Logo" 
+                className="w-8 h-8 object-contain"
+              />
+              
+              {/* Title & User Info */}
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">Production Tracker</h1>
+                <div className="flex items-center space-x-3 mt-0.5">
+                  <span className="text-sm text-gray-600">
+                    {userName || userEmail.split('@')[0]}
+                  </span>
+                  {isAdmin && (
+                    <button
+                      onClick={() => setShowAdminPanel(!showAdminPanel)}
+                      className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors"
+                      title="Admin Panel"
+                    >
+                      Admin
+                    </button>
+                  )}
                 </div>
               </div>
               
@@ -2499,31 +2499,35 @@ const ProductionTracker = () => {
         <div className="sm:hidden">
           {/* Top Bar */}
           <div className="px-4 py-3 border-b border-gray-100">
-            {/* Centered Logo and Title */}
-            <div className="flex flex-col items-center text-center mb-2">
-              <img 
-                src="/bike.png" 
-                alt="Logo" 
-                className="w-10 h-10 object-contain mb-1"
-              />
-              <h1 className="text-lg font-semibold text-gray-900">Production Tracker</h1>
-              <div className="flex items-center space-x-2 text-sm text-gray-600 mt-0.5">
-                <span>{userName || userEmail.split('@')[0]}</span>
-                {isAdmin && (
-                  <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">
-                    Admin
-                  </span>
-                )}
+            {/* Logo positioned to the side with title */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-3">
+                <img 
+                  src="/bike.png" 
+                  alt="Logo" 
+                  className="w-8 h-8 object-contain"
+                />
+                <div>
+                  <h1 className="text-lg font-semibold text-gray-900">Production Tracker</h1>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <span>{userName || userEmail.split('@')[0]}</span>
+                    {isAdmin && (
+                      <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">
+                        Admin
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
+              
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setShowQRModal(true)}
+                className="p-2 rounded-lg bg-gray-50 text-gray-600"
+              >
+                <QrCode className="h-5 w-5" />
+              </button>
             </div>
-            
-            {/* Mobile Menu Button - Top Right */}
-            <button
-              onClick={() => setShowQRModal(true)}
-              className="absolute top-3 right-4 p-2 rounded-lg bg-gray-50 text-gray-600"
-            >
-              <QrCode className="h-5 w-5" />
-            </button>
           </div>
 
           {/* Mobile Action Bar */}
@@ -2608,9 +2612,9 @@ const ProductionTracker = () => {
               <span className="text-xs text-gray-500">Tap to select</span>
             </div>
             
-            <div className="flex items-start justify-between space-x-4">
-              {/* Compact Working Days - 50% size */}
-              <div className="flex space-x-1.5 overflow-x-auto flex-1">
+            <div className="flex items-start justify-between space-x-3">
+              {/* Ultra Compact Working Days - 50% smaller, neat and tiny */}
+              <div className="flex space-x-1 overflow-x-auto flex-1">
                 {getWorkingDays().map(date => {
                   const dayData = allDailyData[date];
                   const isSelected = selectedDate === date;
@@ -2628,7 +2632,7 @@ const ProductionTracker = () => {
                         }
                       }}
                       disabled={!canAccess}
-                      className={`flex-shrink-0 flex flex-col items-center px-2 py-1.5 rounded-md border transition-all text-xs ${
+                      className={`flex-shrink-0 flex flex-col items-center px-1 py-1 rounded border transition-all ${
                         isSelected
                           ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
                           : canAccess
@@ -2636,17 +2640,17 @@ const ProductionTracker = () => {
                           : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
                       }`}
                     >
-                      <span className="font-medium text-xs">{dayName}</span>
-                      <span className="font-semibold text-sm">{dayNumber}</span>
+                      <span className="font-medium text-[10px] leading-tight">{dayName}</span>
+                      <span className="font-semibold text-xs leading-tight">{dayNumber}</span>
                       {jobCount > 0 && (
-                        <span className={`text-xs mt-0.5 px-1 py-0.5 rounded-full ${
+                        <span className={`text-[9px] mt-0.5 px-0.5 py-0 rounded-full leading-tight ${
                           isSelected ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-700'
                         }`}>
                           {jobCount}
                         </span>
                       )}
                       {dayData?.isFinished && (
-                        <div className={`w-1 h-1 rounded-full mt-0.5 ${
+                        <div className={`w-0.5 h-0.5 rounded-full mt-0.5 ${
                           isSelected ? 'bg-green-300' : 'bg-green-500'
                         }`}></div>
                       )}
@@ -2655,19 +2659,23 @@ const ProductionTracker = () => {
                 })}
               </div>
               
-              {/* Professional Mini Calendar */}
-              <div className="bg-gray-50 rounded-lg p-2 w-24">
-                <div className="text-center mb-1">
+              {/* Reasonable Size Calendar - Professional and Clickable */}
+              <button
+                onClick={() => setShowCalendarModal(true)}
+                className="bg-gray-50 hover:bg-gray-100 rounded-lg p-3 w-32 transition-colors border border-gray-200 hover:border-gray-300"
+                title="Open Full Calendar"
+              >
+                <div className="text-center mb-2">
                   <div className="text-xs font-medium text-gray-600">
                     {new Date(selectedDate || new Date()).toLocaleDateString('en-US', { month: 'short' })}
                   </div>
-                  <div className="text-lg font-bold text-gray-900">
+                  <div className="text-sm font-bold text-gray-900">
                     {new Date(selectedDate || new Date()).getFullYear()}
                   </div>
                 </div>
-                <div className="grid grid-cols-7 gap-0.5 text-xs">
+                <div className="grid grid-cols-7 gap-1 text-xs">
                   {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                    <div key={i} className="text-center text-gray-400 font-medium py-0.5">
+                    <div key={i} className="text-center text-gray-400 font-medium py-1">
                       {day}
                     </div>
                   ))}
@@ -2685,7 +2693,7 @@ const ProductionTracker = () => {
                     
                     // Empty cells for days before month starts
                     for (let i = 0; i < firstDay; i++) {
-                      days.push(<div key={`empty-${i}`} className="h-4"></div>);
+                      days.push(<div key={`empty-${i}`} className="h-5"></div>);
                     }
                     
                     // Days of the month
@@ -2696,54 +2704,51 @@ const ProductionTracker = () => {
                       const isSelected = day === selectedDay;
                       
                       days.push(
-                        <button
+                        <div
                           key={day}
-                          onClick={() => {
-                            if (isWorkingDay) {
-                              setSelectedDate(dateStr);
-                            }
-                          }}
-                          className={`h-4 w-4 text-xs flex items-center justify-center rounded-sm transition-colors ${
+                          className={`h-5 w-5 text-xs flex items-center justify-center rounded transition-colors ${
                             isSelected
                               ? 'bg-blue-600 text-white'
                               : isWorkingDay
-                              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                              ? 'bg-blue-100 text-blue-700'
                               : isToday
                               ? 'bg-gray-200 text-gray-700'
                               : 'text-gray-400'
                           }`}
-                          disabled={!isWorkingDay}
                         >
                           {day}
-                        </button>
+                        </div>
                       );
                     }
                     
                     return days;
                   })()}
                 </div>
-              </div>
+                <div className="mt-2 text-xs text-gray-500 text-center">
+                  Click to expand
+                </div>
+              </button>
             </div>
           </div>
 
-          {/* Desktop Date Selection */}
-          <div className="hidden sm:block p-6">
-            <h3 className="text-lg font-medium text-gray-800 mb-4">Select Working Day</h3>
+          {/* Desktop Date Selection - Compact and 50% smaller */}
+          <div className="hidden sm:block p-4">
+            <h3 className="text-sm font-medium text-gray-800 mb-3">Select Working Day</h3>
           
           {/* Time Access Warning */}
           {!isWithinWorkingHoursState && (
-            <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
               <div className="flex items-center">
-                <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
+                <AlertCircle className="h-4 w-4 text-yellow-600 mr-2" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-800">Outside Working Hours</p>
-                  <p className="text-xs text-yellow-700">Access is only available between 06:55 AM and 16:35 PM, Monday to Thursday</p>
+                  <p className="text-xs font-medium text-yellow-800">Outside Working Hours</p>
+                  <p className="text-[10px] text-yellow-700">Access is only available between 06:55 AM and 16:35 PM, Monday to Thursday</p>
                 </div>
               </div>
             </div>
           )}
           
-          <div className="flex flex-wrap gap-1 sm:gap-2">
+          <div className="flex flex-wrap gap-1">
             {getWorkingDays().map((date) => {
               const isSelected = selectedDate === date;
               const hasData = allDailyData[date];
@@ -2759,40 +2764,40 @@ const ProductionTracker = () => {
                     }
                   }}
                   disabled={!canAccess}
-                  className={`px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg border-2 transition-all ${
+                  className={`px-2 py-1 text-[10px] rounded border transition-all ${
                     isSelected
                       ? 'bg-blue-600 text-white border-blue-600'
                       : hasData || isToday
                       ? 'bg-white text-gray-700 border-gray-300 hover:border-blue-400 hover:bg-blue-50'
                       : 'bg-white text-gray-500 border-gray-200'
-                  } ${isToday ? 'ring-2 ring-yellow-400' : ''} ${
+                  } ${isToday ? 'ring-1 ring-yellow-400' : ''} ${
                     hasData ? 'font-semibold' : ''
                   } ${allDailyData[date]?.isFinished ? 'border-green-500 bg-green-50' : ''} ${
                     !canAccess ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 >
-                  <div className="text-xs sm:text-sm">
+                  <div className="text-[10px] leading-tight">
                     {formatDateForDisplay(date)}
                   </div>
                   {hasData ? (
-                    <div className="text-xs mt-1">
+                    <div className="text-[9px] mt-0.5 leading-tight">
                       {allDailyData[date].completedJobs.length} jobs
                       {allDailyData[date].isFinished && (
                         <span className="text-green-600 font-bold"> ✓</span>
                       )}
                     </div>
                   ) : (
-                    <div className="text-xs mt-1 text-gray-400">
+                    <div className="text-[9px] mt-0.5 text-gray-400 leading-tight">
                       Not started
                     </div>
                   )}
                   {isToday && !hasData && (
-                    <div className="text-xs mt-1 text-yellow-600 font-medium">
+                    <div className="text-[9px] mt-0.5 text-yellow-600 font-medium leading-tight">
                       Today
                     </div>
                   )}
                   {!canAccess && (
-                    <div className="text-xs mt-1 text-red-600 font-medium">
+                    <div className="text-[9px] mt-0.5 text-red-600 font-medium leading-tight">
                       {isAdmin ? 'Admin Only' : 'Locked'}
                     </div>
                   )}
@@ -3665,86 +3670,130 @@ const ProductionTracker = () => {
         </div>
       )}
 
-      {/* Calendar Modal for Historical Data */}
+      {/* Professional Calendar Modal - App-like Interface */}
       {showCalendarModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-2xl font-bold text-gray-800">📅 Historical Data</h2>
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
+            {/* Header */}
+            <div className="flex justify-between items-center px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+              <h2 className="text-lg font-semibold text-gray-800">📅 Calendar</h2>
               <button
                 onClick={() => {
                   setShowCalendarModal(false);
                   setSelectedHistoryDate('');
                 }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-white hover:bg-opacity-80 rounded-lg transition-colors"
               >
-                <X className="h-6 w-6 text-gray-600" />
+                <X className="h-5 w-5 text-gray-600" />
               </button>
             </div>
             
             <div className="p-6">
-              {/* Calendar Grid */}
+              {/* Professional Calendar View */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">Select Date to View</label>
-                <div className="grid grid-cols-7 gap-1 sm:gap-2">
-                  {/* Day Headers */}
-                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                    <div key={day} className="text-center text-xs sm:text-sm font-medium text-gray-500 p-2">
+                {/* Month/Year Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  </h3>
+                  <div className="text-sm text-gray-500">
+                    Working Days Only
+                  </div>
+                </div>
+                
+                {/* Day Headers */}
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
+                    <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
                       {day}
                     </div>
                   ))}
-                  
-                  {/* Calendar Days */}
+                </div>
+                
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-7 gap-1">
                   {(() => {
-                    const currentWeekStart = new Date();
-                    currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay() + 1); // Monday
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = today.getMonth();
+                    const firstDay = new Date(year, month, 1).getDay();
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+                    const todayDate = today.getDate();
                     
                     const days = [];
-                    for (let i = 0; i < 7; i++) {
-                      const date = new Date(currentWeekStart);
-                      date.setDate(currentWeekStart.getDate() + i);
-                      const dateString = date.toISOString().split('T')[0];
+                    
+                    // Empty cells for days before month starts
+                    for (let i = 0; i < firstDay; i++) {
+                      days.push(<div key={`empty-${i}`} className="h-10"></div>);
+                    }
+                    
+                    // Days of the month
+                    for (let day = 1; day <= daysInMonth; day++) {
+                      const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                       const hasData = allDailyData[dateString];
                       const isAccessible = canAccessDate(dateString);
                       const isSelected = selectedHistoryDate === dateString;
-                      const isToday = dateString === new Date().toISOString().split('T')[0];
+                      const isToday = todayDate === day;
+                      const isWorkingDay = getWorkingDays().includes(dateString);
                       
                       days.push(
                         <button
-                          key={dateString}
+                          key={day}
                           onClick={() => {
-                            if (isAccessible) {
+                            if (isAccessible && hasData) {
                               setSelectedHistoryDate(dateString);
                             }
                           }}
-                          disabled={!isAccessible}
+                          disabled={!isAccessible || !hasData}
                           className={`
-                            p-2 sm:p-3 text-xs sm:text-sm rounded-lg transition-all duration-200
+                            h-10 w-10 rounded-lg text-sm font-medium transition-all duration-200 relative
                             ${isSelected 
-                              ? 'bg-blue-600 text-white font-semibold' 
-                              : isAccessible 
-                                ? hasData 
-                                  ? 'bg-green-100 hover:bg-green-200 text-green-800 font-medium cursor-pointer' 
-                                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700 cursor-pointer'
-                                : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                              ? 'bg-blue-600 text-white shadow-lg transform scale-105' 
+                              : hasData && isAccessible
+                                ? 'bg-green-100 hover:bg-green-200 text-green-800 hover:shadow-md cursor-pointer' 
+                                : isWorkingDay
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  : 'text-gray-300 cursor-not-allowed'
                             }
-                            ${isToday ? 'ring-2 ring-blue-300' : ''}
+                            ${isToday ? 'ring-2 ring-blue-300 ring-opacity-60' : ''}
                           `}
-                          title={isAccessible ? `View data for ${formatDateForDisplay(dateString)}` : 'Date not accessible'}
+                          title={
+                            hasData && isAccessible 
+                              ? `View data for ${new Date(dateString).toLocaleDateString()}` 
+                              : isWorkingDay 
+                                ? 'No data available' 
+                                : 'Not a working day'
+                          }
                         >
-                          <div className="text-center">
-                            <div className="font-medium">{date.getDate()}</div>
-                            {hasData && (
-                              <div className="text-xs mt-1">
-                                <span className="inline-block w-1 h-1 bg-green-500 rounded-full"></span>
-                              </div>
-                            )}
-                          </div>
+                          {day}
+                          {hasData && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                          )}
+                          {isToday && !isSelected && (
+                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></div>
+                          )}
                         </button>
                       );
                     }
+                    
                     return days;
                   })()}
+                </div>
+                
+                {/* Legend */}
+                <div className="mt-4 flex items-center justify-center space-x-4 text-xs text-gray-600">
+                  <div className="flex items-center space-x-1">
+                    <div className="w-3 h-3 bg-green-100 rounded border"></div>
+                    <span>Has Data</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <div className="w-3 h-3 bg-blue-600 rounded"></div>
+                    <span>Selected</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <div className="w-3 h-3 border-2 border-blue-300 rounded"></div>
+                    <span>Today</span>
+                  </div>
                 </div>
               </div>
               
