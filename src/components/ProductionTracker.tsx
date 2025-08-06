@@ -808,37 +808,39 @@ const ProductionTracker = () => {
 
       // Debounce the save operation
       const timeoutId = setTimeout(() => {
-        const dailyData: any = {
-          date: selectedDate,
-          completedJobs,
-          lossTimeEntries,
-          isFinished: allDailyData[selectedDate]?.isFinished || false
-        };
+        // Create new data structure without depending on allDailyData inside effect
+        setAllDailyData(prev => {
+          const currentData = prev[selectedDate];
+          const dailyData: any = {
+            date: selectedDate,
+            completedJobs,
+            lossTimeEntries,
+            isFinished: currentData?.isFinished || false
+          };
 
-        // Only add finishTime if it exists (avoid undefined values)
-        const existingFinishTime = allDailyData[selectedDate]?.finishTime;
-        if (existingFinishTime) {
-          dailyData.finishTime = existingFinishTime;
-        }
+          // Only add finishTime if it exists (avoid undefined values)
+          if (currentData?.finishTime) {
+            dailyData.finishTime = currentData.finishTime;
+          }
 
-        // Update local state
-        setAllDailyData(prev => ({
-          ...prev,
-          [selectedDate]: dailyData
-        }));
+          // Save to Firebase automatically with status indicator
+          setIsSaving(true);
+          const cleanedData = removeUndefinedValues(dailyData);
+          saveDailyData(userId, selectedDate, cleanedData)
+            .then(() => {
+              setLastSaved(new Date());
+              setIsSaving(false);
+            })
+            .catch(error => {
+              console.error('Error auto-saving data:', error);
+              setIsSaving(false);
+            });
 
-        // Save to Firebase automatically with status indicator
-        setIsSaving(true);
-        const cleanedData = removeUndefinedValues(dailyData);
-        saveDailyData(userId, selectedDate, cleanedData)
-          .then(() => {
-            setLastSaved(new Date());
-            setIsSaving(false);
-          })
-          .catch(error => {
-            console.error('Error auto-saving data:', error);
-            setIsSaving(false);
-          });
+          return {
+            ...prev,
+            [selectedDate]: dailyData
+          };
+        });
       }, 1000); // 1 second delay
 
       setSaveTimeoutId(timeoutId);
