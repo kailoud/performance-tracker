@@ -285,15 +285,15 @@ export const resetUserDailyData = async (userId: string, date: string): Promise<
     }
     
     const resetData = {
-      date,
+      date: date,
       completedJobs: [],
       lossTimeEntries: [],
       isFinished: false,
-      updatedAt: serverTimestamp()
+      updatedAt: new Date().toISOString()
     };
     console.log('Firebase: Setting document with data:', resetData);
     
-    await setDoc(dailyDataRef, resetData);
+    await setDoc(dailyDataRef, resetData, { merge: false });
     console.log(`Firebase: Successfully reset data for user ${userId} on date ${date}`);
     
     // Verify the write worked
