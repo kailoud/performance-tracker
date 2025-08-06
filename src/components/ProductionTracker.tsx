@@ -195,6 +195,8 @@ const ProductionTracker = () => {
   // Calendar modal state
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [selectedHistoryDate, setSelectedHistoryDate] = useState<string>('');
+  const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
+  const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   
   // QR Code modal state
   const [showQRModal, setShowQRModal] = useState(false);
@@ -2643,7 +2645,7 @@ const ProductionTracker = () => {
                       <span className="font-medium text-[9px] leading-tight">{dayName}</span>
                       <span className="font-bold text-sm leading-tight">{dayNumber}</span>
                       {jobCount > 0 && (
-                        <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full flex items-center justify-center ${
+                        <div className={`absolute top-0.5 right-0.5 w-3 h-3 rounded-full flex items-center justify-center ${
                           isSelected ? 'bg-blue-300' : 'bg-blue-500'
                         }`}>
                           <span className="text-white text-[8px] font-bold">{jobCount}</span>
@@ -3651,13 +3653,37 @@ const ProductionTracker = () => {
             <div className="p-6">
               {/* Professional Calendar View */}
               <div className="mb-6">
-                {/* Month/Year Header */}
+                {/* Month/Year Header with Dropdown */}
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                  </h3>
+                  <div className="flex items-center space-x-3">
+                    <select
+                      value={calendarMonth}
+                      onChange={(e) => setCalendarMonth(parseInt(e.target.value))}
+                      className="text-lg font-semibold text-gray-800 bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+                    >
+                      {Array.from({ length: 12 }, (_, i) => (
+                        <option key={i} value={i}>
+                          {new Date(2023, i, 1).toLocaleDateString('en-US', { month: 'long' })}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={calendarYear}
+                      onChange={(e) => setCalendarYear(parseInt(e.target.value))}
+                      className="text-lg font-semibold text-gray-800 bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+                    >
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const year = new Date().getFullYear() - 2 + i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
                   <div className="text-sm text-gray-500">
-                    Working Days Only
+                    Mon-Thu Working Days
                   </div>
                 </div>
                 
@@ -3674,11 +3700,10 @@ const ProductionTracker = () => {
                 <div className="grid grid-cols-7 gap-1">
                   {(() => {
                     const today = new Date();
-                    const year = today.getFullYear();
-                    const month = today.getMonth();
-                    const firstDay = new Date(year, month, 1).getDay();
-                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+                    const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+                    const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
                     const todayDate = today.getDate();
+                    const isCurrentMonth = today.getMonth() === calendarMonth && today.getFullYear() === calendarYear;
                     
                     const days = [];
                     
@@ -3689,27 +3714,31 @@ const ProductionTracker = () => {
                     
                     // Days of the month
                     for (let day = 1; day <= daysInMonth; day++) {
-                      const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                      const dateString = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                      const dateObj = new Date(calendarYear, calendarMonth, day);
+                      const dayOfWeek = dateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
+                      
+                      // Monday(1) to Thursday(4) are working days
+                      const isWorkingDay = dayOfWeek >= 1 && dayOfWeek <= 4;
                       const hasData = allDailyData[dateString];
                       const isAccessible = canAccessDate(dateString);
                       const isSelected = selectedHistoryDate === dateString;
-                      const isToday = todayDate === day;
-                      const isWorkingDay = getWorkingDays().includes(dateString);
+                      const isToday = isCurrentMonth && todayDate === day;
                       
                       days.push(
                         <button
                           key={day}
                           onClick={() => {
-                            if (isAccessible && hasData) {
+                            if (isWorkingDay && hasData) {
                               setSelectedHistoryDate(dateString);
                             }
                           }}
-                          disabled={!isAccessible || !hasData}
+                          disabled={!isWorkingDay || !hasData}
                           className={`
                             h-10 w-10 rounded-lg text-sm font-medium transition-all duration-200 relative
                             ${isSelected 
                               ? 'bg-blue-600 text-white shadow-lg transform scale-105' 
-                              : hasData && isAccessible
+                              : hasData && isWorkingDay
                                 ? 'bg-green-100 hover:bg-green-200 text-green-800 hover:shadow-md cursor-pointer' 
                                 : isWorkingDay
                                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -3718,15 +3747,15 @@ const ProductionTracker = () => {
                             ${isToday ? 'ring-2 ring-blue-300 ring-opacity-60' : ''}
                           `}
                           title={
-                            hasData && isAccessible 
-                              ? `View data for ${new Date(dateString).toLocaleDateString()}` 
+                            hasData && isWorkingDay
+                              ? `View data for ${dateObj.toLocaleDateString()}` 
                               : isWorkingDay 
                                 ? 'No data available' 
                                 : 'Not a working day'
                           }
                         >
                           {day}
-                          {hasData && (
+                          {hasData && isWorkingDay && (
                             <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                           )}
                           {isToday && !isSelected && (
@@ -3893,7 +3922,6 @@ const ProductionTracker = () => {
               {/* No Data Message */}
               {selectedHistoryDate && !allDailyData[selectedHistoryDate] && (
                 <div className="text-center py-8">
-                  <div className="text-6xl mb-4">📅</div>
                   <h3 className="text-xl font-semibold text-gray-600 mb-2">No Data Available</h3>
                   <p className="text-gray-500">
                     No production data was recorded for {formatDateForDisplay(selectedHistoryDate)}
@@ -3904,7 +3932,6 @@ const ProductionTracker = () => {
               {/* Instructions */}
               {!selectedHistoryDate && (
                 <div className="text-center py-8">
-                  <div className="text-6xl mb-4">📅</div>
                   <h3 className="text-xl font-semibold text-gray-600 mb-2">Select a Date</h3>
                   <p className="text-gray-500">
                     Choose a date above to view historical production data
