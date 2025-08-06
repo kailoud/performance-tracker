@@ -3636,12 +3636,12 @@ const ProductionTracker = () => {
         </div>
       )}
 
-      {/* Professional Calendar Modal - App-like Interface */}
+      {/* Professional Calendar Modal - App-like Interface with Scrolling */}
       {showCalendarModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
-            {/* Header */}
-            <div className="flex justify-between items-center px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Header - Fixed */}
+            <div className="flex justify-between items-center px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0">
               <div className="flex items-center space-x-3">
                 <div className="bg-slate-600 rounded-lg p-2 shadow-sm">
                   <div className="bg-white rounded p-1">
@@ -3666,7 +3666,9 @@ const ProductionTracker = () => {
               </button>
             </div>
             
-            <div className="p-6">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6">
               {/* Professional Calendar View */}
               <div className="mb-6">
                 {/* Month/Year Header with Dropdown */}
@@ -3865,7 +3867,7 @@ const ProductionTracker = () => {
                   {allDailyData[selectedHistoryDate].completedJobs.length > 0 && (
                     <div>
                       <h3 className="text-lg font-semibold mb-3">✅ Completed Jobs</h3>
-                      <div className="overflow-x-auto">
+                      <div className="overflow-x-auto overflow-y-auto max-h-80 border border-gray-200 rounded-lg">
                         <table className="w-full table-auto text-sm">
                           <thead>
                             <tr className="bg-gray-50">
@@ -3896,7 +3898,7 @@ const ProductionTracker = () => {
                   {allDailyData[selectedHistoryDate].lossTimeEntries.length > 0 && (
                     <div>
                       <h3 className="text-lg font-semibold mb-3 text-red-700">⚠️ Loss Time Entries</h3>
-                      <div className="overflow-x-auto">
+                      <div className="overflow-x-auto overflow-y-auto max-h-60 border border-gray-200 rounded-lg">
                         <table className="w-full table-auto text-sm">
                           <thead>
                             <tr className="bg-red-50">
@@ -3950,6 +3952,7 @@ const ProductionTracker = () => {
                   </p>
                 </div>
               )}
+              </div>
             </div>
           </div>
         </div>
