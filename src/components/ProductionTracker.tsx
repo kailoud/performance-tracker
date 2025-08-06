@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Clock, Target, CheckCircle, AlertCircle, StopCircle, Plus, Trash2, Download, Calendar, X, LogOut, Timer, Play, Pause, Square } from 'lucide-react';
+import { Clock, Target, CheckCircle, AlertCircle, StopCircle, Plus, Trash2, Download, Calendar, X, LogOut, Timer, Play, Pause, Square, QrCode } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { 
   signIn, 
@@ -172,6 +172,9 @@ const ProductionTracker = () => {
   // Calendar modal state
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [selectedHistoryDate, setSelectedHistoryDate] = useState<string>('');
+  
+  // QR Code modal state
+  const [showQRModal, setShowQRModal] = useState(false);
   
   // Search suggestions state
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -2295,6 +2298,15 @@ const ProductionTracker = () => {
               </button>
             </div>
             
+            {/* QR Code Button */}
+            <button
+              onClick={() => setShowQRModal(true)}
+              className="p-1.5 rounded-lg bg-green-100 hover:bg-green-200 text-green-600 transition-colors"
+              title="Show QR Code for Mobile Access"
+            >
+              <QrCode className="h-4 w-4" />
+            </button>
+            
             {/* Calendar Icon for Historical Data */}
             <button
               onClick={() => setShowCalendarModal(true)}
@@ -3175,6 +3187,59 @@ const ProductionTracker = () => {
                 <p>Job will be logged with expected time as actual time</p>
                 <p className="text-xs text-gray-500 mt-1">
                   Real elapsed time will be recorded in timer data
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR Code Modal */}
+      {showQRModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-2xl font-bold text-gray-800">📱 Scan QR Code</h2>
+              <button
+                onClick={() => setShowQRModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="h-6 w-6 text-gray-600" />
+              </button>
+            </div>
+            
+            <div className="p-6 text-center">
+              <p className="text-gray-600 mb-4">
+                Scan this QR code with your phone to access the Production Tracker
+              </p>
+              
+              {/* QR Code Image */}
+              <div className="flex justify-center mb-4">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin)}&bgcolor=ffffff&color=000000&qzone=1&margin=0`}
+                  alt="QR Code for Production Tracker"
+                  className="border border-gray-200 rounded-lg"
+                />
+              </div>
+              
+              <div className="text-sm text-gray-500 mb-4">
+                <p className="font-medium">Current URL:</p>
+                <p className="break-all text-blue-600">{window.location.origin}</p>
+              </div>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-800 mb-2">📝 Instructions:</h3>
+                <ol className="text-left text-sm text-blue-700 space-y-1">
+                  <li>1. Open your phone's camera app</li>
+                  <li>2. Point it at the QR code above</li>
+                  <li>3. Tap the notification that appears</li>
+                  <li>4. Access the Production Tracker on your phone!</li>
+                </ol>
+              </div>
+              
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-xs text-green-700">
+                  💡 <strong>Tip:</strong> You can bookmark the site on your phone for quick access later!
                 </p>
               </div>
             </div>
