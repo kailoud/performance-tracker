@@ -2612,7 +2612,7 @@ const ProductionTracker = () => {
               <span className="text-xs text-gray-500">Tap to select</span>
             </div>
             
-            <div className="flex items-start justify-between space-x-3">
+            <div className="flex items-center space-x-2">
               {/* Ultra Compact Working Days - 50% smaller, neat and tiny */}
               <div className="flex space-x-1 overflow-x-auto flex-1">
                 {getWorkingDays().map(date => {
@@ -2659,73 +2659,21 @@ const ProductionTracker = () => {
                 })}
               </div>
               
-              {/* Reasonable Size Calendar - Professional and Clickable */}
+              {/* Square Calendar Button - Aligned with day cards */}
               <button
                 onClick={() => setShowCalendarModal(true)}
-                className="bg-gray-50 hover:bg-gray-100 rounded-lg p-3 w-32 transition-colors border border-gray-200 hover:border-gray-300"
+                className="flex-shrink-0 bg-red-500 hover:bg-red-600 rounded-lg p-2 w-16 h-16 transition-colors shadow-sm"
                 title="Open Full Calendar"
               >
-                <div className="text-center mb-2">
-                  <div className="text-xs font-medium text-gray-600">
-                    {new Date(selectedDate || new Date()).toLocaleDateString('en-US', { month: 'short' })}
-                  </div>
-                  <div className="text-sm font-bold text-gray-900">
-                    {new Date(selectedDate || new Date()).getFullYear()}
-                  </div>
-                </div>
-                <div className="grid grid-cols-7 gap-1 text-xs">
-                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                    <div key={i} className="text-center text-gray-400 font-medium py-1">
-                      {day}
+                <div className="bg-white rounded p-1 h-full w-full flex flex-col items-center justify-center">
+                  <div className="text-red-500 font-bold text-xs text-center">
+                    <div className="text-[8px] leading-tight">
+                      {new Date(selectedDate || new Date()).toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}
                     </div>
-                  ))}
-                  {(() => {
-                    const currentDate = new Date(selectedDate || new Date());
-                    const year = currentDate.getFullYear();
-                    const month = currentDate.getMonth();
-                    const firstDay = new Date(year, month, 1).getDay();
-                    const daysInMonth = new Date(year, month + 1, 0).getDate();
-                    const today = new Date().getDate();
-                    const isCurrentMonth = new Date().getMonth() === month && new Date().getFullYear() === year;
-                    const selectedDay = currentDate.getDate();
-                    
-                    const days = [];
-                    
-                    // Empty cells for days before month starts
-                    for (let i = 0; i < firstDay; i++) {
-                      days.push(<div key={`empty-${i}`} className="h-5"></div>);
-                    }
-                    
-                    // Days of the month
-                    for (let day = 1; day <= daysInMonth; day++) {
-                      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                      const isWorkingDay = getWorkingDays().includes(dateStr);
-                      const isToday = isCurrentMonth && day === today;
-                      const isSelected = day === selectedDay;
-                      
-                      days.push(
-                        <div
-                          key={day}
-                          className={`h-5 w-5 text-xs flex items-center justify-center rounded transition-colors ${
-                            isSelected
-                              ? 'bg-blue-600 text-white'
-                              : isWorkingDay
-                              ? 'bg-blue-100 text-blue-700'
-                              : isToday
-                              ? 'bg-gray-200 text-gray-700'
-                              : 'text-gray-400'
-                          }`}
-                        >
-                          {day}
-                        </div>
-                      );
-                    }
-                    
-                    return days;
-                  })()}
-                </div>
-                <div className="mt-2 text-xs text-gray-500 text-center">
-                  Click to expand
+                    <div className="text-lg leading-tight font-bold">
+                      {new Date(selectedDate || new Date()).getDate()}
+                    </div>
+                  </div>
                 </div>
               </button>
             </div>
@@ -3676,7 +3624,17 @@ const ProductionTracker = () => {
           <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
             {/* Header */}
             <div className="flex justify-between items-center px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
-              <h2 className="text-lg font-semibold text-gray-800">📅 Calendar</h2>
+              <div className="flex items-center space-x-3">
+                <div className="bg-red-500 rounded-lg p-2 shadow-sm">
+                  <div className="bg-white rounded p-1">
+                    <div className="text-red-500 font-bold text-xs text-center">
+                      <div className="text-[8px] leading-tight">JUL</div>
+                      <div className="text-sm leading-tight">{new Date().getDate()}</div>
+                    </div>
+                  </div>
+                </div>
+                <h2 className="text-lg font-semibold text-gray-800">Calendar</h2>
+              </div>
               <button
                 onClick={() => {
                   setShowCalendarModal(false);
