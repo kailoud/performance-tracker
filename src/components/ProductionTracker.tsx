@@ -212,6 +212,9 @@ const ProductionTracker = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saveTimeoutId, setSaveTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  
+  // Data loading state to prevent percentage fluctuation on refresh
+  const [isDataLoading, setIsDataLoading] = useState(false);
 
   const lossReasons = [
     'Waiting for Parts', 'Waiting Jobs', 'Cleaning', 'Maintenance', 
@@ -461,10 +464,13 @@ const ProductionTracker = () => {
   // Load all daily data for user
   const loadAllDailyData = async (uid: string) => {
     try {
+      setIsDataLoading(true);
       const data = await getAllDailyData(uid);
       setAllDailyData(data);
     } catch (error) {
       console.error('Error loading daily data:', error);
+    } finally {
+      setIsDataLoading(false);
     }
   };
   
@@ -787,7 +793,7 @@ const ProductionTracker = () => {
 
   // Load data for selected date
   React.useEffect(() => {
-    if (selectedDate) {
+    if (selectedDate && !isDataLoading) {
       if (allDailyData[selectedDate]) {
         setCompletedJobs(allDailyData[selectedDate].completedJobs);
         setLossTimeEntries(allDailyData[selectedDate].lossTimeEntries);
@@ -796,11 +802,11 @@ const ProductionTracker = () => {
         setLossTimeEntries([]);
       }
     }
-  }, [selectedDate, allDailyData]);
+  }, [selectedDate, allDailyData, isDataLoading]);
 
   // Save data when it changes (with debouncing)
   React.useEffect(() => {
-    if (selectedDate && !isSwitchingDate && userId && (completedJobs.length > 0 || lossTimeEntries.length > 0)) {
+    if (selectedDate && !isSwitchingDate && !isDataLoading && userId && (completedJobs.length > 0 || lossTimeEntries.length > 0)) {
       // Clear any existing timeout
       if (saveTimeoutId) {
         clearTimeout(saveTimeoutId);
@@ -852,7 +858,7 @@ const ProductionTracker = () => {
         }
       };
     }
-  }, [completedJobs, lossTimeEntries, selectedDate, isSwitchingDate, userId, saveTimeoutId]);
+  }, [completedJobs, lossTimeEntries, selectedDate, isSwitchingDate, isDataLoading, userId, saveTimeoutId]);
 
   const completedMinutes = completedJobs.reduce((sum, job) => sum + job.actualMinutes, 0);
   const lossTimeTotal = lossTimeEntries.reduce((sum, entry) => sum + entry.minutes, 0);
@@ -2995,58 +3001,69 @@ const ProductionTracker = () => {
         <div className="bg-white rounded-none sm:rounded-lg shadow-lg p-4 sm:p-6">
           <h2 className="text-lg sm:text-xl font-semibold mb-4">Progress Status</h2>
           
-          <div className="h-64 relative">
-            {isTargetReached && (
-              <div className="absolute inset-0 flex items-center justify-center z-10">
-                <div className="text-center">
-                  <div className="text-6xl mb-2">🎉</div>
-                  <div className="text-2xl font-bold text-yellow-500">TARGET REACHED!</div>
-                </div>
+          {isDataLoading ? (
+            <div className="h-64 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <div className="text-gray-600">Loading data...</div>
               </div>
-            )}
-            
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={isTargetReached ? [{ name: 'Completed', value: adjustedTarget, color: '#10b981' }] : filteredProgressData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={100}
-                  startAngle={90}
-                  endAngle={450}
-                  paddingAngle={0}
-                  dataKey="value"
-                >
-                  {(isTargetReached ? [{ name: 'Completed', value: adjustedTarget, color: '#10b981' }] : filteredProgressData).map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => [`${Number(value).toFixed(1)} min`, 'Time']} />
-                {!isTargetReached && <Legend />}
-              </PieChart>
-            </ResponsiveContainer>
-            
-            {!isTargetReached && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-700">{completedPercentage.toFixed(1)}%</div>
-                  <div className="text-sm text-gray-500">Complete</div>
-                </div>
+            </div>
+          ) : (
+            <>
+              <div className="h-64 relative">
+                {isTargetReached && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <div className="text-center">
+                      <div className="text-6xl mb-2">🎉</div>
+                      <div className="text-2xl font-bold text-yellow-500">TARGET REACHED!</div>
+                    </div>
+                  </div>
+                )}
+                
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={isTargetReached ? [{ name: 'Completed', value: adjustedTarget, color: '#10b981' }] : filteredProgressData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={100}
+                      startAngle={90}
+                      endAngle={450}
+                      paddingAngle={0}
+                      dataKey="value"
+                    >
+                      {(isTargetReached ? [{ name: 'Completed', value: adjustedTarget, color: '#10b981' }] : filteredProgressData).map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [`${Number(value).toFixed(1)} min`, 'Time']} />
+                    {!isTargetReached && <Legend />}
+                  </PieChart>
+                </ResponsiveContainer>
+                
+                {!isTargetReached && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-700">{completedPercentage.toFixed(1)}%</div>
+                      <div className="text-sm text-gray-500">Complete</div>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          
-          <div className="mt-4 text-center">
-            <p className="text-base sm:text-lg font-semibold text-gray-700">
-              {completedMinutes.toFixed(1)} / {adjustedTarget} minutes
-              {lossTimeTotal > 0 && <span className="text-xs sm:text-sm text-red-600"> (Target reduced by {lossTimeTotal} min)</span>}
-            </p>
-            <p className="text-xs sm:text-sm text-gray-500">{completedJobs.length} tasks completed</p>
-            {lossTimeTotal > 0 && (
-              <p className="text-xs sm:text-sm text-red-600 font-medium">{lossTimeTotal} minutes lost time</p>
-            )}
-          </div>
+              
+              <div className="mt-4 text-center">
+                <p className="text-base sm:text-lg font-semibold text-gray-700">
+                  {completedMinutes.toFixed(1)} / {adjustedTarget} minutes
+                  {lossTimeTotal > 0 && <span className="text-xs sm:text-sm text-red-600"> (Target reduced by {lossTimeTotal} min)</span>}
+                </p>
+                <p className="text-xs sm:text-sm text-gray-500">{completedJobs.length} tasks completed</p>
+                {lossTimeTotal > 0 && (
+                  <p className="text-xs sm:text-sm text-red-600 font-medium">{lossTimeTotal} minutes lost time</p>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
