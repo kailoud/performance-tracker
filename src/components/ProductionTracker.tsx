@@ -395,7 +395,8 @@ const ProductionTracker = () => {
         dailyData.finishTime = existingFinishTime;
       }
       
-      saveDailyData(userId, selectedDate, dailyData).then(() => {
+      const cleanedData = removeUndefinedValues(dailyData);
+      saveDailyData(userId, selectedDate, cleanedData).then(() => {
         setAllDailyData(prev => ({
           ...prev,
           [selectedDate]: dailyData
@@ -552,6 +553,30 @@ const ProductionTracker = () => {
   ];
 
   const TARGET_MINUTES = 525;
+
+  // Helper function to remove undefined values from objects
+  const removeUndefinedValues = (obj: any): any => {
+    const cleaned: any = {};
+    for (const key in obj) {
+      if (obj[key] !== undefined) {
+        if (Array.isArray(obj[key])) {
+          // For arrays, clean each item
+          cleaned[key] = obj[key].map((item: any) => 
+            typeof item === 'object' && item !== null 
+              ? removeUndefinedValues(item) 
+              : item
+          ).filter((item: any) => item !== undefined);
+        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+          // For objects, recursively clean
+          cleaned[key] = removeUndefinedValues(obj[key]);
+        } else {
+          // For primitive values, just copy if not undefined
+          cleaned[key] = obj[key];
+        }
+      }
+    }
+    return cleaned;
+  };
 
   // Time and access control functions
   const isWithinWorkingHours = (date: Date): boolean => {
@@ -796,7 +821,8 @@ const ProductionTracker = () => {
 
       // Save to Firebase automatically with status indicator
       setIsSaving(true);
-      saveDailyData(userId, selectedDate, dailyData)
+      const cleanedData = removeUndefinedValues(dailyData);
+      saveDailyData(userId, selectedDate, cleanedData)
         .then(() => {
           setLastSaved(new Date());
           setIsSaving(false);
@@ -870,7 +896,8 @@ const ProductionTracker = () => {
         dailyData.finishTime = existingFinishTime;
       }
       
-      await saveDailyData(userId, selectedDate, dailyData);
+      const cleanedData = removeUndefinedValues(dailyData);
+      await saveDailyData(userId, selectedDate, cleanedData);
       
       // Update local state
       setAllDailyData(prev => ({
@@ -1026,7 +1053,8 @@ const ProductionTracker = () => {
         dailyData.finishTime = existingFinishTime;
       }
       
-      await saveDailyData(userId, selectedDate, dailyData);
+      const cleanedData = removeUndefinedValues(dailyData);
+      await saveDailyData(userId, selectedDate, cleanedData);
       
       // Update local state
       setAllDailyData(prev => ({
@@ -1065,7 +1093,8 @@ const ProductionTracker = () => {
 
     // Save to Firebase
     try {
-      await saveDailyData(userId, selectedDate, dailyData);
+      const cleanedData = removeUndefinedValues(dailyData);
+      await saveDailyData(userId, selectedDate, cleanedData);
       
       // Update local state
       setAllDailyData(prev => ({
@@ -1964,15 +1993,21 @@ const ProductionTracker = () => {
 
       // Save to Firebase
       if (userId && selectedDate) {
-        const dailyData = {
+        const dailyData: any = {
           date: selectedDate,
           completedJobs: updatedJobs,
           lossTimeEntries,
-          isFinished: allDailyData[selectedDate]?.isFinished || false,
-          finishTime: allDailyData[selectedDate]?.finishTime
+          isFinished: allDailyData[selectedDate]?.isFinished || false
         };
         
-        saveDailyData(userId, selectedDate, dailyData).then(() => {
+        // Only add finishTime if it exists (avoid undefined values)
+        const existingFinishTime = allDailyData[selectedDate]?.finishTime;
+        if (existingFinishTime) {
+          dailyData.finishTime = existingFinishTime;
+        }
+        
+        const cleanedData = removeUndefinedValues(dailyData);
+        saveDailyData(userId, selectedDate, cleanedData).then(() => {
           setAllDailyData(prev => ({
             ...prev,
             [selectedDate]: dailyData
