@@ -3672,8 +3672,8 @@ const ProductionTracker = () => {
                       onChange={(e) => setCalendarYear(parseInt(e.target.value))}
                       className="text-lg font-semibold text-gray-800 bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
                     >
-                      {Array.from({ length: 5 }, (_, i) => {
-                        const year = new Date().getFullYear() - 2 + i;
+                      {Array.from({ length: 3 }, (_, i) => {
+                        const year = new Date().getFullYear() + i;
                         return (
                           <option key={year} value={year}>
                             {year}
@@ -3681,9 +3681,6 @@ const ProductionTracker = () => {
                         );
                       })}
                     </select>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    Mon-Thu Working Days
                   </div>
                 </div>
                 
