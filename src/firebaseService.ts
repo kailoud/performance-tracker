@@ -255,15 +255,20 @@ export const updateUserBlockStatus = async (userId: string, isBlocked: boolean):
 
 export const resetUserDailyData = async (userId: string, date: string): Promise<void> => {
   try {
+    console.log(`Firebase: Resetting daily data for user ${userId} on date ${date}`);
     const dailyDataRef = doc(db, 'users', userId, 'dailyData', date);
-    await setDoc(dailyDataRef, {
+    const resetData = {
       date,
       completedJobs: [],
       lossTimeEntries: [],
       isFinished: false,
       updatedAt: serverTimestamp()
-    });
+    };
+    console.log('Firebase: Setting document with data:', resetData);
+    await setDoc(dailyDataRef, resetData);
+    console.log(`Firebase: Successfully reset data for user ${userId} on date ${date}`);
   } catch (error) {
+    console.error(`Firebase: Error resetting data for user ${userId} on date ${date}:`, error);
     throw error;
   }
 };

@@ -328,7 +328,9 @@ const ProductionTracker = () => {
         // Set admin status based on email (you can modify this logic)
         // For now, let's set admin based on specific email addresses
         const adminEmails = ['kailoud639@gmail.com', 'admin@company.com', 'manager@company.com']; // Add your admin emails
-        setIsAdmin(adminEmails.includes(profile.email));
+                                const isUserAdmin = adminEmails.includes(profile.email);
+                        setIsAdmin(isUserAdmin);
+                        console.log(`User ${profile.email} admin status: ${isUserAdmin}`);
       }
     } catch (error) {
       console.error('Error loading user profile:', error);
@@ -1650,13 +1652,17 @@ const ProductionTracker = () => {
 
   const handleResetUserData = async (userId: string, date: string) => {
     try {
+      console.log(`Admin attempting to reset data for user ${userId} on date ${date}`);
       await resetUserDailyData(userId, date);
+      console.log(`Successfully reset data for user ${userId} on date ${date}`);
       alert(`✅ Data successfully reset for user on ${date}`);
       // Refresh the users list to reflect any changes
       await loadAllUsers();
     } catch (error) {
       console.error('Error resetting user data:', error);
-      alert(`❌ Error resetting user data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Full error details:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`❌ Error resetting user data: ${errorMessage}\n\nCheck the console for more details.`);
     }
   };
 
