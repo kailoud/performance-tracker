@@ -183,6 +183,10 @@ const ProductionTracker = () => {
   // Search suggestions state
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredItems, setFilteredItems] = useState<ProductionItem[]>([]);
+  
+  // Data saving state
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   const lossReasons = [
     'Waiting for Parts', 'Waiting Jobs', 'Cleaning', 'Maintenance', 
@@ -754,19 +758,35 @@ const ProductionTracker = () => {
 
   // Save data when it changes
   React.useEffect(() => {
-    if (selectedDate && !isSwitchingDate && (completedJobs.length > 0 || lossTimeEntries.length > 0)) {
+    if (selectedDate && !isSwitchingDate && userId && (completedJobs.length > 0 || lossTimeEntries.length > 0)) {
+      const dailyData = {
+        date: selectedDate,
+        completedJobs,
+        lossTimeEntries,
+        isFinished: allDailyData[selectedDate]?.isFinished || false,
+        finishTime: allDailyData[selectedDate]?.finishTime
+      };
+
+      // Update local state
       setAllDailyData(prev => ({
         ...prev,
-        [selectedDate]: {
-          date: selectedDate,
-          completedJobs,
-          lossTimeEntries,
-          isFinished: prev[selectedDate]?.isFinished || false,
-          finishTime: prev[selectedDate]?.finishTime
-        }
+        [selectedDate]: dailyData
       }));
+
+      // Save to Firebase automatically with status indicator
+      setIsSaving(true);
+      saveDailyData(userId, selectedDate, dailyData)
+        .then(() => {
+          setLastSaved(new Date());
+          setIsSaving(false);
+        })
+        .catch(error => {
+          console.error('Error auto-saving data:', error);
+          setIsSaving(false);
+          // You could show a notification here if needed
+        });
     }
-  }, [completedJobs, lossTimeEntries, selectedDate, isSwitchingDate]);
+  }, [completedJobs, lossTimeEntries, selectedDate, isSwitchingDate, userId, allDailyData]);
 
   const completedMinutes = completedJobs.reduce((sum, job) => sum + job.actualMinutes, 0);
   const lossTimeTotal = lossTimeEntries.reduce((sum, entry) => sum + entry.minutes, 0);
@@ -815,6 +835,7 @@ const ProductionTracker = () => {
 
     // Save to Firebase
     try {
+      setIsSaving(true);
       const dailyData = {
         date: selectedDate,
         completedJobs: updatedJobs,
@@ -829,8 +850,12 @@ const ProductionTracker = () => {
         ...prev,
         [selectedDate]: dailyData
       }));
+      
+      setLastSaved(new Date());
+      setIsSaving(false);
     } catch (error) {
       console.error('Error saving job:', error);
+      setIsSaving(false);
     }
 
     setSelectedItem('');
@@ -960,6 +985,7 @@ const ProductionTracker = () => {
 
     // Save to Firebase
     try {
+      setIsSaving(true);
       const dailyData = {
         date: selectedDate,
         completedJobs,
@@ -974,8 +1000,12 @@ const ProductionTracker = () => {
         ...prev,
         [selectedDate]: dailyData
       }));
+      
+      setLastSaved(new Date());
+      setIsSaving(false);
     } catch (error) {
       console.error('Error saving loss time:', error);
+      setIsSaving(false);
     }
 
     setSelectedLossReason('');
@@ -2395,6 +2425,17 @@ const ProductionTracker = () => {
               {!isOnline && (
                 <div className="text-xs text-red-600 mt-1">
                   🔴 Offline
+                </div>
+              )}
+              {/* Save Status Indicator */}
+              {isSaving && (
+                <div className="text-xs text-blue-600 mt-1">
+                  💾 Saving...
+                </div>
+              )}
+              {lastSaved && !isSaving && (
+                <div className="text-xs text-green-600 mt-1">
+                  ✅ Saved {lastSaved.toLocaleTimeString()}
                 </div>
               )}
             </div>
