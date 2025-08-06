@@ -2493,7 +2493,7 @@ const ProductionTracker = () => {
                 
                 <button
                   onClick={handleLogout}
-                  className="p-2 rounded-lg bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors"
+                  className="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 transition-colors border border-red-200"
                   title="Logout"
                 >
                   <LogOut className="h-4 w-4" />
@@ -2528,13 +2528,23 @@ const ProductionTracker = () => {
                 </div>
               </div>
               
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setShowQRModal(true)}
-                className="p-2 rounded-lg bg-gray-50 text-gray-600"
-              >
-                <QrCode className="h-5 w-5" />
-              </button>
+              {/* Mobile Menu Buttons */}
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setShowQRModal(true)}
+                  className="p-2 rounded-lg bg-gray-50 text-gray-600"
+                  title="QR Code"
+                >
+                  <QrCode className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 rounded-lg bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
 
