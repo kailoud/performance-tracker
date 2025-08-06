@@ -2068,7 +2068,7 @@ const ProductionTracker = () => {
       
       try {
         // Test basic connectivity to a reliable service
-        const response = await fetch('https://httpbin.org/get', { 
+        await fetch('https://httpbin.org/get', { 
           method: 'GET',
           mode: 'no-cors',
           cache: 'no-cache'
