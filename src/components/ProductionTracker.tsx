@@ -2632,25 +2632,25 @@ const ProductionTracker = () => {
                         }
                       }}
                       disabled={!canAccess}
-                      className={`flex-shrink-0 flex flex-col items-center px-1 py-1 rounded border transition-all ${
+                      className={`flex-shrink-0 w-12 h-12 rounded-lg border transition-all flex flex-col items-center justify-center relative ${
                         isSelected
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-md transform scale-105'
                           : canAccess
-                          ? 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                          ? 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm'
                           : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
                       }`}
                     >
-                      <span className="font-medium text-[10px] leading-tight">{dayName}</span>
-                      <span className="font-semibold text-xs leading-tight">{dayNumber}</span>
+                      <span className="font-medium text-[9px] leading-tight">{dayName}</span>
+                      <span className="font-bold text-sm leading-tight">{dayNumber}</span>
                       {jobCount > 0 && (
-                        <span className={`text-[9px] mt-0.5 px-0.5 py-0 rounded-full leading-tight ${
-                          isSelected ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-700'
+                        <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full flex items-center justify-center ${
+                          isSelected ? 'bg-blue-300' : 'bg-blue-500'
                         }`}>
-                          {jobCount}
-                        </span>
+                          <span className="text-white text-[8px] font-bold">{jobCount}</span>
+                        </div>
                       )}
                       {dayData?.isFinished && (
-                        <div className={`w-0.5 h-0.5 rounded-full mt-0.5 ${
+                        <div className={`absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full ${
                           isSelected ? 'bg-green-300' : 'bg-green-500'
                         }`}></div>
                       )}
@@ -2662,11 +2662,11 @@ const ProductionTracker = () => {
               {/* Square Calendar Button - Aligned with day cards */}
               <button
                 onClick={() => setShowCalendarModal(true)}
-                className="flex-shrink-0 bg-red-500 hover:bg-red-600 rounded-lg p-2 w-16 h-16 transition-colors shadow-sm"
+                className="flex-shrink-0 bg-slate-600 hover:bg-slate-700 rounded-lg p-2 w-16 h-16 transition-colors shadow-sm"
                 title="Open Full Calendar"
               >
                 <div className="bg-white rounded p-1 h-full w-full flex flex-col items-center justify-center">
-                  <div className="text-red-500 font-bold text-xs text-center">
+                  <div className="text-slate-600 font-bold text-xs text-center">
                     <div className="text-[8px] leading-tight">
                       {new Date(selectedDate || new Date()).toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}
                     </div>
@@ -3625,10 +3625,12 @@ const ProductionTracker = () => {
             {/* Header */}
             <div className="flex justify-between items-center px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
               <div className="flex items-center space-x-3">
-                <div className="bg-red-500 rounded-lg p-2 shadow-sm">
+                <div className="bg-slate-600 rounded-lg p-2 shadow-sm">
                   <div className="bg-white rounded p-1">
-                    <div className="text-red-500 font-bold text-xs text-center">
-                      <div className="text-[8px] leading-tight">JUL</div>
+                    <div className="text-slate-600 font-bold text-xs text-center">
+                      <div className="text-[8px] leading-tight">
+                        {new Date().toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}
+                      </div>
                       <div className="text-sm leading-tight">{new Date().getDate()}</div>
                     </div>
                   </div>
