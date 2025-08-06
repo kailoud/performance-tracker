@@ -2363,149 +2363,137 @@ const ProductionTracker = () => {
         </div>
       )}
 
-      {/* Header */}
-      <div className="bg-white rounded-none sm:rounded-lg shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
-          <div className="flex items-center space-x-3 sm:space-x-4">
-            <div>
+      {/* Professional Header */}
+      <div className="bg-white border-b border-gray-200 p-4 sm:p-6 mb-6">
+        <div className="flex items-center justify-between">
+          {/* Left Side - Branding & User Info */}
+          <div className="flex items-center space-x-6">
+            {/* Logo & Title */}
+            <div className="flex items-center space-x-3">
               <img 
                 src="/bike.png" 
-                alt="Folding Bike Logo" 
-                className="w-8 h-8 sm:w-12 sm:h-12 object-contain"
+                alt="Company Logo" 
+                className="w-10 h-10 object-contain"
               />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-800">Production Tracker</h1>
-              <p className="text-xs sm:text-sm text-gray-600">
-                Welcome back, {userName.substring(0, 3).toUpperCase()}! 👋
-                {isAdmin && (
-                  <button
-                    onClick={() => setShowAdminPanel(!showAdminPanel)}
-                    className="ml-2 text-purple-600 font-medium hover:text-purple-800 underline cursor-pointer"
-                    title="Admin Panel"
-                  >
-                    (Admin)
-                  </button>
-                )}
-              </p>
-            </div>
-          </div>
-          
-          {/* Professional Header Layout */}
-          <div className="flex items-center justify-between">
-            {/* User Info Section */}
-            <div className="flex items-center space-x-4">
-              <div className="text-sm">
-                <span className="text-gray-600">Welcome back,</span>
-                <span className="font-medium text-gray-800 ml-1">{userName || userEmail.split('@')[0]}</span>
-              </div>
-              
-              {/* Status Indicators */}
-              <div className="flex items-center space-x-3">
-                {!isOnline && (
-                  <div className="flex items-center space-x-1 text-red-600">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <span className="text-xs">Offline</span>
-                  </div>
-                )}
-                
-                {networkIssues.length > 0 && (
-                  <div className="flex items-center space-x-1 text-yellow-600">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <span className="text-xs">Connection Issues</span>
-                  </div>
-                )}
-                
-                {/* Save Status */}
-                {isSaving ? (
-                  <div className="flex items-center space-x-1 text-blue-600">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                    <span className="text-xs">Saving</span>
-                  </div>
-                ) : lastSaved && (
-                  <div className="flex items-center space-x-1 text-green-600">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-xs">Saved at {lastSaved.toLocaleTimeString()}</span>
-                  </div>
-                )}
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">Production Tracker</h1>
+                <div className="flex items-center space-x-3 mt-0.5">
+                  <span className="text-sm text-gray-600">
+                    {userName || userEmail.split('@')[0]}
+                  </span>
+                  {isAdmin && (
+                    <button
+                      onClick={() => setShowAdminPanel(!showAdminPanel)}
+                      className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors"
+                      title="Admin Panel"
+                    >
+                      Admin
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
             
-            {/* Action Buttons Section */}
-            <div className="flex items-center space-x-2">
-              {/* Save Button */}
+            {/* Status Indicators */}
+            <div className="hidden sm:flex items-center space-x-4 pl-6 border-l border-gray-200">
+              {!isOnline && (
+                <div className="flex items-center space-x-2 text-red-600">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span className="text-sm">Offline</span>
+                </div>
+              )}
+              
+              {networkIssues.length > 0 && (
+                <div className="flex items-center space-x-2 text-yellow-600">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <span className="text-sm">Connection Issues</span>
+                </div>
+              )}
+              
+              {isSaving ? (
+                <div className="flex items-center space-x-2 text-blue-600">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm">Saving</span>
+                </div>
+              ) : lastSaved && (
+                <div className="flex items-center space-x-2 text-green-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm">Saved {lastSaved.toLocaleTimeString()}</span>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Right Side - Action Buttons */}
+          <div className="flex items-center space-x-3">
+            {/* Primary Actions */}
+            <button
+              onClick={handleManualSave}
+              disabled={isSaving || (!completedJobs.length && !lossTimeEntries.length)}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                isSaving || (!completedJobs.length && !lossTimeEntries.length)
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md'
+              }`}
+            >
+              {isSaving ? 'Saving...' : 'Save Progress'}
+            </button>
+            
+            {selectedDate && (
               <button
-                onClick={handleManualSave}
-                disabled={isSaving || (!completedJobs.length && !lossTimeEntries.length)}
-                className={`flex items-center space-x-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                  isSaving || (!completedJobs.length && !lossTimeEntries.length)
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md'
+                onClick={finishWorkDay}
+                disabled={allDailyData[selectedDate]?.isFinished || (!isWithinWorkingHoursState && !isAdmin)}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                  allDailyData[selectedDate]?.isFinished || (!isWithinWorkingHoursState && !isAdmin)
+                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                    : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
                 }`}
-                title="Save progress to Firebase"
               >
-                <span>{isSaving ? 'Saving...' : 'Save Progress'}</span>
+                {allDailyData[selectedDate]?.isFinished ? 'Day Completed' : 'Finish Day'}
+              </button>
+            )}
+            
+            {isWeekComplete() && (
+              <button
+                onClick={resetWeek}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition-all"
+              >
+                Start New Week
+              </button>
+            )}
+            
+            {/* Secondary Actions */}
+            <div className="flex items-center space-x-1 ml-3 pl-3 border-l border-gray-200">
+              <button
+                onClick={() => setShowQRModal(true)}
+                className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors"
+                title="QR Code"
+              >
+                <QrCode className="h-4 w-4" />
               </button>
               
-              {/* Utility Buttons */}
-              <div className="flex items-center space-x-1 border-l pl-2">
-                <button
-                  onClick={() => setShowQRModal(true)}
-                  className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors"
-                  title="QR Code for Mobile"
-                >
-                  <QrCode className="h-4 w-4" />
-                </button>
-                
-                <button
-                  onClick={() => setShowCalendarModal(true)}
-                  className="p-2 rounded-md bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors"
-                  title="View History"
-                >
-                  <Calendar className="h-4 w-4" />
-                </button>
-                
-                <button
-                  onClick={handleLogout}
-                  className="p-2 rounded-md bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors"
-                  title="Logout"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </div>
+              <button
+                onClick={() => setShowCalendarModal(true)}
+                className="p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors"
+                title="History"
+              >
+                <Calendar className="h-4 w-4" />
+              </button>
               
-              {/* Day Actions */}
-              <div className="flex items-center space-x-2 border-l pl-2">
-                {selectedDate && (
-                  <button
-                    onClick={finishWorkDay}
-                    disabled={allDailyData[selectedDate]?.isFinished || (!isWithinWorkingHoursState && !isAdmin)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                      allDailyData[selectedDate]?.isFinished || (!isWithinWorkingHoursState && !isAdmin)
-                        ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                        : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
-                    }`}
-                  >
-                    {allDailyData[selectedDate]?.isFinished ? 'Day Completed' : 'Finish Day'}
-                  </button>
-                )}
-                
-                {isWeekComplete() && (
-                  <button
-                    onClick={resetWeek}
-                    className="px-3 py-1.5 text-sm font-medium rounded-md bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition-colors"
-                  >
-                    Start New Week
-                  </button>
-                )}
-              </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-lg bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 transition-colors"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
 
         {/* Date Selection */}
-        <div className="mb-4 sm:mb-6">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-3">Select Working Day</h3>
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6">
+          <h3 className="text-lg font-medium text-gray-800 mb-4">Select Working Day</h3>
           
           {/* Time Access Warning */}
           {!isWithinWorkingHoursState && (
