@@ -779,7 +779,7 @@ const ProductionTracker = () => {
   // Check if deletion is allowed (non-admin users cannot delete after finish day or if less than 2 items remain)
 
 
-  // Memoized version for the current selected date to avoid repeated calculations
+  // Simplified delete logic - allow deletion if not finished and has data
   const canDeleteCurrentData = React.useMemo(() => {
     if (!selectedDate) return false;
     const dayData = allDailyData[selectedDate];
@@ -791,12 +791,12 @@ const ProductionTracker = () => {
       return false;
     }
     
-    // Cannot delete if less than 3 items (for bulk deletion - ensures at least 2 remain after deletion)
+    // Allow deletion if there are items to delete
     const totalItems = (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0);
-    return totalItems >= 3;
+    return totalItems > 0;
   }, [selectedDate, isAdmin, allDailyData]);
 
-  // Memoized version for individual item deletion
+  // Simplified individual item deletion - allow if not finished and has more than 1 item
   const canDeleteCurrentIndividualItem = React.useMemo(() => {
     if (!selectedDate) return false;
     const dayData = allDailyData[selectedDate];
@@ -808,9 +808,9 @@ const ProductionTracker = () => {
       return false;
     }
     
-    // Can delete individual items if there are more than 2 total items
+    // Allow individual deletion if there are more than 1 total items
     const totalItems = (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0);
-    return totalItems > 2;
+    return totalItems > 1;
   }, [selectedDate, isAdmin, allDailyData]);
 
   // Get the current week's data for summary
@@ -2106,12 +2106,7 @@ const ProductionTracker = () => {
         return;
       }
       
-      // Check if deleting would leave less than 2 items
-      const remainingItems = (currentData.completedJobs.length - 1) + currentData.lossTimeEntries.length;
-      if (remainingItems < 2 && !isAdmin) {
-        alert('❌ Cannot delete this item. At least 2 data entries must remain. Please add more data before deleting.');
-        return;
-      }
+
       
       const updatedJobs = currentData.completedJobs.filter(job => job.id !== jobId);
       const updatedData = {
@@ -2177,12 +2172,7 @@ const ProductionTracker = () => {
         return;
       }
       
-      // Check if deleting would leave less than 2 items
-      const remainingItems = currentData.completedJobs.length + (currentData.lossTimeEntries.length - 1);
-      if (remainingItems < 2 && !isAdmin) {
-        alert('❌ Cannot delete this item. At least 2 data entries must remain. Please add more data before deleting.');
-        return;
-      }
+
       
       const updatedLossTime = currentData.lossTimeEntries.filter(entry => entry.id !== entryId);
       const updatedData = {
@@ -3736,7 +3726,7 @@ const ProductionTracker = () => {
                           ? 'bg-red-600 hover:bg-red-700 text-white'
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
-                      title={canDeleteCurrentData ? "Delete all completed jobs" : "Cannot delete (day finished or less than 3 items total)"}
+                      title={canDeleteCurrentData ? "Delete all completed jobs" : "Cannot delete (day finished or no items to delete)"}
                     >
                       🗑️ Clear All
                     </button>
@@ -3787,7 +3777,7 @@ const ProductionTracker = () => {
                                   ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
                                   : 'text-gray-400 cursor-not-allowed'
                               }`}
-                              title={canDeleteCurrentIndividualItem ? "Delete this job" : "Cannot delete (day finished or less than 2 items total)"}
+                              title={canDeleteCurrentIndividualItem ? "Delete this job" : "Cannot delete (day finished or only 1 item remaining)"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -3821,7 +3811,7 @@ const ProductionTracker = () => {
                           ? 'bg-red-600 hover:bg-red-700 text-white'
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
-                      title={canDeleteCurrentData ? "Delete all loss time entries" : "Cannot delete (day finished or less than 3 items total)"}
+                      title={canDeleteCurrentData ? "Delete all loss time entries" : "Cannot delete (day finished or no items to delete)"}
                     >
                       🗑️ Clear All
                     </button>
@@ -3856,7 +3846,7 @@ const ProductionTracker = () => {
                                   ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
                                   : 'text-gray-400 cursor-not-allowed'
                               }`}
-                              title={canDeleteCurrentIndividualItem ? "Delete this loss time entry" : "Cannot delete (day finished or less than 2 items total)"}
+                              title={canDeleteCurrentIndividualItem ? "Delete this loss time entry" : "Cannot delete (day finished or only 1 item remaining)"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
