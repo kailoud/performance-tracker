@@ -593,14 +593,14 @@ const ProductionTracker = () => {
     // Admin can access all dates
     if (isAdmin) return true;
     
-    // For past dates, only allow access if it's the same week and during working hours
+    // For past dates, allow access for viewing (calendar and PDF download)
     if (date < today) {
       const workingDays = getWorkingDays();
       const isInCurrentWeek = workingDays.includes(dateString);
       if (!isInCurrentWeek) return false; // No access to past weeks
       
-      // For past dates in current week, only allow during working hours
-      return isWithinWorkingHours(today);
+      // Allow access to past dates in current week for viewing
+      return true;
     }
     
     // For today, only allow access during working hours
