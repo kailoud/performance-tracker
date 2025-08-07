@@ -628,35 +628,40 @@ const ProductionTracker = () => {
     // Admin can access all dates
     if (isAdmin) return true;
     
+    // Check if the date is in the currently displayed week
+    const displayWorkingDays = getDisplayWorkingDays();
+    if (!displayWorkingDays.includes(dateString)) {
+      return false; // Date not in currently displayed week
+    }
+    
     // For past dates, allow access for viewing (calendar and PDF download)
     if (date < today) {
-      const workingDays = getWorkingDays();
-      const isInCurrentWeek = workingDays.includes(dateString);
-      if (!isInCurrentWeek) return false; // No access to past weeks
-      
-      // Allow access to past dates in current week for viewing
-      return true;
+      return true; // Allow viewing of past dates in displayed week
     }
     
-    // For today, allow access anytime (removed working hours restriction)
+    // For today, check working hours restriction
     if (dateString === todayString) {
-      return true;
+      return isWithinWorkingHours(today);
     }
     
-    // For future dates, implement sequential access
-    const workingDays = getWorkingDays();
-    const todayIndex = workingDays.indexOf(todayString);
-    const dateIndex = workingDays.indexOf(dateString);
+    // For future dates in the displayed week, implement sequential access
+    const todayIndex = displayWorkingDays.indexOf(todayString);
+    const dateIndex = displayWorkingDays.indexOf(dateString);
     
     if (todayIndex === -1 || dateIndex === -1) return false;
     
-    // Only allow access to the next sequential working day
+    // Check if we're in a new week (Monday) and it's before working hours
+    if (dateIndex === 0 && today.getDay() === 1) { // Monday
+      return isWithinWorkingHours(today);
+    }
+    
+    // For other future dates in the same week, implement sequential access
     if (dateIndex === todayIndex + 1) {
       // Check if current day is finished
-      const currentDayData = allDailyData[workingDays[todayIndex]];
+      const currentDayData = allDailyData[displayWorkingDays[todayIndex]];
       if (currentDayData?.isFinished) {
-        // Current day is finished, allow access to next day
-        return true;
+        // Current day is finished, allow access to next day during working hours
+        return isWithinWorkingHours(today);
       }
       return false; // Current day not finished, no access to next day
     }
@@ -695,6 +700,31 @@ const ProductionTracker = () => {
     return workingDays;
   };
 
+  // Get working days to display based on new logic:
+  // - Current week cards remain visible until 23:00 PM Sunday
+  // - New week cards appear Monday but cannot be accessed until working hours
+  const getDisplayWorkingDays = React.useCallback((): string[] => {
+    const today = new Date();
+    const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const currentHour = today.getHours();
+    
+    // If it's Sunday and before 23:00, show current week
+    if (currentDay === 0 && currentHour < 23) {
+      return getWorkingDays();
+    }
+    
+    // If it's Sunday after 23:00 or any other day, show next week
+    if (currentDay === 0 && currentHour >= 23) {
+      // Get next week's working days
+      const nextWeek = new Date(today);
+      nextWeek.setDate(today.getDate() + 1); // Move to Monday
+      return getWorkingDays(nextWeek.toISOString().split('T')[0]);
+    }
+    
+    // For all other days, show current week
+    return getWorkingDays();
+  }, []);
+
   const formatDateForDisplay = (dateString: string): string => {
     const date = new Date(dateString);
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -709,13 +739,13 @@ const ProductionTracker = () => {
 
   // Check if the current week is complete (all working days finished)
   const isWeekComplete = (): boolean => {
-    const workingDays = getWorkingDays(selectedDate);
+    const workingDays = getDisplayWorkingDays();
     return workingDays.every(day => allDailyData[day]?.isFinished);
   };
 
   // Get the current week's data for summary
   const getCurrentWeekData = () => {
-    const workingDays = getWorkingDays(selectedDate);
+    const workingDays = getDisplayWorkingDays();
     const weekData = workingDays.map(day => allDailyData[day]).filter(Boolean);
     
     const totalCompletedMinutes = weekData.reduce((sum, day) => 
@@ -738,7 +768,7 @@ const ProductionTracker = () => {
 
   // Reset function to start a new week
   const resetWeek = () => {
-    const workingDays = getWorkingDays(selectedDate);
+    const workingDays = getDisplayWorkingDays();
     const nextWeekStart = new Date(workingDays[0]);
     nextWeekStart.setDate(nextWeekStart.getDate() + 7); // Move to next Monday
     
@@ -776,15 +806,15 @@ const ProductionTracker = () => {
   React.useEffect(() => {
     if (!selectedDate && isLoggedIn) {
       const today = getCurrentDateKey();
-      const workingDays = getWorkingDays(today);
+      const displayWorkingDays = getDisplayWorkingDays();
       
       // Check if current week is complete and we should move to next week
-      const isCurrentWeekComplete = workingDays.every(day => allDailyData[day]?.isFinished);
-      const isCurrentWeekInProgress = workingDays.some(day => allDailyData[day] && !allDailyData[day].isFinished);
+      const isCurrentWeekComplete = displayWorkingDays.every(day => allDailyData[day]?.isFinished);
+      const isCurrentWeekInProgress = displayWorkingDays.some(day => allDailyData[day] && !allDailyData[day].isFinished);
       
       if (isCurrentWeekComplete && !isCurrentWeekInProgress) {
         // Move to next week
-        const nextWeekStart = new Date(workingDays[0]);
+        const nextWeekStart = new Date(displayWorkingDays[0]);
         nextWeekStart.setDate(nextWeekStart.getDate() + 7);
         
         const nextWeekDays: string[] = [];
@@ -795,13 +825,13 @@ const ProductionTracker = () => {
         }
         
         setSelectedDate(nextWeekDays[0]);
-      } else if (workingDays.includes(today)) {
+      } else if (displayWorkingDays.includes(today)) {
         setSelectedDate(today);
       } else {
-        setSelectedDate(workingDays[0]); // Default to Monday
+        setSelectedDate(displayWorkingDays[0]); // Default to Monday
       }
     }
-  }, [isLoggedIn, selectedDate, allDailyData]);
+  }, [isLoggedIn, selectedDate, allDailyData, getDisplayWorkingDays]);
 
   // Load data for selected date
   React.useEffect(() => {
@@ -2961,7 +2991,7 @@ const ProductionTracker = () => {
             <div className="flex items-center space-x-2">
               {/* Ultra Compact Working Days - 50% smaller, neat and tiny */}
               <div className="flex space-x-1 overflow-x-auto flex-1">
-                {getWorkingDays(selectedDate).map(date => {
+                {getDisplayWorkingDays().map(date => {
                   const dayData = allDailyData[date];
                   const isSelected = selectedDate === date;
                   const canAccess = canAccessDate(date);
@@ -3043,7 +3073,7 @@ const ProductionTracker = () => {
           )}
           
           <div className="flex flex-wrap gap-1">
-            {getWorkingDays(selectedDate).map((date) => {
+            {getDisplayWorkingDays().map((date) => {
               const isSelected = selectedDate === date;
               const hasData = allDailyData[date];
               const isToday = date === getCurrentDateKey();
