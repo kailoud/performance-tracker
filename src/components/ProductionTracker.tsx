@@ -4388,8 +4388,11 @@ const ProductionTracker = () => {
                             <h4 className="font-semibold text-gray-900 text-xs truncate max-w-full">
                               {user.name}
                             </h4>
-                            <p className="text-[10px] text-gray-500 truncate max-w-full">
-                              {user.email}
+                            <p className="text-[8px] text-gray-500 truncate max-w-full leading-tight">
+                              {user.email.length > 15 ? 
+                                `${user.name}@${user.email.split('@')[1]?.substring(0, 3) || 'com'}` : 
+                                user.email
+                              }
                             </p>
                           </div>
                           
