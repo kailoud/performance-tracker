@@ -953,8 +953,8 @@ const ProductionTracker = () => {
     setShowSuggestions(false);
     setFilteredItems([]);
     
-    // Only show timer popup during working hours or if admin
-    if (isWithinWorkingHoursState || isAdmin) {
+    // Only show timer popup during working hours and for today's date, or if admin
+    if (isAdmin || (isWithinWorkingHoursState && selectedDate === new Date().toISOString().split('T')[0])) {
       // Show timer popup for the selected item
       setTimerState(prev => {
         console.log('Setting timer state:', { ...prev, isVisible: true, expectedTime: item.time, itemCode: item.itemCode, lmCode: item.lmCode }); // Debug log
@@ -983,8 +983,8 @@ const ProductionTracker = () => {
       const item = productionData.find(p => p.itemCode === itemCode);
       if (item) {
         console.log('Found item for dropdown:', item); // Debug log
-        // Only show timer popup during working hours or if admin
-        if (isWithinWorkingHoursState || isAdmin) {
+        // Only show timer popup during working hours and for today's date, or if admin
+        if (isAdmin || (isWithinWorkingHoursState && selectedDate === new Date().toISOString().split('T')[0])) {
           // Show timer popup for the selected item
           setTimerState(prev => {
             console.log('Setting timer state from dropdown:', { ...prev, isVisible: true, expectedTime: item.time, itemCode: item.itemCode, lmCode: item.lmCode }); // Debug log
@@ -2095,10 +2095,22 @@ const ProductionTracker = () => {
   // Timer functions
   const startTimer = () => {
     if (!timerState.isActive) {
-      // Only allow timer operations during working hours or if admin
-      if (!isWithinWorkingHoursState && !isAdmin) {
-        alert('Timer can only be used during working hours (06:55 AM - 16:35 PM, Monday to Thursday)');
-        return;
+      // Only allow timer operations during working hours and for today's date, or if admin
+      if (!isAdmin) {
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+        const isWorkingDayToday = isWorkingDay(now);
+        const isWithinHours = isWithinWorkingHours(now);
+        
+        if (selectedDate !== today) {
+          alert('Timer can only be used for today\'s date during working hours for non-admin users.');
+          return;
+        }
+        
+        if (!isWorkingDayToday || !isWithinHours) {
+          alert('Timer can only be used during working hours (06:55 AM - 16:35 PM, Monday to Thursday)');
+          return;
+        }
       }
       
       // Request notification permission when starting timer
@@ -2127,10 +2139,22 @@ const ProductionTracker = () => {
 
   const pauseTimer = () => {
     if (timerState.isActive && !timerState.isPaused) {
-      // Only allow timer operations during working hours or if admin
-      if (!isWithinWorkingHoursState && !isAdmin) {
-        alert('Timer can only be used during working hours (06:55 AM - 16:35 PM, Monday to Thursday)');
-        return;
+      // Only allow timer operations during working hours and for today's date, or if admin
+      if (!isAdmin) {
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+        const isWorkingDayToday = isWorkingDay(now);
+        const isWithinHours = isWithinWorkingHours(now);
+        
+        if (selectedDate !== today) {
+          alert('Timer can only be used for today\'s date during working hours for non-admin users.');
+          return;
+        }
+        
+        if (!isWorkingDayToday || !isWithinHours) {
+          alert('Timer can only be used during working hours (06:55 AM - 16:35 PM, Monday to Thursday)');
+          return;
+        }
       }
       
       setTimerState(prev => ({
@@ -2147,10 +2171,22 @@ const ProductionTracker = () => {
 
   const resumeTimer = () => {
     if (timerState.isActive && timerState.isPaused) {
-      // Only allow timer operations during working hours or if admin
-      if (!isWithinWorkingHoursState && !isAdmin) {
-        alert('Timer can only be used during working hours (06:55 AM - 16:35 PM, Monday to Thursday)');
-        return;
+      // Only allow timer operations during working hours and for today's date, or if admin
+      if (!isAdmin) {
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+        const isWorkingDayToday = isWorkingDay(now);
+        const isWithinHours = isWithinWorkingHours(now);
+        
+        if (selectedDate !== today) {
+          alert('Timer can only be used for today\'s date during working hours for non-admin users.');
+          return;
+        }
+        
+        if (!isWorkingDayToday || !isWithinHours) {
+          alert('Timer can only be used during working hours (06:55 AM - 16:35 PM, Monday to Thursday)');
+          return;
+        }
       }
       
       const now = Date.now();
