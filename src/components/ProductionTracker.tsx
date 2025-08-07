@@ -1798,9 +1798,16 @@ const ProductionTracker = () => {
     }
     
     // For main user interface
-    const currentDate = getCurrentDateKey();
-    console.log('🗑️ Main interface delete for date:', currentDate, 'user:', userId);
-    const currentData = allDailyData[currentDate];
+    let targetDate = getCurrentDateKey();
+    
+    // If we're in the calendar popup viewing historical data, use the selected date
+    if (selectedHistoryDate) {
+      targetDate = selectedHistoryDate;
+      console.log('🗑️ Using selected history date for deletion:', targetDate);
+    }
+    
+    console.log('🗑️ Main interface delete for date:', targetDate, 'user:', userId);
+    const currentData = allDailyData[targetDate];
     if (currentData) {
       const updatedJobs = currentData.completedJobs.filter(job => job.id !== jobId);
       const updatedData = {
@@ -1813,18 +1820,18 @@ const ProductionTracker = () => {
       // Update local state
       setAllDailyData(prev => ({
         ...prev,
-        [currentDate]: updatedData
+        [targetDate]: updatedData
       }));
       
       // Save to Firebase
       if (userId) {
         console.log('🗑️ Saving to Firebase...');
-        saveDailyData(userId, currentDate, updatedData);
+        saveDailyData(userId, targetDate, updatedData);
       } else {
         console.log('🗑️ No userId available');
       }
     } else {
-      console.log('🗑️ No current data found for date:', currentDate);
+      console.log('🗑️ No current data found for date:', targetDate);
     }
   };
 
@@ -1849,9 +1856,16 @@ const ProductionTracker = () => {
     }
     
     // For main user interface
-    const currentDate = getCurrentDateKey();
-    console.log('🗑️ Main interface delete loss time for date:', currentDate, 'user:', userId);
-    const currentData = allDailyData[currentDate];
+    let targetDate = getCurrentDateKey();
+    
+    // If we're in the calendar popup viewing historical data, use the selected date
+    if (selectedHistoryDate) {
+      targetDate = selectedHistoryDate;
+      console.log('🗑️ Using selected history date for loss time deletion:', targetDate);
+    }
+    
+    console.log('🗑️ Main interface delete loss time for date:', targetDate, 'user:', userId);
+    const currentData = allDailyData[targetDate];
     if (currentData) {
       const updatedLossTime = currentData.lossTimeEntries.filter(entry => entry.id !== entryId);
       const updatedData = {
@@ -1864,18 +1878,18 @@ const ProductionTracker = () => {
       // Update local state
       setAllDailyData(prev => ({
         ...prev,
-        [currentDate]: updatedData
+        [targetDate]: updatedData
       }));
       
       // Save to Firebase
       if (userId) {
         console.log('🗑️ Saving loss time to Firebase...');
-        saveDailyData(userId, currentDate, updatedData);
+        saveDailyData(userId, targetDate, updatedData);
       } else {
         console.log('🗑️ No userId available for loss time');
       }
     } else {
-      console.log('🗑️ No current data found for loss time date:', currentDate);
+      console.log('🗑️ No current data found for loss time date:', targetDate);
     }
   };
 
