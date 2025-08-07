@@ -777,9 +777,14 @@ const ProductionTracker = () => {
   };
 
   // Check if deletion is allowed (non-admin users cannot delete after finish day or if less than 2 items remain)
-  const canDeleteData = React.useCallback((dateString: string): boolean => {
+
+
+  // Memoized version for the current selected date to avoid repeated calculations
+  const canDeleteCurrentData = React.useMemo(() => {
+    if (!selectedDate) return false;
+    const dayData = allDailyData[selectedDate];
+    
     if (isAdmin) return true; // Admin can always delete
-    const dayData = allDailyData[dateString];
     
     // Cannot delete if day is finished
     if (dayData?.isFinished) {
@@ -788,17 +793,15 @@ const ProductionTracker = () => {
     
     // Cannot delete if less than 3 items (for bulk deletion - ensures at least 2 remain after deletion)
     const totalItems = (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0);
-    if (totalItems < 3) {
-      return false;
-    }
-    
-    return true;
-  }, [isAdmin, allDailyData]);
+    return totalItems >= 3;
+  }, [selectedDate, isAdmin, allDailyData]);
 
-  // Check if individual items can be deleted (more than 2 total items)
-  const canDeleteIndividualItem = React.useCallback((dateString: string): boolean => {
+  // Memoized version for individual item deletion
+  const canDeleteCurrentIndividualItem = React.useMemo(() => {
+    if (!selectedDate) return false;
+    const dayData = allDailyData[selectedDate];
+    
     if (isAdmin) return true; // Admin can always delete
-    const dayData = allDailyData[dateString];
     
     // Cannot delete if day is finished
     if (dayData?.isFinished) {
@@ -808,19 +811,7 @@ const ProductionTracker = () => {
     // Can delete individual items if there are more than 2 total items
     const totalItems = (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0);
     return totalItems > 2;
-  }, [isAdmin, allDailyData]);
-
-  // Memoized version for the current selected date to avoid repeated calculations
-  const canDeleteCurrentData = React.useMemo(() => {
-    if (!selectedDate) return false;
-    return canDeleteData(selectedDate);
-  }, [selectedDate, canDeleteData]);
-
-  // Memoized version for individual item deletion
-  const canDeleteCurrentIndividualItem = React.useMemo(() => {
-    if (!selectedDate) return false;
-    return canDeleteIndividualItem(selectedDate);
-  }, [selectedDate, canDeleteIndividualItem]);
+  }, [selectedDate, isAdmin, allDailyData]);
 
   // Get the current week's data for summary
   const getCurrentWeekData = () => {
