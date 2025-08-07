@@ -64,7 +64,11 @@ export const signUp = async (email: string, password: string): Promise<User> => 
   try {
     const userCredential: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
     return userCredential.user;
-  } catch (error) {
+  } catch (error: any) {
+    // Handle network errors specifically
+    if (error.code === 'auth/network-request-failed') {
+      throw new Error('Network error: Please check your internet connection and try again.');
+    }
     throw error;
   }
 };
@@ -94,7 +98,11 @@ export const signIn = async (email: string, password: string): Promise<User> => 
     }
     
     return userCredential.user;
-  } catch (error) {
+  } catch (error: any) {
+    // Handle network errors specifically
+    if (error.code === 'auth/network-request-failed') {
+      throw new Error('Network error: Please check your internet connection and try again.');
+    }
     throw error;
   }
 };
@@ -102,7 +110,11 @@ export const signIn = async (email: string, password: string): Promise<User> => 
 export const resetPassword = async (email: string): Promise<void> => {
   try {
     await sendPasswordResetEmail(auth, email);
-  } catch (error) {
+  } catch (error: any) {
+    // Handle network errors specifically
+    if (error.code === 'auth/network-request-failed') {
+      throw new Error('Network error: Please check your internet connection and try again.');
+    }
     throw error;
   }
 };

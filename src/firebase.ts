@@ -6,7 +6,7 @@ import { getAuth } from 'firebase/auth';
 const firebaseConfig = {
   apiKey: "AIzaSyD1m-ujx2qua2LnyAiN1zXZLs98AHh-URo",
   authDomain: "performance-trackerapp.firebaseapp.com",
-  databaseURL: "https://performance-trackerapp-default-rtdb.europe-w",
+  databaseURL: "https://performance-trackerapp-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "performance-trackerapp",
   storageBucket: "performance-trackerapp.firebasestorage.app",
   messagingSenderId: "389701249735",
