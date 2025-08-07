@@ -4149,7 +4149,8 @@ const ProductionTracker = () => {
                       // Monday(1) to Thursday(4) are working days
                       const isWorkingDay = dayOfWeek >= 1 && dayOfWeek <= 4;
                       const dayData = allDailyData[dateString];
-                      const hasData = dayData && (dayData.completedJobs.length > 0 || dayData.lossTimeEntries.length > 0);
+                      const isFutureDate = dateObj > new Date();
+                      const hasData = dayData && !isFutureDate && (dayData.completedJobs.length > 0 || dayData.lossTimeEntries.length > 0);
                       const isSelected = selectedHistoryDate === dateString;
                       const isToday = isCurrentMonth && todayDate === day;
                       
@@ -4157,33 +4158,37 @@ const ProductionTracker = () => {
                         <button
                           key={day}
                           onClick={() => {
-                            if (isWorkingDay) {
+                            if (isWorkingDay && !isFutureDate) {
                               setSelectedHistoryDate(dateString);
                             }
                           }}
-                          disabled={!isWorkingDay}
+                          disabled={!isWorkingDay || isFutureDate}
                           className={`
                             h-10 w-10 rounded-lg text-sm font-medium transition-all duration-200 relative
                             ${isSelected 
                               ? 'bg-blue-600 text-white shadow-lg transform scale-105' 
                               : hasData && isWorkingDay
                                 ? 'bg-green-100 hover:bg-green-200 text-green-800 hover:shadow-md cursor-pointer' 
-                                : isWorkingDay
+                                : isWorkingDay && !isFutureDate
                                   ? 'bg-gray-100 text-gray-600 cursor-pointer'
-                                  : 'text-gray-300 cursor-not-allowed'
+                                  : isWorkingDay && isFutureDate
+                                    ? 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                                    : 'text-gray-300 cursor-not-allowed'
                             }
                             ${isToday ? 'ring-2 ring-blue-300 ring-opacity-60' : ''}
                           `}
                           title={
                             hasData && isWorkingDay
                               ? `View data for ${dateObj.toLocaleDateString()}` 
-                              : isWorkingDay 
+                              : isWorkingDay && !isFutureDate
                                 ? `View ${dateObj.toLocaleDateString()} (no data)` 
-                                : 'Not a working day'
+                                : isWorkingDay && isFutureDate
+                                  ? `Future date: ${dateObj.toLocaleDateString()}`
+                                  : 'Not a working day'
                           }
                         >
                           {day}
-                          {isWorkingDay && (
+                          {isWorkingDay && !isFutureDate && (
                             <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
                               hasData ? 'bg-green-500' : 'bg-gray-400'
                             }`}></div>
