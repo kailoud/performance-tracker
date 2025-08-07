@@ -190,8 +190,7 @@ const ProductionTracker = () => {
   const [showTimeExceededBanner, setShowTimeExceededBanner] = useState(false);
   const [bannerData, setBannerData] = useState<any>(null);
   
-  // Firebase initialization state
-  const [firebaseInitialized, setFirebaseInitialized] = useState(false);
+
   
   // Admin search state
   const [adminSearchQuery, setAdminSearchQuery] = useState('');
@@ -243,8 +242,6 @@ const ProductionTracker = () => {
           auth.authStateReady(),
           timeoutPromise
         ]);
-        
-        setFirebaseInitialized(true);
       } catch (error) {
         console.error('Firebase initialization error:', error);
         // If Firebase fails, clear storage and retry
@@ -2491,38 +2488,6 @@ const ProductionTracker = () => {
         <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
-          {!firebaseInitialized && (
-            <p className="text-sm text-yellow-600 mt-2">Initializing Firebase...</p>
-          )}
-          <p className="text-sm text-gray-500 mt-2">If this takes too long, try refreshing the page</p>
-          <div className="flex space-x-2 mt-4">
-            <button 
-              onClick={() => window.location.reload()} 
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Refresh Page
-            </button>
-            <button 
-              onClick={() => {
-                // Force clear all storage and reload
-                if ('indexedDB' in window) {
-                  indexedDB.databases().then(databases => {
-                    databases.forEach(db => {
-                      if (db.name) {
-                        indexedDB.deleteDatabase(db.name);
-                      }
-                    });
-                  });
-                }
-                localStorage.clear();
-                sessionStorage.clear();
-                window.location.reload();
-              }} 
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Clear Storage & Reload
-            </button>
-          </div>
         </div>
       </div>
     );
