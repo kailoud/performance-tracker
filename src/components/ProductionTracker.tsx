@@ -779,36 +779,26 @@ const ProductionTracker = () => {
   // Check if deletion is allowed (non-admin users cannot delete after finish day or if less than 2 items remain)
 
 
-  // Simplified delete logic - allow deletion if not finished and has data
+  // Simplified delete logic - allow deletion if has data
   const canDeleteCurrentData = React.useMemo(() => {
     if (!selectedDate) return false;
     const dayData = allDailyData[selectedDate];
     
     if (isAdmin) return true; // Admin can always delete
     
-    // Cannot delete if day is finished
-    if (dayData?.isFinished) {
-      return false;
-    }
-    
-    // Allow deletion if there are items to delete
+    // Allow deletion if there are items to delete (regardless of day status)
     const totalItems = (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0);
     return totalItems > 0;
   }, [selectedDate, isAdmin, allDailyData]);
 
-  // Simplified individual item deletion - allow if not finished and has more than 1 item
+  // Simplified individual item deletion - allow if has more than 1 item
   const canDeleteCurrentIndividualItem = React.useMemo(() => {
     if (!selectedDate) return false;
     const dayData = allDailyData[selectedDate];
     
     if (isAdmin) return true; // Admin can always delete
     
-    // Cannot delete if day is finished
-    if (dayData?.isFinished) {
-      return false;
-    }
-    
-    // Allow individual deletion if there are more than 1 total items
+    // Allow individual deletion if there are more than 1 total items (regardless of day status)
     const totalItems = (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0);
     return totalItems > 1;
   }, [selectedDate, isAdmin, allDailyData]);
@@ -2100,14 +2090,6 @@ const ProductionTracker = () => {
     console.log('🗑️ Main interface delete for date:', targetDate, 'user:', userId);
     const currentData = allDailyData[targetDate];
     if (currentData) {
-      // Check if day is finished (non-admin users cannot delete after finish day)
-      if (currentData.isFinished && !isAdmin) {
-        alert('❌ Cannot delete data after the day has been finished. Please contact an administrator if you need to make changes.');
-        return;
-      }
-      
-
-      
       const updatedJobs = currentData.completedJobs.filter(job => job.id !== jobId);
       const updatedData = {
         ...currentData,
@@ -2166,14 +2148,6 @@ const ProductionTracker = () => {
     console.log('🗑️ Main interface delete loss time for date:', targetDate, 'user:', userId);
     const currentData = allDailyData[targetDate];
     if (currentData) {
-      // Check if day is finished (non-admin users cannot delete after finish day)
-      if (currentData.isFinished && !isAdmin) {
-        alert('❌ Cannot delete data after the day has been finished. Please contact an administrator if you need to make changes.');
-        return;
-      }
-      
-
-      
       const updatedLossTime = currentData.lossTimeEntries.filter(entry => entry.id !== entryId);
       const updatedData = {
         ...currentData,
@@ -3726,7 +3700,7 @@ const ProductionTracker = () => {
                           ? 'bg-red-600 hover:bg-red-700 text-white'
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
-                      title={canDeleteCurrentData ? "Delete all completed jobs" : "Cannot delete (day finished or no items to delete)"}
+                      title={canDeleteCurrentData ? "Delete all completed jobs" : "No items to delete"}
                     >
                       🗑️ Clear All
                     </button>
@@ -3777,7 +3751,7 @@ const ProductionTracker = () => {
                                   ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
                                   : 'text-gray-400 cursor-not-allowed'
                               }`}
-                              title={canDeleteCurrentIndividualItem ? "Delete this job" : "Cannot delete (day finished or only 1 item remaining)"}
+                              title={canDeleteCurrentIndividualItem ? "Delete this job" : "Only 1 item remaining"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -3811,7 +3785,7 @@ const ProductionTracker = () => {
                           ? 'bg-red-600 hover:bg-red-700 text-white'
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
-                      title={canDeleteCurrentData ? "Delete all loss time entries" : "Cannot delete (day finished or no items to delete)"}
+                      title={canDeleteCurrentData ? "Delete all loss time entries" : "No items to delete"}
                     >
                       🗑️ Clear All
                     </button>
@@ -3846,7 +3820,7 @@ const ProductionTracker = () => {
                                   ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
                                   : 'text-gray-400 cursor-not-allowed'
                               }`}
-                              title={canDeleteCurrentIndividualItem ? "Delete this loss time entry" : "Cannot delete (day finished or only 1 item remaining)"}
+                              title={canDeleteCurrentIndividualItem ? "Delete this loss time entry" : "Only 1 item remaining"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
