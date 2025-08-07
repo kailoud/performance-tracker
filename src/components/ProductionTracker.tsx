@@ -4115,6 +4115,31 @@ const ProductionTracker = () => {
                                 </button>
                                 <button
                                   onClick={() => {
+                                    if (window.confirm(`⚠️ FORCE CLEAR: This will clear ${user.name}'s display data locally (Firebase quota exceeded). Data will reappear on page refresh unless Firebase quota is available.`)) {
+                                      // Force clear the user's data locally for testing
+                                      if (selectedUserForEdit && selectedUserForEdit.uid === user.uid) {
+                                        const today = new Date().toISOString().split('T')[0];
+                                        setEditingUserData(prev => ({
+                                          ...prev,
+                                          [today]: {
+                                            date: today,
+                                            completedJobs: [],
+                                            lossTimeEntries: [],
+                                            isFinished: false,
+                                            updatedAt: new Date().toISOString()
+                                          }
+                                        }));
+                                      }
+                                      alert('✅ Display data cleared locally (temporary fix due to Firebase quota)');
+                                    }
+                                  }}
+                                  className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium transition-colors"
+                                  title="Force clear display data locally (temporary)"
+                                >
+                                  🚨 Force
+                                </button>
+                                <button
+                                  onClick={() => {
                                     const date = window.prompt('📅 Enter date (YYYY-MM-DD) to reset:');
                                     if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
                                       if (window.confirm(`🔄 Reset ${user.name}'s data for ${date}?`)) {
