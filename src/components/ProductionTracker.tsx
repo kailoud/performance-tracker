@@ -783,57 +783,7 @@ const ProductionTracker = () => {
   }, [selectedDate, allDailyData, isDataLoading]);
 
   // Manual save function
-  const handleManualSave = async () => {
-    if (!selectedDate || !userId) return;
-    
-    try {
-      setIsSaving(true);
-      
-      // Update local state
-      setAllDailyData(prev => {
-        const currentData = prev[selectedDate];
-        const dailyData: any = {
-          date: selectedDate,
-          completedJobs,
-          lossTimeEntries,
-          isFinished: currentData?.isFinished || false
-        };
 
-        // Only add finishTime if it exists (avoid undefined values)
-        if (currentData?.finishTime) {
-          dailyData.finishTime = currentData.finishTime;
-        }
-
-        return {
-          ...prev,
-          [selectedDate]: dailyData
-        };
-      });
-
-      // Save to Firebase
-      const currentData = allDailyData[selectedDate];
-      const dailyData: any = {
-        date: selectedDate,
-        completedJobs,
-        lossTimeEntries,
-        isFinished: currentData?.isFinished || false
-      };
-
-      if (currentData?.finishTime) {
-        dailyData.finishTime = currentData.finishTime;
-      }
-
-      const cleanedData = removeUndefinedValues(dailyData);
-      await saveDailyData(userId, selectedDate, cleanedData);
-      
-      setLastSaved(new Date());
-      setIsSaving(false);
-    } catch (error) {
-      console.error('Error saving data:', error);
-      setIsSaving(false);
-      alert('Error saving data. Please try again.');
-    }
-  };
 
   const completedMinutes = completedJobs.reduce((sum, job) => sum + job.actualMinutes, 0);
   const lossTimeTotal = lossTimeEntries.reduce((sum, entry) => sum + entry.minutes, 0);
