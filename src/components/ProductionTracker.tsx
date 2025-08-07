@@ -2859,7 +2859,7 @@ const ProductionTracker = () => {
                       disabled={!canAccess}
                       className={`flex-shrink-0 w-12 h-12 rounded-lg border transition-all flex flex-col items-center justify-center relative ${
                         isSelected
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-md transform scale-105'
+                          ? 'bg-blue-600 text-gray-900 border-blue-600 shadow-md transform scale-105'
                           : canAccess
                           ? 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm'
                           : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
@@ -2939,7 +2939,7 @@ const ProductionTracker = () => {
                   disabled={!canAccess}
                   className={`px-2 py-1 text-[10px] rounded border transition-all ${
                     isSelected
-                      ? 'bg-blue-600 text-white border-blue-600'
+                      ? 'bg-blue-600 text-gray-900 border-blue-600'
                       : hasData || isToday
                       ? 'bg-white text-gray-700 border-gray-300 hover:border-blue-400 hover:bg-blue-50'
                       : 'bg-white text-gray-500 border-gray-200'
