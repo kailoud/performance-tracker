@@ -14,82 +14,60 @@ const firebaseConfig = {
   measurementId: "G-YY78TD4HMN"
 };
 
-// Clear problematic Firebase storage on initialization
-const clearFirebaseStorage = () => {
+// Initialize Firebase with retry logic
+let app: any;
+let retryCount = 0;
+const maxRetries = 3;
+
+const initializeFirebase = () => {
   try {
-    // Clear ALL IndexedDB databases that might be corrupted
-    if ('indexedDB' in window) {
-      // Clear Firebase specific databases
-      const databasesToDelete = [
-        'firebaseLocalStorageDb',
-        'firebaseLocalStorage',
-        'firebaseRemoteConfig',
-        'firebaseRemoteConfigDb'
-      ];
-      
-      databasesToDelete.forEach(dbName => {
-        const request = indexedDB.deleteDatabase(dbName);
-        request.onsuccess = () => {
-          console.log(`Database ${dbName} cleared successfully`);
-        };
-        request.onerror = () => {
-          console.log(`Could not clear database ${dbName}`);
-        };
-      });
-    }
-    
-    // Clear ALL localStorage entries related to Firebase
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && (key.includes('firebase') || key.includes('Firebase') || key.includes('remoteConfig'))) {
-        keysToRemove.push(key);
-      }
-    }
-    keysToRemove.forEach(key => {
-      localStorage.removeItem(key);
-      console.log(`Removed localStorage key: ${key}`);
-    });
-    
-    // Clear sessionStorage as well
-    for (let i = 0; i < sessionStorage.length; i++) {
-      const key = sessionStorage.key(i);
-      if (key && (key.includes('firebase') || key.includes('Firebase') || key.includes('remoteConfig'))) {
-        sessionStorage.removeItem(key);
-        console.log(`Removed sessionStorage key: ${key}`);
-      }
-    }
-    
+    app = initializeApp(firebaseConfig);
+    console.log('Firebase initialized successfully');
+    return app;
   } catch (error) {
-    console.log('Error clearing Firebase storage:', error);
+    console.error('Firebase initialization error:', error);
+    retryCount++;
+    
+    if (retryCount < maxRetries) {
+      console.log(`Retrying Firebase initialization (attempt ${retryCount + 1}/${maxRetries})...`);
+      // Wait a bit before retrying
+      setTimeout(() => {
+        initializeFirebase();
+      }, 1000);
+    } else {
+      console.error('Firebase initialization failed after maximum retries');
+      throw error;
+    }
   }
 };
 
-// Clear storage on app initialization
-clearFirebaseStorage();
-
-// Initialize Firebase with error handling
-let app;
-try {
-  app = initializeApp(firebaseConfig);
-} catch (error) {
-  console.error('Firebase initialization error:', error);
-  // If Firebase fails to initialize, clear storage and retry
-  clearFirebaseStorage();
-  app = initializeApp(firebaseConfig);
-}
+// Initialize Firebase
+app = initializeFirebase();
 
 // Initialize Firestore and Auth with error handling
 let db: any, auth: any;
-try {
-  db = getFirestore(app);
-  auth = getAuth(app);
-} catch (error) {
-  console.error('Firebase service initialization error:', error);
-  // Retry initialization
-  db = getFirestore(app);
-  auth = getAuth(app);
-}
+
+const initializeServices = () => {
+  try {
+    db = getFirestore(app);
+    auth = getAuth(app);
+    console.log('Firebase services initialized successfully');
+  } catch (error) {
+    console.error('Firebase service initialization error:', error);
+    // Retry service initialization
+    setTimeout(() => {
+      try {
+        db = getFirestore(app);
+        auth = getAuth(app);
+        console.log('Firebase services initialized on retry');
+      } catch (retryError) {
+        console.error('Firebase services initialization failed on retry:', retryError);
+      }
+    }, 1000);
+  }
+};
+
+initializeServices();
 
 export { db, auth };
 export default app; 

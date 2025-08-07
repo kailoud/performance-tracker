@@ -234,7 +234,7 @@ const ProductionTracker = () => {
       try {
         // Set a timeout for Firebase initialization
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Firebase initialization timeout')), 5000); // 5 second timeout
+          setTimeout(() => reject(new Error('Firebase initialization timeout')), 10000); // 10 second timeout
         });
         
         // Test Firebase connection with timeout
@@ -242,6 +242,7 @@ const ProductionTracker = () => {
           auth.authStateReady(),
           timeoutPromise
         ]);
+        console.log('Firebase auth state ready');
       } catch (error) {
         console.error('Firebase initialization error:', error);
         // Don't reload the page, just continue with the app
@@ -1702,6 +1703,12 @@ const ProductionTracker = () => {
       return;
     }
 
+    // Check network connectivity first
+    if (!navigator.onLine) {
+      setAuthError('No internet connection. Please check your network and try again.');
+      return;
+    }
+
     try {
       setAuthError('');
       setIsLoading(true);
@@ -1750,6 +1757,12 @@ const ProductionTracker = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(forgotPasswordEmail)) {
       setForgotPasswordMessage('Please enter a valid email address');
+      return;
+    }
+
+    // Check network connectivity first
+    if (!navigator.onLine) {
+      setForgotPasswordMessage('No internet connection. Please check your network and try again.');
       return;
     }
 
