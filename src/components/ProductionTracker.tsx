@@ -647,15 +647,15 @@ const ProductionTracker = () => {
   }, []);
 
   // Helper functions for date management
-  const getWorkingDays = (): string[] => {
-    const today = new Date();
-    const currentWeekStart = new Date(today);
-    currentWeekStart.setDate(today.getDate() - today.getDay() + 1); // Monday
+  const getWorkingDays = (baseDate?: string): string[] => {
+    const dateToUse = baseDate ? new Date(baseDate) : new Date();
+    const weekStart = new Date(dateToUse);
+    weekStart.setDate(dateToUse.getDate() - dateToUse.getDay() + 1); // Monday
     
     const workingDays: string[] = [];
     for (let i = 0; i < 4; i++) { // Monday to Thursday
-      const date = new Date(currentWeekStart);
-      date.setDate(currentWeekStart.getDate() + i);
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + i);
       workingDays.push(date.toISOString().split('T')[0]);
     }
     return workingDays;
@@ -675,13 +675,13 @@ const ProductionTracker = () => {
 
   // Check if the current week is complete (all working days finished)
   const isWeekComplete = (): boolean => {
-    const workingDays = getWorkingDays();
+    const workingDays = getWorkingDays(selectedDate);
     return workingDays.every(day => allDailyData[day]?.isFinished);
   };
 
   // Get the current week's data for summary
   const getCurrentWeekData = () => {
-    const workingDays = getWorkingDays();
+    const workingDays = getWorkingDays(selectedDate);
     const weekData = workingDays.map(day => allDailyData[day]).filter(Boolean);
     
     const totalCompletedMinutes = weekData.reduce((sum, day) => 
@@ -704,7 +704,7 @@ const ProductionTracker = () => {
 
   // Reset function to start a new week
   const resetWeek = () => {
-    const workingDays = getWorkingDays();
+    const workingDays = getWorkingDays(selectedDate);
     const nextWeekStart = new Date(workingDays[0]);
     nextWeekStart.setDate(nextWeekStart.getDate() + 7); // Move to next Monday
     
@@ -742,7 +742,7 @@ const ProductionTracker = () => {
   React.useEffect(() => {
     if (!selectedDate && isLoggedIn) {
       const today = getCurrentDateKey();
-      const workingDays = getWorkingDays();
+      const workingDays = getWorkingDays(today);
       
       // Check if current week is complete and we should move to next week
       const isCurrentWeekComplete = workingDays.every(day => allDailyData[day]?.isFinished);
@@ -1093,7 +1093,7 @@ const ProductionTracker = () => {
       }));
 
       // Check if this is Thursday (last day of the week)
-      const workingDays = getWorkingDays();
+      const workingDays = getWorkingDays(selectedDate);
       const currentIndex = workingDays.indexOf(selectedDate);
       const isThursday = currentIndex === 3; // Thursday is index 3 (Monday=0, Tuesday=1, Wednesday=2, Thursday=3)
       
@@ -1469,7 +1469,7 @@ const ProductionTracker = () => {
     // Week info
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'normal');
-    const workingDays = getWorkingDays();
+    const workingDays = getWorkingDays(selectedDate);
     const weekStart = formatDateForDisplay(workingDays[0]);
     const weekEnd = formatDateForDisplay(workingDays[3]);
     pdf.text(`Week: ${weekStart} to ${weekEnd}`, margin, 45);
@@ -2840,7 +2840,7 @@ const ProductionTracker = () => {
             <div className="flex items-center space-x-2">
               {/* Ultra Compact Working Days - 50% smaller, neat and tiny */}
               <div className="flex space-x-1 overflow-x-auto flex-1">
-                {getWorkingDays().map(date => {
+                {getWorkingDays(selectedDate).map(date => {
                   const dayData = allDailyData[date];
                   const isSelected = selectedDate === date;
                   const canAccess = canAccessDate(date);
@@ -2922,7 +2922,7 @@ const ProductionTracker = () => {
           )}
           
           <div className="flex flex-wrap gap-1">
-            {getWorkingDays().map((date) => {
+            {getWorkingDays(selectedDate).map((date) => {
               const isSelected = selectedDate === date;
               const hasData = allDailyData[date];
               const isToday = date === getCurrentDateKey();
@@ -2986,7 +2986,7 @@ const ProductionTracker = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-purple-800">🎉 Week Complete!</h3>
               <div className="text-sm text-purple-600">
-                All {getWorkingDays().length} working days finished
+                All {getWorkingDays(selectedDate).length} working days finished
               </div>
             </div>
             
