@@ -3293,10 +3293,25 @@ const ProductionTracker = () => {
             
             {completedJobs.length > 0 && (
               <div className="mb-8">
-                <div className="flex items-center mb-4">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                  <h3 className="text-base sm:text-lg font-medium text-gray-800">Completed Jobs</h3>
-                  <span className="ml-2 text-sm text-gray-500">({completedJobs.length} jobs)</span>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                    <h3 className="text-base sm:text-lg font-medium text-gray-800">Completed Jobs</h3>
+                    <span className="ml-2 text-sm text-gray-500">({completedJobs.length} jobs)</span>
+                  </div>
+                  {completedJobs.length > 0 && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`🗑️ Delete ALL ${completedJobs.length} completed jobs? This cannot be undone.`)) {
+                          completedJobs.forEach(job => handleDeleteJob(job.id));
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors"
+                      title="Delete all completed jobs"
+                    >
+                      🗑️ Clear All
+                    </button>
+                  )}
                 </div>
                 <div className="overflow-x-auto border border-gray-200 rounded-lg">
                   <table className="w-full table-auto text-xs sm:text-sm">
@@ -3307,6 +3322,7 @@ const ProductionTracker = () => {
                         <th className="px-3 py-3 text-left font-medium text-gray-700">Units</th>
                         <th className="px-3 py-3 text-left font-medium text-gray-700">Timer</th>
                         <th className="px-3 py-3 text-left font-medium text-gray-700">Time</th>
+                        <th className="px-3 py-3 text-center font-medium text-gray-700">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -3329,6 +3345,19 @@ const ProductionTracker = () => {
                             )}
                           </td>
                           <td className="px-3 py-3 text-xs text-gray-500">{job.timestamp}</td>
+                          <td className="px-3 py-3 text-center">
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`🗑️ Delete job "${job.itemCode}" (${job.unitsCompleted} units)?`)) {
+                                  handleDeleteJob(job.id);
+                                }
+                              }}
+                              className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                              title="Delete this job"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -3339,10 +3368,25 @@ const ProductionTracker = () => {
 
             {lossTimeEntries.length > 0 && (
               <div>
-                <div className="flex items-center mb-4">
-                  <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
-                  <h3 className="text-base sm:text-lg font-medium text-gray-800">Loss Time Entries</h3>
-                  <span className="ml-2 text-sm text-gray-500">({lossTimeEntries.length} entries)</span>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
+                    <h3 className="text-base sm:text-lg font-medium text-gray-800">Loss Time Entries</h3>
+                    <span className="ml-2 text-sm text-gray-500">({lossTimeEntries.length} entries)</span>
+                  </div>
+                  {lossTimeEntries.length > 0 && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`🗑️ Delete ALL ${lossTimeEntries.length} loss time entries? This cannot be undone.`)) {
+                          lossTimeEntries.forEach(entry => handleDeleteLossTime(entry.id));
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors"
+                      title="Delete all loss time entries"
+                    >
+                      🗑️ Clear All
+                    </button>
+                  )}
                 </div>
                 <div className="overflow-x-auto border border-gray-200 rounded-lg">
                   <table className="w-full table-auto text-xs sm:text-sm">
@@ -3351,6 +3395,7 @@ const ProductionTracker = () => {
                         <th className="px-3 py-3 text-left font-medium text-gray-700">Reason</th>
                         <th className="px-3 py-3 text-left font-medium text-gray-700">Minutes Lost</th>
                         <th className="px-3 py-3 text-left font-medium text-gray-700">Time</th>
+                        <th className="px-3 py-3 text-center font-medium text-gray-700">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -3359,6 +3404,19 @@ const ProductionTracker = () => {
                           <td className="px-3 py-3 font-medium text-red-700">{entry.reason}</td>
                           <td className="px-3 py-3 text-red-600 font-medium">{entry.minutes}</td>
                           <td className="px-3 py-3 text-xs text-gray-500">{entry.timestamp}</td>
+                          <td className="px-3 py-3 text-center">
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`🗑️ Delete loss time entry "${entry.reason}" (${entry.minutes} minutes)?`)) {
+                                  handleDeleteLossTime(entry.id);
+                                }
+                              }}
+                              className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                              title="Delete this loss time entry"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -3919,7 +3977,20 @@ const ProductionTracker = () => {
                   {/* Completed Jobs */}
                   {allDailyData[selectedHistoryDate].completedJobs.length > 0 && (
                     <div>
-                      <h3 className="text-lg font-semibold mb-3">✅ Completed Jobs</h3>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold">✅ Completed Jobs</h3>
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`🗑️ Delete ALL ${allDailyData[selectedHistoryDate].completedJobs.length} completed jobs for ${selectedHistoryDate}? This cannot be undone.`)) {
+                              allDailyData[selectedHistoryDate].completedJobs.forEach(job => handleDeleteJob(job.id));
+                            }
+                          }}
+                          className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors"
+                          title="Delete all completed jobs for this date"
+                        >
+                          🗑️ Clear All
+                        </button>
+                      </div>
                       <div className="overflow-x-auto overflow-y-auto max-h-80 border border-gray-200 rounded-lg">
                         <table className="w-full table-auto text-sm">
                           <thead>
@@ -3929,6 +4000,7 @@ const ProductionTracker = () => {
                               <th className="px-4 py-2 text-left">Units</th>
                               <th className="px-4 py-2 text-left">Minutes</th>
                               <th className="px-4 py-2 text-left">Time</th>
+                              <th className="px-4 py-2 text-center">Actions</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -3939,6 +4011,19 @@ const ProductionTracker = () => {
                                 <td className="px-4 py-2 font-medium text-blue-600">{job.unitsCompleted}</td>
                                 <td className="px-4 py-2">{job.actualMinutes.toFixed(1)}</td>
                                 <td className="px-4 py-2 text-xs">{job.timestamp}</td>
+                                <td className="px-4 py-2 text-center">
+                                  <button
+                                    onClick={() => {
+                                      if (window.confirm(`🗑️ Delete job "${job.itemCode}" (${job.unitsCompleted} units)?`)) {
+                                        handleDeleteJob(job.id);
+                                      }
+                                    }}
+                                    className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                                    title="Delete this job"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
@@ -3950,7 +4035,20 @@ const ProductionTracker = () => {
                   {/* Loss Time Entries */}
                   {allDailyData[selectedHistoryDate].lossTimeEntries.length > 0 && (
                     <div>
-                      <h3 className="text-lg font-semibold mb-3 text-red-700">⚠️ Loss Time Entries</h3>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-red-700">⚠️ Loss Time Entries</h3>
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`🗑️ Delete ALL ${allDailyData[selectedHistoryDate].lossTimeEntries.length} loss time entries for ${selectedHistoryDate}? This cannot be undone.`)) {
+                              allDailyData[selectedHistoryDate].lossTimeEntries.forEach(entry => handleDeleteLossTime(entry.id));
+                            }
+                          }}
+                          className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors"
+                          title="Delete all loss time entries for this date"
+                        >
+                          🗑️ Clear All
+                        </button>
+                      </div>
                       <div className="overflow-x-auto overflow-y-auto max-h-60 border border-gray-200 rounded-lg">
                         <table className="w-full table-auto text-sm">
                           <thead>
@@ -3958,6 +4056,7 @@ const ProductionTracker = () => {
                               <th className="px-4 py-2 text-left">Reason</th>
                               <th className="px-4 py-2 text-left">Minutes Lost</th>
                               <th className="px-4 py-2 text-left">Time</th>
+                              <th className="px-4 py-2 text-center">Actions</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -3966,6 +4065,19 @@ const ProductionTracker = () => {
                                 <td className="px-4 py-2 font-medium text-red-700">{entry.reason}</td>
                                 <td className="px-4 py-2 text-red-600">{entry.minutes}</td>
                                 <td className="px-4 py-2 text-xs">{entry.timestamp}</td>
+                                <td className="px-4 py-2 text-center">
+                                  <button
+                                    onClick={() => {
+                                      if (window.confirm(`🗑️ Delete loss time entry "${entry.reason}" (${entry.minutes} minutes)?`)) {
+                                        handleDeleteLossTime(entry.id);
+                                      }
+                                    }}
+                                    className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                                    title="Delete this loss time entry"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
