@@ -4343,140 +4343,50 @@ const ProductionTracker = () => {
                 </div>
 
                 {/* Users List */}
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 px-1">User Management</h3>
-                  {allUsers.map((user) => (
-                    <div key={user.uid} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                      {/* User Header */}
-                      <div className="p-4 border-b border-gray-100">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-r from-slate-600 to-slate-700 rounded-full flex items-center justify-center">
-                              <span className="text-white font-semibold text-sm">
-                                {user.name.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900">{user.name}</h4>
-                              <button
-                                onClick={() => handleEditUserData(user)}
-                                className="text-blue-600 hover:text-blue-800 text-sm underline"
-                              >
-                                {user.email}
-                              </button>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              user.isBlocked 
-                                ? 'bg-red-100 text-red-800 border border-red-200' 
-                                : 'bg-green-100 text-green-800 border border-green-200'
-                            }`}>
-                              {user.isBlocked ? '🚫 Blocked' : '✅ Active'}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {allUsers.map((user) => (
+                      <button
+                        key={user.uid}
+                        onClick={() => handleEditUserData(user)}
+                        className="group relative bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-200 hover:border-slate-300"
+                      >
+                        {/* Profile Square */}
+                        <div className="flex flex-col items-center space-y-3">
+                          <div className="w-16 h-16 bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl flex items-center justify-center shadow-sm">
+                            <span className="text-white font-bold text-xl">
+                              {user.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
+                          
+                          {/* User Info */}
+                          <div className="text-center">
+                            <h4 className="font-semibold text-gray-900 text-sm truncate max-w-full">
+                              {user.name}
+                            </h4>
+                            <p className="text-xs text-gray-500 truncate max-w-full">
+                              {user.email}
+                            </p>
+                          </div>
+                          
+                          {/* Status Badge */}
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            user.isBlocked 
+                              ? 'bg-red-100 text-red-800 border border-red-200' 
+                              : 'bg-green-100 text-green-800 border border-green-200'
+                          }`}>
+                            {user.isBlocked ? '🚫 Blocked' : '✅ Active'}
+                          </span>
                         </div>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="p-4 bg-gray-50">
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                          <button
-                            onClick={() => handleBlockUser(user.uid, !user.isBlocked)}
-                            className={`flex items-center justify-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                              user.isBlocked
-                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                                : 'bg-rose-600 hover:bg-rose-700 text-white'
-                            }`}
-                          >
-                            <span>{user.isBlocked ? '✅' : '🚫'}</span>
-                            <span>{user.isBlocked ? 'Unblock' : 'Block'}</span>
-                          </button>
-                          
-                          <button
-                            onClick={() => {
-                              const today = new Date().toISOString().split('T')[0];
-                              if (window.confirm(`🔄 Reset ${user.name}'s data for today (${today})?`)) {
-                                handleResetUserData(user.uid, today);
-                              }
-                            }}
-                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
-                          >
-                            <span>🔄</span>
-                            <span>Today</span>
-                          </button>
-                          
-                          <button
-                            onClick={() => {
-                              if (window.confirm(`⚠️ FORCE CLEAR: This will clear ${user.name}'s display data locally. Data will reappear on page refresh unless Firebase quota is available.`)) {
-                                if (selectedUserForEdit && selectedUserForEdit.uid === user.uid) {
-                                  const today = new Date().toISOString().split('T')[0];
-                                  setEditingUserData(prev => ({
-                                    ...prev,
-                                    [today]: {
-                                      date: today,
-                                      completedJobs: [],
-                                      lossTimeEntries: [],
-                                      isFinished: false,
-                                      updatedAt: new Date().toISOString()
-                                    }
-                                  }));
-                                }
-                                alert('✅ Display data cleared locally (temporary fix)');
-                              }
-                            }}
-                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-medium transition-colors"
-                          >
-                            <span>🚨</span>
-                            <span>Force</span>
-                          </button>
-                          
-                          <button
-                            onClick={() => {
-                              const date = window.prompt('📅 Enter date (YYYY-MM-DD) to reset:');
-                              if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-                                if (window.confirm(`🔄 Reset ${user.name}'s data for ${date}?`)) {
-                                  handleResetUserData(user.uid, date);
-                                }
-                              } else if (date) {
-                                window.alert('❌ Please enter a valid date in YYYY-MM-DD format');
-                              }
-                            }}
-                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-xs font-medium transition-colors"
-                          >
-                            <span>📅</span>
-                            <span>Date</span>
-                          </button>
-                          
-                          <button
-                            onClick={() => {
-                              const dates = ['Monday', 'Tuesday', 'Wednesday', 'Thursday'];
-                              const thisWeek = dates.map((_, i) => {
-                                const d = new Date();
-                                const monday = new Date(d.setDate(d.getDate() - d.getDay() + 1));
-                                return new Date(monday.getTime() + i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-                              });
-                              if (window.confirm(`🗓️ Reset ${user.name}'s data for the entire current week?\n\nDates: ${thisWeek.join(', ')}`)) {
-                                thisWeek.forEach(date => handleResetUserData(user.uid, date));
-                              }
-                            }}
-                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
-                          >
-                            <span>🗓️</span>
-                            <span>Week</span>
-                          </button>
-                          
-                          <button
-                            onClick={() => handleDeleteUser(user.uid, user.name)}
-                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-medium transition-colors"
-                          >
-                            <span>🗑️</span>
-                            <span>Delete</span>
-                          </button>
+                        
+                        {/* Hover Effect */}
+                        <div className="absolute inset-0 bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center">
+                          <span className="text-slate-600 font-medium text-sm">Click to Manage</span>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      </button>
+                    ))}
+                  </div>
                   
                   {allUsers.length === 0 && (
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
@@ -4796,6 +4706,102 @@ const ProductionTracker = () => {
                               {editingUserData[editingSelectedDate].isFinished ? 'Finished' : 'In Progress'}
                             </span>
                           </div>
+                        </div>
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h4 className="font-semibold mb-3 text-gray-800">User Management Actions</h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          <button
+                            onClick={() => handleBlockUser(selectedUserForEdit.uid, !allUsers.find(u => u.uid === selectedUserForEdit.uid)?.isBlocked)}
+                            className={`flex items-center justify-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                              allUsers.find(u => u.uid === selectedUserForEdit.uid)?.isBlocked
+                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                : 'bg-rose-600 hover:bg-rose-700 text-white'
+                            }`}
+                          >
+                            <span>{allUsers.find(u => u.uid === selectedUserForEdit.uid)?.isBlocked ? '✅' : '🚫'}</span>
+                            <span>{allUsers.find(u => u.uid === selectedUserForEdit.uid)?.isBlocked ? 'Unblock' : 'Block'}</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              const today = new Date().toISOString().split('T')[0];
+                              if (window.confirm(`🔄 Reset ${selectedUserForEdit.name}'s data for today (${today})?`)) {
+                                handleResetUserData(selectedUserForEdit.uid, today);
+                              }
+                            }}
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
+                          >
+                            <span>🔄</span>
+                            <span>Today</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`⚠️ FORCE CLEAR: This will clear ${selectedUserForEdit.name}'s display data locally. Data will reappear on page refresh unless Firebase quota is available.`)) {
+                                const today = new Date().toISOString().split('T')[0];
+                                setEditingUserData(prev => ({
+                                  ...prev,
+                                  [today]: {
+                                    date: today,
+                                    completedJobs: [],
+                                    lossTimeEntries: [],
+                                    isFinished: false,
+                                    updatedAt: new Date().toISOString()
+                                  }
+                                }));
+                                alert('✅ Display data cleared locally (temporary fix)');
+                              }
+                            }}
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-medium transition-colors"
+                          >
+                            <span>🚨</span>
+                            <span>Force</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              const date = window.prompt('📅 Enter date (YYYY-MM-DD) to reset:');
+                              if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                                if (window.confirm(`🔄 Reset ${selectedUserForEdit.name}'s data for ${date}?`)) {
+                                  handleResetUserData(selectedUserForEdit.uid, date);
+                                }
+                              } else if (date) {
+                                window.alert('❌ Please enter a valid date in YYYY-MM-DD format');
+                              }
+                            }}
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-xs font-medium transition-colors"
+                          >
+                            <span>📅</span>
+                            <span>Date</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              const workingDays = getWorkingDays(selectedDate);
+                              const weekStart = workingDays[0];
+                              const weekEnd = workingDays[3];
+                              if (window.confirm(`🔄 Reset ${selectedUserForEdit.name}'s data for entire week (${formatDateForDisplay(weekStart)} to ${formatDateForDisplay(weekEnd)})?`)) {
+                                workingDays.forEach(day => {
+                                  handleResetUserData(selectedUserForEdit.uid, day);
+                                });
+                              }
+                            }}
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
+                          >
+                            <span>🗓️</span>
+                            <span>Week</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => handleDeleteUser(selectedUserForEdit.uid, selectedUserForEdit.name)}
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-medium transition-colors"
+                          >
+                            <span>🗑️</span>
+                            <span>Delete</span>
+                          </button>
                         </div>
                       </div>
                       
