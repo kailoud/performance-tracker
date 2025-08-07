@@ -4148,7 +4148,8 @@ const ProductionTracker = () => {
                       
                       // Monday(1) to Thursday(4) are working days
                       const isWorkingDay = dayOfWeek >= 1 && dayOfWeek <= 4;
-                      const hasData = allDailyData[dateString];
+                      const dayData = allDailyData[dateString];
+                      const hasData = dayData && (dayData.completedJobs.length > 0 || dayData.lossTimeEntries.length > 0);
                       const isSelected = selectedHistoryDate === dateString;
                       const isToday = isCurrentMonth && todayDate === day;
                       
@@ -4156,11 +4157,11 @@ const ProductionTracker = () => {
                         <button
                           key={day}
                           onClick={() => {
-                            if (isWorkingDay && hasData) {
+                            if (isWorkingDay) {
                               setSelectedHistoryDate(dateString);
                             }
                           }}
-                          disabled={!isWorkingDay || !hasData}
+                          disabled={!isWorkingDay}
                           className={`
                             h-10 w-10 rounded-lg text-sm font-medium transition-all duration-200 relative
                             ${isSelected 
@@ -4168,7 +4169,7 @@ const ProductionTracker = () => {
                               : hasData && isWorkingDay
                                 ? 'bg-green-100 hover:bg-green-200 text-green-800 hover:shadow-md cursor-pointer' 
                                 : isWorkingDay
-                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  ? 'bg-gray-100 text-gray-600 cursor-pointer'
                                   : 'text-gray-300 cursor-not-allowed'
                             }
                             ${isToday ? 'ring-2 ring-blue-300 ring-opacity-60' : ''}
@@ -4177,13 +4178,15 @@ const ProductionTracker = () => {
                             hasData && isWorkingDay
                               ? `View data for ${dateObj.toLocaleDateString()}` 
                               : isWorkingDay 
-                                ? 'No data available' 
+                                ? `View ${dateObj.toLocaleDateString()} (no data)` 
                                 : 'Not a working day'
                           }
                         >
                           {day}
-                          {hasData && isWorkingDay && (
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                          {isWorkingDay && (
+                            <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
+                              hasData ? 'bg-green-500' : 'bg-gray-400'
+                            }`}></div>
                           )}
                           {isToday && !isSelected && (
                             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></div>
@@ -4201,6 +4204,10 @@ const ProductionTracker = () => {
                   <div className="flex items-center space-x-1">
                     <div className="w-3 h-3 bg-green-100 rounded border"></div>
                     <span>Has Data</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <div className="w-3 h-3 bg-gray-300 rounded border"></div>
+                    <span>No Data</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <div className="w-3 h-3 bg-blue-600 rounded"></div>
