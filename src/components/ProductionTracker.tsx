@@ -603,9 +603,9 @@ const ProductionTracker = () => {
       return true;
     }
     
-    // For today, only allow access during working hours
+    // For today, allow access anytime (removed working hours restriction)
     if (dateString === todayString) {
-      return isWithinWorkingHours(today);
+      return true;
     }
     
     // For future dates, implement sequential access
@@ -620,8 +620,8 @@ const ProductionTracker = () => {
       // Check if current day is finished
       const currentDayData = allDailyData[workingDays[todayIndex]];
       if (currentDayData?.isFinished) {
-        // Current day is finished, allow access to next day during working hours
-        return isWithinWorkingHours(today);
+        // Current day is finished, allow access to next day
+        return true;
       }
       return false; // Current day not finished, no access to next day
     }
@@ -793,21 +793,20 @@ const ProductionTracker = () => {
   const handleSubmit = async () => {
     if (!userId || !selectedDate) return;
     
-    // Check working hours and date restrictions for non-admin users
+    // Check date restrictions for non-admin users
     if (!isAdmin) {
       const now = new Date();
       const today = now.toISOString().split('T')[0];
       const isWorkingDayToday = isWorkingDay(now);
-      const isWithinHours = isWithinWorkingHours(now);
       
-      // Only allow logging on today's date during working hours
+      // Only allow logging on today's date
       if (selectedDate !== today) {
-        alert('❌ Job logging is only available for today\'s date during working hours for non-admin users.');
+        alert('❌ Job logging is only available for today\'s date for non-admin users.');
         return;
       }
       
-      if (!isWorkingDayToday || !isWithinHours) {
-        alert('❌ Job logging is only available during working hours (06:55 AM - 16:35 PM, Monday to Thursday) for non-admin users.');
+      if (!isWorkingDayToday) {
+        alert('❌ Job logging is only available on working days (Monday to Thursday) for non-admin users.');
         return;
       }
     }
@@ -954,7 +953,7 @@ const ProductionTracker = () => {
     setFilteredItems([]);
     
     // Only show timer popup during working hours and for today's date, or if admin
-    if (isAdmin || (isWithinWorkingHoursState && selectedDate === new Date().toISOString().split('T')[0])) {
+            if (isAdmin || selectedDate === new Date().toISOString().split('T')[0]) {
       // Show timer popup for the selected item
       setTimerState(prev => {
         console.log('Setting timer state:', { ...prev, isVisible: true, expectedTime: item.time, itemCode: item.itemCode, lmCode: item.lmCode }); // Debug log
@@ -984,7 +983,7 @@ const ProductionTracker = () => {
       if (item) {
         console.log('Found item for dropdown:', item); // Debug log
         // Only show timer popup during working hours and for today's date, or if admin
-        if (isAdmin || (isWithinWorkingHoursState && selectedDate === new Date().toISOString().split('T')[0])) {
+        if (isAdmin || selectedDate === new Date().toISOString().split('T')[0]) {
           // Show timer popup for the selected item
           setTimerState(prev => {
             console.log('Setting timer state from dropdown:', { ...prev, isVisible: true, expectedTime: item.time, itemCode: item.itemCode, lmCode: item.lmCode }); // Debug log
@@ -1009,21 +1008,20 @@ const ProductionTracker = () => {
   const handleLossTimeSubmit = async () => {
     if (!selectedLossReason || !lossTimeMinutes || !userId || !selectedDate) return;
 
-    // Check working hours and date restrictions for non-admin users
+    // Check date restrictions for non-admin users
     if (!isAdmin) {
       const now = new Date();
       const today = now.toISOString().split('T')[0];
       const isWorkingDayToday = isWorkingDay(now);
-      const isWithinHours = isWithinWorkingHours(now);
       
-      // Only allow logging on today's date during working hours
+      // Only allow logging on today's date
       if (selectedDate !== today) {
-        alert('❌ Loss time logging is only available for today\'s date during working hours for non-admin users.');
+        alert('❌ Loss time logging is only available for today\'s date for non-admin users.');
         return;
       }
       
-      if (!isWorkingDayToday || !isWithinHours) {
-        alert('❌ Loss time logging is only available during working hours (06:55 AM - 16:35 PM, Monday to Thursday) for non-admin users.');
+      if (!isWorkingDayToday) {
+        alert('❌ Loss time logging is only available on working days (Monday to Thursday) for non-admin users.');
         return;
       }
     }
@@ -1107,6 +1105,23 @@ const ProductionTracker = () => {
 
   const finishWorkDay = async () => {
     if (!userId || !selectedDate) return;
+    
+    // Check restrictions for non-admin users
+    if (!isAdmin) {
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      const isWorkingDayToday = isWorkingDay(now);
+      
+      if (selectedDate !== today) {
+        alert('❌ Finish Day is only available for today\'s date for non-admin users.');
+        return;
+      }
+      
+      if (!isWorkingDayToday) {
+        alert('❌ Finish Day is only available on working days (Monday to Thursday) for non-admin users.');
+        return;
+      }
+    }
     
     const finishTime = new Date().toLocaleTimeString();
     
@@ -2095,20 +2110,19 @@ const ProductionTracker = () => {
   // Timer functions
   const startTimer = () => {
     if (!timerState.isActive) {
-      // Only allow timer operations during working hours and for today's date, or if admin
+      // Only allow timer operations for today's date, or if admin
       if (!isAdmin) {
         const now = new Date();
         const today = now.toISOString().split('T')[0];
         const isWorkingDayToday = isWorkingDay(now);
-        const isWithinHours = isWithinWorkingHours(now);
         
         if (selectedDate !== today) {
-          alert('Timer can only be used for today\'s date during working hours for non-admin users.');
+          alert('Timer can only be used for today\'s date for non-admin users.');
           return;
         }
         
-        if (!isWorkingDayToday || !isWithinHours) {
-          alert('Timer can only be used during working hours (06:55 AM - 16:35 PM, Monday to Thursday)');
+        if (!isWorkingDayToday) {
+          alert('Timer can only be used on working days (Monday to Thursday) for non-admin users.');
           return;
         }
       }
@@ -2139,20 +2153,19 @@ const ProductionTracker = () => {
 
   const pauseTimer = () => {
     if (timerState.isActive && !timerState.isPaused) {
-      // Only allow timer operations during working hours and for today's date, or if admin
+      // Only allow timer operations for today's date, or if admin
       if (!isAdmin) {
         const now = new Date();
         const today = now.toISOString().split('T')[0];
         const isWorkingDayToday = isWorkingDay(now);
-        const isWithinHours = isWithinWorkingHours(now);
         
         if (selectedDate !== today) {
-          alert('Timer can only be used for today\'s date during working hours for non-admin users.');
+          alert('Timer can only be used for today\'s date for non-admin users.');
           return;
         }
         
-        if (!isWorkingDayToday || !isWithinHours) {
-          alert('Timer can only be used during working hours (06:55 AM - 16:35 PM, Monday to Thursday)');
+        if (!isWorkingDayToday) {
+          alert('Timer can only be used on working days (Monday to Thursday) for non-admin users.');
           return;
         }
       }
@@ -2171,20 +2184,19 @@ const ProductionTracker = () => {
 
   const resumeTimer = () => {
     if (timerState.isActive && timerState.isPaused) {
-      // Only allow timer operations during working hours and for today's date, or if admin
+      // Only allow timer operations for today's date, or if admin
       if (!isAdmin) {
         const now = new Date();
         const today = now.toISOString().split('T')[0];
         const isWorkingDayToday = isWorkingDay(now);
-        const isWithinHours = isWithinWorkingHours(now);
         
         if (selectedDate !== today) {
-          alert('Timer can only be used for today\'s date during working hours for non-admin users.');
+          alert('Timer can only be used for today\'s date for non-admin users.');
           return;
         }
         
-        if (!isWorkingDayToday || !isWithinHours) {
-          alert('Timer can only be used during working hours (06:55 AM - 16:35 PM, Monday to Thursday)');
+        if (!isWorkingDayToday) {
+          alert('Timer can only be used on working days (Monday to Thursday) for non-admin users.');
           return;
         }
       }
@@ -2755,9 +2767,9 @@ const ProductionTracker = () => {
               {selectedDate && (
                 <button
                   onClick={finishWorkDay}
-                  disabled={allDailyData[selectedDate]?.isFinished || (!isWithinWorkingHoursState && !isAdmin)}
+                  disabled={allDailyData[selectedDate]?.isFinished || (!isAdmin && selectedDate !== new Date().toISOString().split('T')[0])}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                    allDailyData[selectedDate]?.isFinished || (!isWithinWorkingHoursState && !isAdmin)
+                    allDailyData[selectedDate]?.isFinished || (!isAdmin && selectedDate !== new Date().toISOString().split('T')[0])
                       ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                       : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
                   }`}
@@ -2861,9 +2873,9 @@ const ProductionTracker = () => {
               {selectedDate && (
                 <button
                   onClick={finishWorkDay}
-                  disabled={allDailyData[selectedDate]?.isFinished || (!isWithinWorkingHoursState && !isAdmin)}
+                  disabled={allDailyData[selectedDate]?.isFinished || (!isAdmin && selectedDate !== new Date().toISOString().split('T')[0])}
                   className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                    allDailyData[selectedDate]?.isFinished || (!isWithinWorkingHoursState && !isAdmin)
+                    allDailyData[selectedDate]?.isFinished || (!isAdmin && selectedDate !== new Date().toISOString().split('T')[0])
                       ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                       : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
                   }`}
@@ -3305,7 +3317,7 @@ const ProductionTracker = () => {
 
             <button
               onClick={handleSubmit}
-              disabled={(!selectedItem && !getCurrentItem()) || !completedQuantity || (!isWithinWorkingHoursState && !isAdmin) || (!isAdmin && selectedDate !== new Date().toISOString().split('T')[0])}
+                                disabled={(!selectedItem && !getCurrentItem()) || !completedQuantity || (!isAdmin && selectedDate !== new Date().toISOString().split('T')[0])}
               className="w-full bg-blue-600 text-white py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors disabled:opacity-50 disabled:transform disabled:scale-95"
             >
               {isSaving ? 'Saving...' : 'Log & Save Job'}
@@ -3339,7 +3351,7 @@ const ProductionTracker = () => {
                 <h3 className="text-lg font-medium">Loss Time Tracking</h3>
                 <button
                   onClick={() => setShowLossTimeForm(!showLossTimeForm)}
-                  disabled={(!isWithinWorkingHoursState && !isAdmin) || (!isAdmin && selectedDate !== new Date().toISOString().split('T')[0])}
+                  disabled={(!isAdmin && selectedDate !== new Date().toISOString().split('T')[0])}
                   className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg flex items-center space-x-1 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50 disabled:transform disabled:scale-95 transition-colors"
                 >
                   <Plus className="h-4 w-4" />
@@ -3378,7 +3390,7 @@ const ProductionTracker = () => {
                   <div className="flex space-x-2">
                                       <button
                     onClick={handleLossTimeSubmit}
-                    disabled={!selectedLossReason || !lossTimeMinutes || (!isWithinWorkingHoursState && !isAdmin) || (!isAdmin && selectedDate !== new Date().toISOString().split('T')[0])}
+                    disabled={!selectedLossReason || !lossTimeMinutes || (!isAdmin && selectedDate !== new Date().toISOString().split('T')[0])}
                     className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:opacity-50 disabled:transform disabled:scale-95 disabled:cursor-not-allowed transition-colors"
                   >
                     {isSaving ? 'Saving...' : 'Log & Save Loss Time'}
