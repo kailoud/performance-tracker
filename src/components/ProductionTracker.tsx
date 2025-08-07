@@ -356,8 +356,8 @@ const ProductionTracker = () => {
     if ('Notification' in window && notificationPermission === 'granted') {
       new Notification(title, {
         body: body,
-        icon: '/bike1.png', // Use the app icon
-        badge: '/bike1.png',
+        icon: '/promax.png', // Use the app icon
+        badge: '/promax.png',
         tag: 'timer-notification'
       });
     }
@@ -2389,9 +2389,9 @@ const ProductionTracker = () => {
         <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
           <div className="text-center mb-6">
             <div className="mb-4">
-              <img 
-                src="/bike1.png" 
-                alt="Folding Bike Logo" 
+                            <img
+                src="/promax.png"
+                alt="Promax Logo"
                 className="mx-auto w-16 h-16 sm:w-20 sm:h-20 object-contain"
               />
             </div>
@@ -2624,7 +2624,7 @@ const ProductionTracker = () => {
             <div className="flex items-center space-x-4">
               {/* Logo moved to the side */}
               <img 
-                src="/bike1.png" 
+                src="/promax.png" 
                 alt="Company Logo" 
                 className="w-8 h-8 object-contain"
               />
