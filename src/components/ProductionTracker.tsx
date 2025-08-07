@@ -803,6 +803,29 @@ const ProductionTracker = () => {
     return totalItems > 2;
   }, [selectedDate, isAdmin, allDailyData]);
 
+  // Calendar popup validation functions
+  const canDeleteCalendarData = React.useMemo(() => {
+    if (!selectedHistoryDate) return false;
+    const dayData = allDailyData[selectedHistoryDate];
+    
+    if (isAdmin) return true; // Admin can always delete
+    
+    // Allow deletion if there are items to delete (regardless of day status)
+    const totalItems = (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0);
+    return totalItems > 0;
+  }, [selectedHistoryDate, isAdmin, allDailyData]);
+
+  const canDeleteCalendarIndividualItem = React.useMemo(() => {
+    if (!selectedHistoryDate) return false;
+    const dayData = allDailyData[selectedHistoryDate];
+    
+    if (isAdmin) return true; // Admin can always delete
+    
+    // Allow individual deletion if there are more than 2 total items (to leave at least 2 after deletion)
+    const totalItems = (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0);
+    return totalItems > 2;
+  }, [selectedHistoryDate, isAdmin, allDailyData]);
+
   // Get the current week's data for summary
   const getCurrentWeekData = () => {
     const workingDays = getDisplayWorkingDays();
@@ -4405,8 +4428,13 @@ const ProductionTracker = () => {
                               allDailyData[selectedHistoryDate].completedJobs.forEach(job => handleDeleteJob(job.id));
                             }
                           }}
-                          className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors"
-                          title="Delete all completed jobs for this date"
+                          disabled={!canDeleteCalendarData}
+                          className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+                            canDeleteCalendarData
+                              ? 'bg-red-600 hover:bg-red-700 text-white'
+                              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          }`}
+                          title={canDeleteCalendarData ? "Delete all completed jobs for this date" : "No items to delete"}
                         >
                           🗑️ Clear All
                         </button>
@@ -4438,8 +4466,13 @@ const ProductionTracker = () => {
                                         handleDeleteJob(job.id);
                                       }
                                     }}
-                                    className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                                    title="Delete this job"
+                                    disabled={!canDeleteCalendarIndividualItem}
+                                    className={`p-1 rounded transition-colors ${
+                                      canDeleteCalendarIndividualItem
+                                        ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
+                                        : 'text-gray-400 cursor-not-allowed'
+                                    }`}
+                                    title={canDeleteCalendarIndividualItem ? "Delete this job" : "Cannot delete (less than 3 items total)"}
                                   >
                                     <Trash2 className="h-3 w-3" />
                                   </button>
@@ -4463,8 +4496,13 @@ const ProductionTracker = () => {
                               allDailyData[selectedHistoryDate].lossTimeEntries.forEach(entry => handleDeleteLossTime(entry.id));
                             }
                           }}
-                          className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors"
-                          title="Delete all loss time entries for this date"
+                          disabled={!canDeleteCalendarData}
+                          className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+                            canDeleteCalendarData
+                              ? 'bg-red-600 hover:bg-red-700 text-white'
+                              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          }`}
+                          title={canDeleteCalendarData ? "Delete all loss time entries for this date" : "No items to delete"}
                         >
                           🗑️ Clear All
                         </button>
@@ -4492,8 +4530,13 @@ const ProductionTracker = () => {
                                         handleDeleteLossTime(entry.id);
                                       }
                                     }}
-                                    className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                                    title="Delete this loss time entry"
+                                    disabled={!canDeleteCalendarIndividualItem}
+                                    className={`p-1 rounded transition-colors ${
+                                      canDeleteCalendarIndividualItem
+                                        ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
+                                        : 'text-gray-400 cursor-not-allowed'
+                                    }`}
+                                    title={canDeleteCalendarIndividualItem ? "Delete this loss time entry" : "Cannot delete (less than 3 items total)"}
                                   >
                                     <Trash2 className="h-3 w-3" />
                                   </button>
