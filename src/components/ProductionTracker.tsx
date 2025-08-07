@@ -793,11 +793,18 @@ const ProductionTracker = () => {
   const handleSubmit = async () => {
     if (!userId || !selectedDate) return;
     
-    // Check working hours restrictions for non-admin users
+    // Check working hours and date restrictions for non-admin users
     if (!isAdmin) {
       const now = new Date();
+      const today = now.toISOString().split('T')[0];
       const isWorkingDayToday = isWorkingDay(now);
       const isWithinHours = isWithinWorkingHours(now);
+      
+      // Only allow logging on today's date during working hours
+      if (selectedDate !== today) {
+        alert('❌ Job logging is only available for today\'s date during working hours for non-admin users.');
+        return;
+      }
       
       if (!isWorkingDayToday || !isWithinHours) {
         alert('❌ Job logging is only available during working hours (06:55 AM - 16:35 PM, Monday to Thursday) for non-admin users.');
@@ -1002,11 +1009,18 @@ const ProductionTracker = () => {
   const handleLossTimeSubmit = async () => {
     if (!selectedLossReason || !lossTimeMinutes || !userId || !selectedDate) return;
 
-    // Check working hours restrictions for non-admin users
+    // Check working hours and date restrictions for non-admin users
     if (!isAdmin) {
       const now = new Date();
+      const today = now.toISOString().split('T')[0];
       const isWorkingDayToday = isWorkingDay(now);
       const isWithinHours = isWithinWorkingHours(now);
+      
+      // Only allow logging on today's date during working hours
+      if (selectedDate !== today) {
+        alert('❌ Loss time logging is only available for today\'s date during working hours for non-admin users.');
+        return;
+      }
       
       if (!isWorkingDayToday || !isWithinHours) {
         alert('❌ Loss time logging is only available during working hours (06:55 AM - 16:35 PM, Monday to Thursday) for non-admin users.');
@@ -3255,7 +3269,7 @@ const ProductionTracker = () => {
 
             <button
               onClick={handleSubmit}
-              disabled={(!selectedItem && !getCurrentItem()) || !completedQuantity || (!isWithinWorkingHoursState && !isAdmin)}
+              disabled={(!selectedItem && !getCurrentItem()) || !completedQuantity || (!isWithinWorkingHoursState && !isAdmin) || (!isAdmin && selectedDate !== new Date().toISOString().split('T')[0])}
               className="w-full bg-blue-600 text-white py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors disabled:opacity-50 disabled:transform disabled:scale-95"
             >
               {isSaving ? 'Saving...' : 'Log & Save Job'}
@@ -3289,7 +3303,7 @@ const ProductionTracker = () => {
                 <h3 className="text-lg font-medium">Loss Time Tracking</h3>
                 <button
                   onClick={() => setShowLossTimeForm(!showLossTimeForm)}
-                  disabled={!isWithinWorkingHoursState && !isAdmin}
+                  disabled={(!isWithinWorkingHoursState && !isAdmin) || (!isAdmin && selectedDate !== new Date().toISOString().split('T')[0])}
                   className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg flex items-center space-x-1 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50 disabled:transform disabled:scale-95 transition-colors"
                 >
                   <Plus className="h-4 w-4" />
@@ -3326,13 +3340,13 @@ const ProductionTracker = () => {
                   </div>
 
                   <div className="flex space-x-2">
-                    <button
-                      onClick={handleLossTimeSubmit}
-                      disabled={!selectedLossReason || !lossTimeMinutes || (!isWithinWorkingHoursState && !isAdmin)}
-                      className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:opacity-50 disabled:transform disabled:scale-95 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {isSaving ? 'Saving...' : 'Log & Save Loss Time'}
-                    </button>
+                                      <button
+                    onClick={handleLossTimeSubmit}
+                    disabled={!selectedLossReason || !lossTimeMinutes || (!isWithinWorkingHoursState && !isAdmin) || (!isAdmin && selectedDate !== new Date().toISOString().split('T')[0])}
+                    className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:opacity-50 disabled:transform disabled:scale-95 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isSaving ? 'Saving...' : 'Log & Save Loss Time'}
+                  </button>
                     
                     {/* Time restriction warning for loss time */}
                     {(!isWithinWorkingHoursState && !isAdmin) && (
