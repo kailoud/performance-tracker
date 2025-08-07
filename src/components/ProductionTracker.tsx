@@ -781,13 +781,30 @@ const ProductionTracker = () => {
     if (isAdmin) return true; // Admin can always delete
     const dayData = allDailyData[dateString];
     
+    console.log('🔍 canDeleteData check:', {
+      dateString,
+      isAdmin,
+      dayData,
+      isFinished: dayData?.isFinished,
+      completedJobs: dayData?.completedJobs?.length || 0,
+      lossTimeEntries: dayData?.lossTimeEntries?.length || 0,
+      totalItems: (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0)
+    });
+    
     // Cannot delete if day is finished
-    if (dayData?.isFinished) return false;
+    if (dayData?.isFinished) {
+      console.log('❌ Cannot delete: Day is finished');
+      return false;
+    }
     
     // Cannot delete if less than 3 items (to ensure at least 2 remain after deletion)
     const totalItems = (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0);
-    if (totalItems < 3) return false;
+    if (totalItems < 3) {
+      console.log('❌ Cannot delete: Less than 3 items total');
+      return false;
+    }
     
+    console.log('✅ Can delete: All conditions met');
     return true;
   };
 
