@@ -234,7 +234,7 @@ const ProductionTracker = () => {
       try {
         // Set a timeout for Firebase initialization
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Firebase initialization timeout')), 10000); // 10 second timeout
+          setTimeout(() => reject(new Error('Firebase initialization timeout')), 15000); // 15 second timeout
         });
         
         // Test Firebase connection with timeout

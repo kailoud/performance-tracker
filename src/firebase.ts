@@ -14,60 +14,50 @@ const firebaseConfig = {
   measurementId: "G-YY78TD4HMN"
 };
 
-// Initialize Firebase with retry logic
-let app: any;
-let retryCount = 0;
-const maxRetries = 3;
-
-const initializeFirebase = () => {
+// Test network connectivity
+const testConnectivity = async () => {
   try {
-    app = initializeApp(firebaseConfig);
-    console.log('Firebase initialized successfully');
-    return app;
+    await fetch('https://www.google.com', { 
+      method: 'HEAD',
+      mode: 'no-cors'
+    });
+    console.log('Network connectivity test passed');
+    return true;
   } catch (error) {
-    console.error('Firebase initialization error:', error);
-    retryCount++;
-    
-    if (retryCount < maxRetries) {
-      console.log(`Retrying Firebase initialization (attempt ${retryCount + 1}/${maxRetries})...`);
-      // Wait a bit before retrying
-      setTimeout(() => {
-        initializeFirebase();
-      }, 1000);
-    } else {
-      console.error('Firebase initialization failed after maximum retries');
-      throw error;
-    }
+    console.error('Network connectivity test failed:', error);
+    return false;
   }
 };
 
-// Initialize Firebase
-app = initializeFirebase();
-
-// Initialize Firestore and Auth with error handling
+// Initialize Firebase with simple error handling
+let app: any;
 let db: any, auth: any;
 
-const initializeServices = () => {
+try {
+  // Test connectivity first
+  testConnectivity();
+  
+  // Initialize Firebase
+  app = initializeApp(firebaseConfig);
+  console.log('Firebase initialized successfully');
+  
+  // Initialize services
+  db = getFirestore(app);
+  auth = getAuth(app);
+  console.log('Firebase services initialized successfully');
+  
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+  // Create a minimal app instance for fallback
   try {
+    app = initializeApp(firebaseConfig, 'fallback');
     db = getFirestore(app);
     auth = getAuth(app);
-    console.log('Firebase services initialized successfully');
-  } catch (error) {
-    console.error('Firebase service initialization error:', error);
-    // Retry service initialization
-    setTimeout(() => {
-      try {
-        db = getFirestore(app);
-        auth = getAuth(app);
-        console.log('Firebase services initialized on retry');
-      } catch (retryError) {
-        console.error('Firebase services initialization failed on retry:', retryError);
-      }
-    }, 1000);
+    console.log('Firebase initialized with fallback');
+  } catch (fallbackError) {
+    console.error('Firebase fallback initialization failed:', fallbackError);
   }
-};
-
-initializeServices();
+}
 
 export { db, auth };
 export default app; 
