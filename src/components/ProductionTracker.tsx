@@ -1778,34 +1778,104 @@ const ProductionTracker = () => {
   };
 
   const handleDeleteJob = (jobId: number) => {
-    if (!selectedUserForEdit || !editingSelectedDate) return;
+    console.log('🗑️ Deleting job with ID:', jobId);
     
-    const currentData = editingUserData[editingSelectedDate];
+    // For admin panel
+    if (selectedUserForEdit && editingSelectedDate) {
+      console.log('🗑️ Admin panel delete for user:', selectedUserForEdit.uid);
+      const currentData = editingUserData[editingSelectedDate];
+      if (currentData) {
+        const updatedJobs = currentData.completedJobs.filter(job => job.id !== jobId);
+        setEditingUserData(prev => ({
+          ...prev,
+          [editingSelectedDate]: {
+            ...currentData,
+            completedJobs: updatedJobs
+          }
+        }));
+      }
+      return;
+    }
+    
+    // For main user interface
+    const currentDate = getCurrentDateKey();
+    console.log('🗑️ Main interface delete for date:', currentDate, 'user:', userId);
+    const currentData = allDailyData[currentDate];
     if (currentData) {
       const updatedJobs = currentData.completedJobs.filter(job => job.id !== jobId);
-      setEditingUserData(prev => ({
+      const updatedData = {
+        ...currentData,
+        completedJobs: updatedJobs
+      };
+      
+      console.log('🗑️ Updated jobs count:', updatedJobs.length);
+      
+      // Update local state
+      setAllDailyData(prev => ({
         ...prev,
-        [editingSelectedDate]: {
-          ...currentData,
-          completedJobs: updatedJobs
-        }
+        [currentDate]: updatedData
       }));
+      
+      // Save to Firebase
+      if (userId) {
+        console.log('🗑️ Saving to Firebase...');
+        saveDailyData(userId, currentDate, updatedData);
+      } else {
+        console.log('🗑️ No userId available');
+      }
+    } else {
+      console.log('🗑️ No current data found for date:', currentDate);
     }
   };
 
   const handleDeleteLossTime = (entryId: number) => {
-    if (!selectedUserForEdit || !editingSelectedDate) return;
+    console.log('🗑️ Deleting loss time entry with ID:', entryId);
     
-    const currentData = editingUserData[editingSelectedDate];
+    // For admin panel
+    if (selectedUserForEdit && editingSelectedDate) {
+      console.log('🗑️ Admin panel delete loss time for user:', selectedUserForEdit.uid);
+      const currentData = editingUserData[editingSelectedDate];
+      if (currentData) {
+        const updatedLossTime = currentData.lossTimeEntries.filter(entry => entry.id !== entryId);
+        setEditingUserData(prev => ({
+          ...prev,
+          [editingSelectedDate]: {
+            ...currentData,
+            lossTimeEntries: updatedLossTime
+          }
+        }));
+      }
+      return;
+    }
+    
+    // For main user interface
+    const currentDate = getCurrentDateKey();
+    console.log('🗑️ Main interface delete loss time for date:', currentDate, 'user:', userId);
+    const currentData = allDailyData[currentDate];
     if (currentData) {
       const updatedLossTime = currentData.lossTimeEntries.filter(entry => entry.id !== entryId);
-      setEditingUserData(prev => ({
+      const updatedData = {
+        ...currentData,
+        lossTimeEntries: updatedLossTime
+      };
+      
+      console.log('🗑️ Updated loss time entries count:', updatedLossTime.length);
+      
+      // Update local state
+      setAllDailyData(prev => ({
         ...prev,
-        [editingSelectedDate]: {
-          ...currentData,
-          lossTimeEntries: updatedLossTime
-        }
+        [currentDate]: updatedData
       }));
+      
+      // Save to Firebase
+      if (userId) {
+        console.log('🗑️ Saving loss time to Firebase...');
+        saveDailyData(userId, currentDate, updatedData);
+      } else {
+        console.log('🗑️ No userId available for loss time');
+      }
+    } else {
+      console.log('🗑️ No current data found for loss time date:', currentDate);
     }
   };
 
