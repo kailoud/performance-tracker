@@ -2999,49 +2999,49 @@ const ProductionTracker = () => {
         
         {/* Weekly Summary - shows when week is complete */}
         {isWeekComplete() && (
-          <div className="mb-4 sm:mb-6 bg-white p-4 sm:p-6 rounded-lg border border-gray-200 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-800">🎉 Week Complete!</h3>
+          <div className="mb-6 bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">🎉 Week Complete!</h3>
               <div className="text-sm text-gray-600">
                 All {getWorkingDays(selectedDate).length} working days finished
               </div>
             </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <div className="text-2xl font-bold text-gray-800">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <div className="text-2xl font-bold text-gray-900">
                   {getCurrentWeekData().totalCompletedMinutes.toFixed(1)}
                 </div>
                 <div className="text-sm text-gray-600">Total Minutes</div>
               </div>
               
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <div className="text-2xl font-bold text-gray-800">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <div className="text-2xl font-bold text-gray-900">
                   {getCurrentWeekData().totalJobs}
                 </div>
                 <div className="text-sm text-gray-600">Total Jobs</div>
               </div>
               
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <div className="text-2xl font-bold text-gray-800">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <div className="text-2xl font-bold text-gray-900">
                   {getCurrentWeekData().totalLossTime}
                 </div>
                 <div className="text-sm text-gray-600">Loss Time</div>
               </div>
               
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <div className="text-2xl font-bold text-gray-800">
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <div className="text-2xl font-bold text-gray-900">
                   {getCurrentWeekData().daysCompleted}
                 </div>
                 <div className="text-sm text-gray-600">Days Completed</div>
               </div>
             </div>
             
-            <div className="mt-4 text-center">
-              <p className="text-gray-700 mb-2">Ready to start a new week?</p>
+            <div className="text-center">
+              <p className="text-gray-700 mb-3">Ready to start a new week?</p>
               <button
                 onClick={resetWeek}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
               >
                 🚀 Start New Week
               </button>
@@ -3050,56 +3050,48 @@ const ProductionTracker = () => {
         )}
         
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
-          <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 shadow-sm">
-            <div className="flex items-center">
-              <Target className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600 mr-2 sm:mr-3" />
-              <div>
-                <p className="text-xs sm:text-sm text-gray-600">Target</p>
-                <p className="text-lg sm:text-xl font-bold text-gray-800">{TARGET_MINUTES} min</p>
-              </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+          <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div className="text-center">
+              <Target className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+              <p className="text-sm font-medium text-gray-600 mb-1">Target</p>
+              <p className="text-xl font-bold text-gray-900">{TARGET_MINUTES} min</p>
             </div>
           </div>
           
-          <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 shadow-sm">
-            <div className="flex items-center">
-              <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600 mr-2 sm:mr-3" />
-              <div>
-                <p className="text-xs sm:text-sm text-gray-600">Completed</p>
-                <p className="text-lg sm:text-xl font-bold text-gray-800">{completedMinutes.toFixed(1)} min</p>
-              </div>
+          <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div className="text-center">
+              <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
+              <p className="text-sm font-medium text-gray-600 mb-1">Completed</p>
+              <p className="text-xl font-bold text-gray-900">{completedMinutes.toFixed(1)} min</p>
             </div>
           </div>
           
-          <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 shadow-sm">
-            <div className="flex items-center">
-              <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600 mr-2 sm:mr-3" />
-              <div>
-                <p className="text-xs sm:text-sm text-gray-600">Remaining</p>
-                <p className="text-lg sm:text-xl font-bold text-gray-800">{remainingMinutes.toFixed(1)} min</p>
-              </div>
+          <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div className="text-center">
+              <AlertCircle className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+              <p className="text-sm font-medium text-gray-600 mb-1">Remaining</p>
+              <p className="text-xl font-bold text-gray-900">{remainingMinutes.toFixed(1)} min</p>
             </div>
           </div>
           
-          <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 shadow-sm">
-            <div className="flex items-center">
-              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600 mr-2 sm:mr-3" />
-              <div>
-                <p className="text-xs sm:text-sm text-gray-600">Progress</p>
-                <p className="text-lg sm:text-xl font-bold text-gray-800">{completedPercentage.toFixed(1)}%</p>
-              </div>
+          <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <div className="text-center">
+              <Clock className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+              <p className="text-sm font-medium text-gray-600 mb-1">Progress</p>
+              <p className="text-xl font-bold text-gray-900">{completedPercentage.toFixed(1)}%</p>
             </div>
           </div>
         </div>
 
         {/* Loss Time Alert */}
         {lossTimeTotal > 0 && (
-          <div className="bg-white p-3 sm:p-4 rounded-lg mb-4 border border-gray-200 shadow-sm">
+          <div className="bg-white p-4 rounded-xl mb-6 border border-gray-100 shadow-sm">
             <div className="flex items-center">
-              <StopCircle className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600 mr-2 sm:mr-3" />
+              <StopCircle className="h-8 w-8 text-red-500 mr-3" />
               <div>
-                <p className="text-xs sm:text-sm text-gray-600">Loss Time Today</p>
-                <p className="text-lg sm:text-xl font-bold text-gray-800">{lossTimeTotal} min</p>
+                <p className="text-sm font-medium text-gray-600">Loss Time Today</p>
+                <p className="text-xl font-bold text-gray-900">{lossTimeTotal} min</p>
                 <p className="text-xs text-gray-500">Adjusted Target: {adjustedTarget} minutes (was {TARGET_MINUTES})</p>
               </div>
             </div>
@@ -3210,16 +3202,21 @@ const ProductionTracker = () => {
 
             {/* Item Info Display */}
             {getCurrentItem() && (
-              <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Target Quantity:</span> {getCurrentItem()?.quantity} units
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Target Time:</span> {getCurrentItem()?.time} minutes
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">LM Code:</span> {getCurrentItem()?.lmCode}
-                </p>
+              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600">Target Quantity:</span>
+                    <span className="text-sm font-bold text-gray-900">{getCurrentItem()?.quantity} units</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600">Target Time:</span>
+                    <span className="text-sm font-bold text-gray-900">{getCurrentItem()?.time} minutes</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600">LM Code:</span>
+                    <span className="text-sm font-bold text-gray-900">{getCurrentItem()?.lmCode}</span>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -3282,7 +3279,7 @@ const ProductionTracker = () => {
               </div>
 
               {showLossTimeForm && (
-                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-3 mb-4">
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-4 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Reason for Loss Time</label>
                     <select
@@ -3343,14 +3340,14 @@ const ProductionTracker = () => {
                 <div className="space-y-2">
                   <h4 className="font-medium text-gray-700">Recent Loss Time:</h4>
                   {lossTimeEntries.slice(-3).reverse().map(entry => (
-                    <div key={entry.id} className="flex justify-between items-center bg-white p-2 rounded border border-gray-200 shadow-sm">
+                    <div key={entry.id} className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
                       <div>
-                        <span className="font-medium text-gray-700">{entry.reason}</span>
+                        <span className="font-medium text-gray-900">{entry.reason}</span>
                         <span className="text-sm text-gray-600 ml-2">({entry.minutes} min at {entry.timestamp})</span>
                       </div>
                       <button
                         onClick={() => deleteLossTimeEntry(entry.id)}
-                        className="text-gray-600 hover:text-gray-800"
+                        className="text-gray-500 hover:text-red-600 transition-colors"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
