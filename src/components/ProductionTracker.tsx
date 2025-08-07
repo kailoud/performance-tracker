@@ -18,7 +18,7 @@ import {
   resetPassword
 } from '../firebaseService';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 
 // Helper function to remove undefined values from objects
 const removeUndefinedValues = (obj: any): any => {
@@ -190,6 +190,9 @@ const ProductionTracker = () => {
   const [showTimeExceededBanner, setShowTimeExceededBanner] = useState(false);
   const [bannerData, setBannerData] = useState<any>(null);
   
+  // Firebase initialization state
+  const [firebaseInitialized, setFirebaseInitialized] = useState(false);
+  
   // Admin search state
   const [adminSearchQuery, setAdminSearchQuery] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<Array<{uid: string, email: string, name: string, isBlocked: boolean}>>([]);
@@ -227,6 +230,27 @@ const ProductionTracker = () => {
 
   // Firebase authentication effect
   useEffect(() => {
+    // Check Firebase initialization
+    const checkFirebaseInit = async () => {
+      try {
+        // Test Firebase connection
+        await auth.authStateReady();
+        setFirebaseInitialized(true);
+      } catch (error) {
+        console.error('Firebase initialization error:', error);
+        // If Firebase fails, clear storage and retry
+        if ('indexedDB' in window) {
+          const request = indexedDB.deleteDatabase('firebaseLocalStorageDb');
+          request.onsuccess = () => {
+            console.log('Firebase storage cleared, retrying initialization...');
+            window.location.reload();
+          };
+        }
+      }
+    };
+
+    checkFirebaseInit();
+
     const unsubscribe = onAuthChange(async (user: any) => {
       if (user) {
         try {
@@ -2461,6 +2485,13 @@ const ProductionTracker = () => {
         <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
+          <p className="text-sm text-gray-500 mt-2">If this takes too long, try refreshing the page</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Refresh Page
+          </button>
         </div>
       </div>
     );
