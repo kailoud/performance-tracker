@@ -4207,189 +4207,217 @@ const ProductionTracker = () => {
         </div>
       )}
       
-      {/* Admin Panel Modal - Mobile Friendly */}
+      {/* Admin Panel Modal - Professional Mobile Design */}
       {showAdminPanel && isAdmin && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-4 sm:p-6 border-b">
-              <h2 className="text-lg sm:text-2xl font-bold text-gray-800">👑 Admin Panel</h2>
+        <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 z-50">
+          {/* Header */}
+          <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-lg">👑</span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Admin Panel</h2>
+                  <p className="text-xs text-gray-500">User Management System</p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowAdminPanel(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >
-                <X className="h-6 w-6 text-gray-600" />
+                <X className="h-5 w-5 text-gray-600" />
               </button>
             </div>
-            
-            <div className="p-4 sm:p-6">
-              {isLoadingUsers ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                  <span className="ml-3 text-gray-600">Loading users...</span>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold text-gray-800">User Management</h3>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => {
-                          const today = new Date().toISOString().split('T')[0];
-                          if (window.confirm(`🔄 Reset ALL users' data for today (${today})?\n\nThis will affect ${allUsers.length} users.`)) {
-                            allUsers.forEach(user => handleResetUserData(user.uid, today));
-                          }
-                        }}
-                        className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg text-sm"
-                        title="Reset today's data for all users"
-                      >
-                        🔄 Reset All Today
-                      </button>
-                      <button
-                        onClick={loadAllUsers}
-                        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm"
-                      >
-                        🔄 Refresh
-                      </button>
+          </div>
+
+          {/* Content */}
+          <div className="h-full overflow-y-auto bg-gray-50">
+            {isLoadingUsers ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent"></div>
+                <p className="mt-4 text-gray-600 font-medium">Loading users...</p>
+              </div>
+            ) : (
+              <div className="p-4 space-y-6">
+                {/* Quick Actions */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                    <button
+                      onClick={loadAllUsers}
+                      className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      <span>🔄</span>
+                      <span>Refresh</span>
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      onClick={() => {
+                        const today = new Date().toISOString().split('T')[0];
+                        if (window.confirm(`🔄 Reset ALL users' data for today (${today})?\n\nThis will affect ${allUsers.length} users.`)) {
+                          allUsers.forEach(user => handleResetUserData(user.uid, today));
+                        }
+                      }}
+                      className="flex items-center justify-center space-x-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      <span>🔄</span>
+                      <span>Reset All Today</span>
+                    </button>
+                    <div className="text-center py-3 px-4 bg-gray-100 rounded-lg">
+                      <div className="text-2xl font-bold text-gray-900">{allUsers.length}</div>
+                      <div className="text-xs text-gray-600">Total Users</div>
                     </div>
                   </div>
-                  
-                  <div className="overflow-x-auto border border-gray-200 rounded-lg">
-                    <table className="w-full table-auto text-sm">
-                      <thead>
-                        <tr className="bg-gray-50">
-                          <th className="px-4 py-3 text-left font-medium text-gray-700">Name</th>
-                          <th className="px-4 py-3 text-left font-medium text-gray-700">Email</th>
-                          <th className="px-4 py-3 text-left font-medium text-gray-700">Status</th>
-                          <th className="px-4 py-3 text-left font-medium text-gray-700">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {allUsers.map((user) => (
-                          <tr key={user.uid} className="border-b border-gray-100 hover:bg-gray-50">
-                            <td className="px-4 py-3 font-medium text-gray-900">{user.name}</td>
-                            <td className="px-4 py-3 text-gray-700">
+                </div>
+
+                {/* Users List */}
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold text-gray-900 px-1">User Management</h3>
+                  {allUsers.map((user) => (
+                    <div key={user.uid} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                      {/* User Header */}
+                      <div className="p-4 border-b border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                              <span className="text-white font-semibold text-sm">
+                                {user.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900">{user.name}</h4>
                               <button
                                 onClick={() => handleEditUserData(user)}
-                                className="text-blue-600 hover:text-blue-800 underline cursor-pointer"
-                                title="Click to edit user data"
+                                className="text-blue-600 hover:text-blue-800 text-sm underline"
                               >
                                 {user.email}
                               </button>
-                            </td>
-                            <td className="px-4 py-3">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                user.isBlocked 
-                                  ? 'bg-red-100 text-red-800' 
-                                  : 'bg-green-100 text-green-800'
-                              }`}>
-                                {user.isBlocked ? 'Blocked' : 'Active'}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="flex flex-wrap gap-1">
-                                <button
-                                  onClick={() => handleBlockUser(user.uid, !user.isBlocked)}
-                                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                                    user.isBlocked
-                                      ? 'bg-green-600 hover:bg-green-700 text-white'
-                                      : 'bg-red-600 hover:bg-red-700 text-white'
-                                  }`}
-                                >
-                                  {user.isBlocked ? '✅ Unblock' : '🚫 Block'}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    const today = new Date().toISOString().split('T')[0];
-                                    if (window.confirm(`🔄 Reset ${user.name}'s data for today (${today})?`)) {
-                                      handleResetUserData(user.uid, today);
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              user.isBlocked 
+                                ? 'bg-red-100 text-red-800 border border-red-200' 
+                                : 'bg-green-100 text-green-800 border border-green-200'
+                            }`}>
+                              {user.isBlocked ? '🚫 Blocked' : '✅ Active'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="p-4 bg-gray-50">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          <button
+                            onClick={() => handleBlockUser(user.uid, !user.isBlocked)}
+                            className={`flex items-center justify-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                              user.isBlocked
+                                ? 'bg-green-600 hover:bg-green-700 text-white'
+                                : 'bg-red-600 hover:bg-red-700 text-white'
+                            }`}
+                          >
+                            <span>{user.isBlocked ? '✅' : '🚫'}</span>
+                            <span>{user.isBlocked ? 'Unblock' : 'Block'}</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              const today = new Date().toISOString().split('T')[0];
+                              if (window.confirm(`🔄 Reset ${user.name}'s data for today (${today})?`)) {
+                                handleResetUserData(user.uid, today);
+                              }
+                            }}
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-xs font-medium transition-colors"
+                          >
+                            <span>🔄</span>
+                            <span>Today</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`⚠️ FORCE CLEAR: This will clear ${user.name}'s display data locally. Data will reappear on page refresh unless Firebase quota is available.`)) {
+                                if (selectedUserForEdit && selectedUserForEdit.uid === user.uid) {
+                                  const today = new Date().toISOString().split('T')[0];
+                                  setEditingUserData(prev => ({
+                                    ...prev,
+                                    [today]: {
+                                      date: today,
+                                      completedJobs: [],
+                                      lossTimeEntries: [],
+                                      isFinished: false,
+                                      updatedAt: new Date().toISOString()
                                     }
-                                  }}
-                                  className="px-2 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-xs font-medium transition-colors"
-                                  title="Reset today's data for this user"
-                                >
-                                  🔄 Today
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    if (window.confirm(`⚠️ FORCE CLEAR: This will clear ${user.name}'s display data locally (Firebase quota exceeded). Data will reappear on page refresh unless Firebase quota is available.`)) {
-                                      // Force clear the user's data locally for testing
-                                      if (selectedUserForEdit && selectedUserForEdit.uid === user.uid) {
-                                        const today = new Date().toISOString().split('T')[0];
-                                        setEditingUserData(prev => ({
-                                          ...prev,
-                                          [today]: {
-                                            date: today,
-                                            completedJobs: [],
-                                            lossTimeEntries: [],
-                                            isFinished: false,
-                                            updatedAt: new Date().toISOString()
-                                          }
-                                        }));
-                                      }
-                                      alert('✅ Display data cleared locally (temporary fix due to Firebase quota)');
-                                    }
-                                  }}
-                                  className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium transition-colors"
-                                  title="Force clear display data locally (temporary)"
-                                >
-                                  🚨 Force
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    const date = window.prompt('📅 Enter date (YYYY-MM-DD) to reset:');
-                                    if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-                                      if (window.confirm(`🔄 Reset ${user.name}'s data for ${date}?`)) {
-                                        handleResetUserData(user.uid, date);
-                                      }
-                                    } else if (date) {
-                                      window.alert('❌ Please enter a valid date in YYYY-MM-DD format');
-                                    }
-                                  }}
-                                  className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
-                                  title="Reset data for a specific date"
-                                >
-                                  📅 Date
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    const dates = ['Monday', 'Tuesday', 'Wednesday', 'Thursday'];
-                                    const thisWeek = dates.map((_, i) => {
-                                      const d = new Date();
-                                      const monday = new Date(d.setDate(d.getDate() - d.getDay() + 1));
-                                      return new Date(monday.getTime() + i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-                                    });
-                                    if (window.confirm(`🗓️ Reset ${user.name}'s data for the entire current week?\n\nDates: ${thisWeek.join(', ')}`)) {
-                                      thisWeek.forEach(date => handleResetUserData(user.uid, date));
-                                    }
-                                  }}
-                                  className="px-2 py-1 bg-orange-600 hover:bg-orange-700 text-white rounded text-xs font-medium transition-colors"
-                                  title="Reset all data for current week"
-                                >
-                                  🗓️ Week
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteUser(user.uid, user.name)}
-                                  className="px-2 py-1 bg-red-800 hover:bg-red-900 text-white rounded text-xs font-medium transition-colors"
-                                  title="Delete user permanently"
-                                >
-                                  🗑️ Delete
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                                  }));
+                                }
+                                alert('✅ Display data cleared locally (temporary fix)');
+                              }
+                            }}
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium transition-colors"
+                          >
+                            <span>🚨</span>
+                            <span>Force</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              const date = window.prompt('📅 Enter date (YYYY-MM-DD) to reset:');
+                              if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                                if (window.confirm(`🔄 Reset ${user.name}'s data for ${date}?`)) {
+                                  handleResetUserData(user.uid, date);
+                                }
+                              } else if (date) {
+                                window.alert('❌ Please enter a valid date in YYYY-MM-DD format');
+                              }
+                            }}
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
+                          >
+                            <span>📅</span>
+                            <span>Date</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              const dates = ['Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+                              const thisWeek = dates.map((_, i) => {
+                                const d = new Date();
+                                const monday = new Date(d.setDate(d.getDate() - d.getDay() + 1));
+                                return new Date(monday.getTime() + i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                              });
+                              if (window.confirm(`🗓️ Reset ${user.name}'s data for the entire current week?\n\nDates: ${thisWeek.join(', ')}`)) {
+                                thisWeek.forEach(date => handleResetUserData(user.uid, date));
+                              }
+                            }}
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-xs font-medium transition-colors"
+                          >
+                            <span>🗓️</span>
+                            <span>Week</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => handleDeleteUser(user.uid, user.name)}
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-red-800 hover:bg-red-900 text-white rounded-lg text-xs font-medium transition-colors"
+                          >
+                            <span>🗑️</span>
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                   
                   {allUsers.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      No users found
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+                      <div className="text-gray-400 text-4xl mb-4">👥</div>
+                      <p className="text-gray-500 font-medium">No users found</p>
+                      <p className="text-sm text-gray-400 mt-1">Users will appear here once they register</p>
                     </div>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
