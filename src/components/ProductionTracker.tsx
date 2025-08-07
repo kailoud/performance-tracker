@@ -190,6 +190,10 @@ const ProductionTracker = () => {
   const [showTimeExceededBanner, setShowTimeExceededBanner] = useState(false);
   const [bannerData, setBannerData] = useState<any>(null);
   
+  // Admin search state
+  const [adminSearchQuery, setAdminSearchQuery] = useState('');
+  const [filteredUsers, setFilteredUsers] = useState<Array<{uid: string, email: string, name: string, isBlocked: boolean}>>([]);
+  
 
   
   // Calendar modal state
@@ -2344,6 +2348,19 @@ const ProductionTracker = () => {
     };
   }, []);
 
+  // Filter users based on search query
+  React.useEffect(() => {
+    if (adminSearchQuery.trim() === '') {
+      setFilteredUsers(allUsers);
+    } else {
+      const filtered = allUsers.filter(user => 
+        user.name.toLowerCase().includes(adminSearchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(adminSearchQuery.toLowerCase())
+      );
+      setFilteredUsers(filtered);
+    }
+  }, [adminSearchQuery, allUsers]);
+
   // Progress data for pie chart
   const progressData = [
     { name: 'Productive Time', value: Math.min(completedMinutes, adjustedTarget), color: '#10b981' },
@@ -4311,88 +4328,98 @@ const ProductionTracker = () => {
             ) : (
               <div className="p-4 space-y-6">
                 {/* Quick Actions */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-semibold text-gray-900">Quick Actions</h3>
                     <button
                       onClick={loadAllUsers}
-                      className="flex items-center space-x-2 bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      className="flex items-center space-x-1 bg-slate-600 hover:bg-slate-700 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
                     >
                       <span>🔄</span>
                       <span>Refresh</span>
                     </button>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button
-                      onClick={() => {
-                        const today = new Date().toISOString().split('T')[0];
-                        if (window.confirm(`🔄 Reset ALL users' data for today (${today})?\n\nThis will affect ${allUsers.length} users.`)) {
-                          allUsers.forEach(user => handleResetUserData(user.uid, today));
-                        }
-                      }}
-                      className="flex items-center justify-center space-x-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors"
-                    >
-                      <span>🔄</span>
-                      <span>Reset All Today</span>
-                    </button>
-                    <div className="text-center py-3 px-4 bg-gray-100 rounded-lg">
-                      <div className="text-2xl font-bold text-gray-900">{allUsers.length}</div>
-                      <div className="text-xs text-gray-600">Total Users</div>
+                  <div className="space-y-2">
+                    {/* Search Bar */}
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={adminSearchQuery}
+                        onChange={(e) => setAdminSearchQuery(e.target.value)}
+                        placeholder="Search by name or email..."
+                        className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      {adminSearchQuery && (
+                        <button
+                          onClick={() => setAdminSearchQuery('')}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                    <div className="text-center py-2 px-3 bg-gray-100 rounded-lg">
+                      <div className="text-lg font-bold text-gray-900">{filteredUsers.length}</div>
+                      <div className="text-xs text-gray-600">Users Found</div>
                     </div>
                   </div>
                 </div>
 
                 {/* Users List */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 px-1">User Management</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {allUsers.map((user) => (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-gray-900 px-1">User Management</h3>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                    {filteredUsers.map((user) => (
                       <button
                         key={user.uid}
                         onClick={() => handleEditUserData(user)}
-                        className="group relative bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-200 hover:border-slate-300"
+                        className="group relative bg-white rounded-lg shadow-sm border border-gray-200 p-2 hover:shadow-md transition-all duration-200 hover:border-slate-300"
                       >
                         {/* Profile Square */}
-                        <div className="flex flex-col items-center space-y-3">
-                          <div className="w-16 h-16 bg-gradient-to-r from-slate-600 to-slate-700 rounded-xl flex items-center justify-center shadow-sm">
-                            <span className="text-white font-bold text-xl">
+                        <div className="flex flex-col items-center space-y-1">
+                          <div className="w-8 h-8 bg-gradient-to-r from-slate-600 to-slate-700 rounded-lg flex items-center justify-center shadow-sm">
+                            <span className="text-white font-bold text-sm">
                               {user.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
                           
                           {/* User Info */}
                           <div className="text-center">
-                            <h4 className="font-semibold text-gray-900 text-sm truncate max-w-full">
+                            <h4 className="font-semibold text-gray-900 text-xs truncate max-w-full">
                               {user.name}
                             </h4>
-                            <p className="text-xs text-gray-500 truncate max-w-full">
+                            <p className="text-[10px] text-gray-500 truncate max-w-full">
                               {user.email}
                             </p>
                           </div>
                           
                           {/* Status Badge */}
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          <span className={`px-1 py-0.5 rounded-full text-[8px] font-medium ${
                             user.isBlocked 
                               ? 'bg-red-100 text-red-800 border border-red-200' 
                               : 'bg-green-100 text-green-800 border border-green-200'
                           }`}>
-                            {user.isBlocked ? '🚫 Blocked' : '✅ Active'}
+                            {user.isBlocked ? '🚫' : '✅'}
                           </span>
                         </div>
                         
                         {/* Hover Effect */}
-                        <div className="absolute inset-0 bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center">
-                          <span className="text-slate-600 font-medium text-sm">Click to Manage</span>
+                        <div className="absolute inset-0 bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg flex items-center justify-center">
+                          <span className="text-slate-600 font-medium text-xs">Click to Manage</span>
                         </div>
                       </button>
                     ))}
                   </div>
                   
-                  {allUsers.length === 0 && (
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-                      <div className="text-gray-400 text-4xl mb-4">👥</div>
-                      <p className="text-gray-500 font-medium">No users found</p>
-                      <p className="text-sm text-gray-400 mt-1">Users will appear here once they register</p>
+                  {filteredUsers.length === 0 && (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
+                      <div className="text-gray-400 text-2xl mb-2">👥</div>
+                      <p className="text-gray-500 font-medium text-sm">
+                        {adminSearchQuery ? 'No users found matching your search' : 'No users found'}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {adminSearchQuery ? 'Try a different search term' : 'Users will appear here once they register'}
+                      </p>
                     </div>
                   )}
                 </div>
