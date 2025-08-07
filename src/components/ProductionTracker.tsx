@@ -2485,6 +2485,9 @@ const ProductionTracker = () => {
         <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
+          {!firebaseInitialized && (
+            <p className="text-sm text-yellow-600 mt-2">Initializing Firebase...</p>
+          )}
           <p className="text-sm text-gray-500 mt-2">If this takes too long, try refreshing the page</p>
           <button 
             onClick={() => window.location.reload()} 
