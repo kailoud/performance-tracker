@@ -880,9 +880,61 @@ const ProductionTracker = () => {
     const updatedJobs = [...completedJobs, newJob];
     setCompletedJobs(updatedJobs);
 
+    // Clear form fields
     setSelectedItem('');
     setCompletedQuantity('');
     setSearchInput('');
+
+    // Auto-save progress immediately
+    try {
+      setIsSaving(true);
+      
+      // Update local state
+      setAllDailyData(prev => {
+        const currentData = prev[selectedDate];
+        const dailyData: any = {
+          date: selectedDate,
+          completedJobs: updatedJobs,
+          lossTimeEntries,
+          isFinished: currentData?.isFinished || false
+        };
+
+        if (currentData?.finishTime) {
+          dailyData.finishTime = currentData.finishTime;
+        }
+
+        return {
+          ...prev,
+          [selectedDate]: dailyData
+        };
+      });
+
+      // Save to Firebase
+      const currentData = allDailyData[selectedDate];
+      const dailyData: any = {
+        date: selectedDate,
+        completedJobs: updatedJobs,
+        lossTimeEntries,
+        isFinished: currentData?.isFinished || false
+      };
+
+      if (currentData?.finishTime) {
+        dailyData.finishTime = currentData.finishTime;
+      }
+
+      const cleanedData = removeUndefinedValues(dailyData);
+      await saveDailyData(userId, selectedDate, cleanedData);
+      
+      setLastSaved(new Date());
+      setIsSaving(false);
+      
+      // Show success feedback
+      console.log('✅ Job completed and progress saved automatically');
+    } catch (error) {
+      console.error('Error auto-saving data:', error);
+      setIsSaving(false);
+      alert('Job completed but failed to save. Please try saving manually.');
+    }
   };
 
   const getCurrentItem = (): ProductionItem | null => {
@@ -1005,9 +1057,61 @@ const ProductionTracker = () => {
     const updatedLossEntries = [...lossTimeEntries, newLossEntry];
     setLossTimeEntries(updatedLossEntries);
 
+    // Clear form fields
     setSelectedLossReason('');
     setLossTimeMinutes('');
     setShowLossTimeForm(false);
+
+    // Auto-save progress immediately
+    try {
+      setIsSaving(true);
+      
+      // Update local state
+      setAllDailyData(prev => {
+        const currentData = prev[selectedDate];
+        const dailyData: any = {
+          date: selectedDate,
+          completedJobs,
+          lossTimeEntries: updatedLossEntries,
+          isFinished: currentData?.isFinished || false
+        };
+
+        if (currentData?.finishTime) {
+          dailyData.finishTime = currentData.finishTime;
+        }
+
+        return {
+          ...prev,
+          [selectedDate]: dailyData
+        };
+      });
+
+      // Save to Firebase
+      const currentData = allDailyData[selectedDate];
+      const dailyData: any = {
+        date: selectedDate,
+        completedJobs,
+        lossTimeEntries: updatedLossEntries,
+        isFinished: currentData?.isFinished || false
+      };
+
+      if (currentData?.finishTime) {
+        dailyData.finishTime = currentData.finishTime;
+      }
+
+      const cleanedData = removeUndefinedValues(dailyData);
+      await saveDailyData(userId, selectedDate, cleanedData);
+      
+      setLastSaved(new Date());
+      setIsSaving(false);
+      
+      // Show success feedback
+      console.log('✅ Loss time added and progress saved automatically');
+    } catch (error) {
+      console.error('Error auto-saving loss time data:', error);
+      setIsSaving(false);
+      alert('Loss time added but failed to save. Please try saving manually.');
+    }
   };
 
   const deleteLossTimeEntry = (id: number) => {
@@ -2571,17 +2675,7 @@ const ProductionTracker = () => {
             {/* Right Side - Action Buttons */}
             <div className="flex items-center space-x-3">
               {/* Primary Actions */}
-              <button
-                onClick={handleManualSave}
-                disabled={isSaving || (!completedJobs.length && !lossTimeEntries.length)}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                  isSaving || (!completedJobs.length && !lossTimeEntries.length)
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md'
-                }`}
-              >
-                {isSaving ? 'Saving...' : 'Save Progress'}
-              </button>
+
               
               {selectedDate && (
                 <button
@@ -2688,19 +2782,6 @@ const ProductionTracker = () => {
           {/* Mobile Action Bar */}
           <div className="px-4 py-3 bg-gray-50">
             <div className="flex items-center justify-between space-x-3">
-              {/* Save Button */}
-              <button
-                onClick={handleManualSave}
-                disabled={isSaving || (!completedJobs.length && !lossTimeEntries.length)}
-                className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                  isSaving || (!completedJobs.length && !lossTimeEntries.length)
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm'
-                }`}
-              >
-                {isSaving ? 'Saving...' : 'Save Progress'}
-              </button>
-              
               {/* Finish Day Button */}
               {selectedDate && (
                 <button
@@ -3155,7 +3236,7 @@ const ProductionTracker = () => {
               disabled={(!selectedItem && !getCurrentItem()) || !completedQuantity || (!isWithinWorkingHoursState && !isAdmin)}
               className="w-full bg-blue-600 text-white py-2 sm:py-3 px-3 sm:px-4 text-sm sm:text-base rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors disabled:opacity-50 disabled:transform disabled:scale-95"
             >
-              Log Completion
+              {isSaving ? 'Saving...' : 'Log & Save Job'}
             </button>
             
             {/* Show Timer Button - only visible if there's an active timer */}
@@ -3228,7 +3309,7 @@ const ProductionTracker = () => {
                       disabled={!selectedLossReason || !lossTimeMinutes || (!isWithinWorkingHoursState && !isAdmin)}
                       className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:opacity-50 disabled:transform disabled:scale-95 disabled:cursor-not-allowed transition-colors"
                     >
-                      Log Loss Time
+                      {isSaving ? 'Saving...' : 'Log & Save Loss Time'}
                     </button>
                     
                     {/* Time restriction warning for loss time */}
