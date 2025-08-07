@@ -784,9 +784,9 @@ const ProductionTracker = () => {
     // Cannot delete if day is finished
     if (dayData?.isFinished) return false;
     
-    // Cannot delete if less than 2 items remain
+    // Cannot delete if less than 3 items (to ensure at least 2 remain after deletion)
     const totalItems = (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0);
-    if (totalItems < 2) return false;
+    if (totalItems < 3) return false;
     
     return true;
   };
@@ -3714,7 +3714,7 @@ const ProductionTracker = () => {
                           ? 'bg-red-600 hover:bg-red-700 text-white'
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
-                      title={canDeleteData(selectedDate) ? "Delete all completed jobs" : "Cannot delete (day finished or less than 2 items remain)"}
+                      title={canDeleteData(selectedDate) ? "Delete all completed jobs" : "Cannot delete (day finished or less than 3 items total)"}
                     >
                       🗑️ Clear All
                     </button>
@@ -3765,7 +3765,7 @@ const ProductionTracker = () => {
                                   ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
                                   : 'text-gray-400 cursor-not-allowed'
                               }`}
-                              title={canDeleteData(selectedDate) ? "Delete this job" : "Cannot delete (day finished or less than 2 items remain)"}
+                              title={canDeleteData(selectedDate) ? "Delete this job" : "Cannot delete (day finished or less than 3 items total)"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -3799,7 +3799,7 @@ const ProductionTracker = () => {
                           ? 'bg-red-600 hover:bg-red-700 text-white'
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
-                      title={canDeleteData(selectedDate) ? "Delete all loss time entries" : "Cannot delete (day finished or less than 2 items remain)"}
+                      title={canDeleteData(selectedDate) ? "Delete all loss time entries" : "Cannot delete (day finished or less than 3 items total)"}
                     >
                       🗑️ Clear All
                     </button>
@@ -3834,7 +3834,7 @@ const ProductionTracker = () => {
                                   ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
                                   : 'text-gray-400 cursor-not-allowed'
                               }`}
-                              title={canDeleteData(selectedDate) ? "Delete this loss time entry" : "Cannot delete (day finished or less than 2 items remain)"}
+                              title={canDeleteData(selectedDate) ? "Delete this loss time entry" : "Cannot delete (day finished or less than 3 items total)"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
