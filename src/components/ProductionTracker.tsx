@@ -4284,7 +4284,7 @@ const ProductionTracker = () => {
           <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
             <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-slate-600 to-slate-700 rounded-lg flex items-center justify-center">
                   <span className="text-white text-lg">👑</span>
                 </div>
                 <div>
@@ -4305,7 +4305,7 @@ const ProductionTracker = () => {
           <div className="h-full overflow-y-auto bg-gray-50">
             {isLoadingUsers ? (
               <div className="flex flex-col items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-600 border-t-transparent"></div>
                 <p className="mt-4 text-gray-600 font-medium">Loading users...</p>
               </div>
             ) : (
@@ -4316,7 +4316,7 @@ const ProductionTracker = () => {
                     <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
                     <button
                       onClick={loadAllUsers}
-                      className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                      className="flex items-center space-x-2 bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                     >
                       <span>🔄</span>
                       <span>Refresh</span>
@@ -4330,7 +4330,7 @@ const ProductionTracker = () => {
                           allUsers.forEach(user => handleResetUserData(user.uid, today));
                         }
                       }}
-                      className="flex items-center justify-center space-x-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors"
+                      className="flex items-center justify-center space-x-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors"
                     >
                       <span>🔄</span>
                       <span>Reset All Today</span>
@@ -4351,7 +4351,7 @@ const ProductionTracker = () => {
                       <div className="p-4 border-b border-gray-100">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <div className="w-10 h-10 bg-gradient-to-r from-slate-600 to-slate-700 rounded-full flex items-center justify-center">
                               <span className="text-white font-semibold text-sm">
                                 {user.name.charAt(0).toUpperCase()}
                               </span>
@@ -4385,8 +4385,8 @@ const ProductionTracker = () => {
                             onClick={() => handleBlockUser(user.uid, !user.isBlocked)}
                             className={`flex items-center justify-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                               user.isBlocked
-                                ? 'bg-green-600 hover:bg-green-700 text-white'
-                                : 'bg-red-600 hover:bg-red-700 text-white'
+                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                : 'bg-rose-600 hover:bg-rose-700 text-white'
                             }`}
                           >
                             <span>{user.isBlocked ? '✅' : '🚫'}</span>
@@ -4400,7 +4400,7 @@ const ProductionTracker = () => {
                                 handleResetUserData(user.uid, today);
                               }
                             }}
-                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-xs font-medium transition-colors"
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
                           >
                             <span>🔄</span>
                             <span>Today</span>
@@ -4425,7 +4425,7 @@ const ProductionTracker = () => {
                                 alert('✅ Display data cleared locally (temporary fix)');
                               }
                             }}
-                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium transition-colors"
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-medium transition-colors"
                           >
                             <span>🚨</span>
                             <span>Force</span>
@@ -4442,7 +4442,7 @@ const ProductionTracker = () => {
                                 window.alert('❌ Please enter a valid date in YYYY-MM-DD format');
                               }
                             }}
-                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-xs font-medium transition-colors"
                           >
                             <span>📅</span>
                             <span>Date</span>
@@ -4460,7 +4460,7 @@ const ProductionTracker = () => {
                                 thisWeek.forEach(date => handleResetUserData(user.uid, date));
                               }
                             }}
-                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-xs font-medium transition-colors"
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
                           >
                             <span>🗓️</span>
                             <span>Week</span>
@@ -4468,7 +4468,7 @@ const ProductionTracker = () => {
                           
                           <button
                             onClick={() => handleDeleteUser(user.uid, user.name)}
-                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-red-800 hover:bg-red-900 text-white rounded-lg text-xs font-medium transition-colors"
+                            className="flex items-center justify-center space-x-1 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-medium transition-colors"
                           >
                             <span>🗑️</span>
                             <span>Delete</span>
