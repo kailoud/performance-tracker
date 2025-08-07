@@ -1092,10 +1092,27 @@ const ProductionTracker = () => {
         [selectedDate]: dailyData
       }));
 
-      // Find next working day
+      // Check if this is Thursday (last day of the week)
       const workingDays = getWorkingDays();
       const currentIndex = workingDays.indexOf(selectedDate);
-      const nextDay = workingDays[currentIndex + 1] || workingDays[0]; // Loop back to Monday if it's Thursday
+      const isThursday = currentIndex === 3; // Thursday is index 3 (Monday=0, Tuesday=1, Wednesday=2, Thursday=3)
+      
+      let nextDay;
+      let weekTransitionMessage = '';
+      
+      if (isThursday) {
+        // If it's Thursday, calculate next Monday
+        const currentDate = new Date(selectedDate);
+        const daysUntilMonday = (8 - currentDate.getDay()) % 7; // Days until next Monday
+        const nextMonday = new Date(currentDate);
+        nextMonday.setDate(currentDate.getDate() + daysUntilMonday);
+        nextDay = nextMonday.toISOString().split('T')[0];
+        weekTransitionMessage = 'Week completed! Starting next week on Monday.';
+      } else {
+        // If it's not Thursday, go to next working day
+        nextDay = workingDays[currentIndex + 1] || workingDays[0];
+        weekTransitionMessage = 'Switched to next working day.';
+      }
 
       // Switch to next day and reset data
       setSelectedDate(nextDay);
@@ -1108,10 +1125,11 @@ const ProductionTracker = () => {
       setLossTimeMinutes('');
       setShowLossTimeForm(false);
 
-      // Show success message
-      alert(`Work day finished! Data saved for ${formatDateForDisplay(selectedDate)}. Switched to ${formatDateForDisplay(nextDay)}.`);
+      // Show success message with week transition info
+      alert(`✅ Work day finished! Data saved for ${formatDateForDisplay(selectedDate)}.\n\n${weekTransitionMessage}\n\nNow viewing: ${formatDateForDisplay(nextDay)}`);
     } catch (error) {
       console.error('Error finishing work day:', error);
+      alert('Error finishing work day. Please try again.');
     }
   };
 
