@@ -791,16 +791,16 @@ const ProductionTracker = () => {
     return totalItems > 0;
   }, [selectedDate, isAdmin, allDailyData]);
 
-  // Simplified individual item deletion - allow if has more than 1 item
+  // Individual item deletion - allow if has more than 2 items (to leave at least 2 after deletion)
   const canDeleteCurrentIndividualItem = React.useMemo(() => {
     if (!selectedDate) return false;
     const dayData = allDailyData[selectedDate];
     
     if (isAdmin) return true; // Admin can always delete
     
-    // Allow individual deletion if there are more than 1 total items (regardless of day status)
+    // Allow individual deletion if there are more than 2 total items (to leave at least 2 after deletion)
     const totalItems = (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0);
-    return totalItems > 1;
+    return totalItems > 2;
   }, [selectedDate, isAdmin, allDailyData]);
 
   // Get the current week's data for summary
@@ -3751,7 +3751,7 @@ const ProductionTracker = () => {
                                   ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
                                   : 'text-gray-400 cursor-not-allowed'
                               }`}
-                              title={canDeleteCurrentIndividualItem ? "Delete this job" : "Only 1 item remaining"}
+                              title={canDeleteCurrentIndividualItem ? "Delete this job" : "Cannot delete (less than 3 items total)"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -3820,7 +3820,7 @@ const ProductionTracker = () => {
                                   ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
                                   : 'text-gray-400 cursor-not-allowed'
                               }`}
-                              title={canDeleteCurrentIndividualItem ? "Delete this loss time entry" : "Only 1 item remaining"}
+                              title={canDeleteCurrentIndividualItem ? "Delete this loss time entry" : "Cannot delete (less than 3 items total)"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
