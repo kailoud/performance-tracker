@@ -2999,49 +2999,49 @@ const ProductionTracker = () => {
         
         {/* Weekly Summary - shows when week is complete */}
         {isWeekComplete() && (
-          <div className="mb-4 sm:mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 p-4 sm:p-6 rounded-none sm:rounded-lg border border-purple-200">
+          <div className="mb-4 sm:mb-6 bg-white p-4 sm:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-purple-800">🎉 Week Complete!</h3>
-              <div className="text-sm text-purple-600">
+              <h3 className="text-xl font-bold text-gray-800">🎉 Week Complete!</h3>
+              <div className="text-sm text-gray-600">
                 All {getWorkingDays(selectedDate).length} working days finished
               </div>
             </div>
             
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-white p-3 rounded-lg shadow-sm">
-                <div className="text-2xl font-bold text-purple-600">
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <div className="text-2xl font-bold text-gray-800">
                   {getCurrentWeekData().totalCompletedMinutes.toFixed(1)}
                 </div>
-                <div className="text-sm text-purple-600">Total Minutes</div>
+                <div className="text-sm text-gray-600">Total Minutes</div>
               </div>
               
-              <div className="bg-white p-3 rounded-lg shadow-sm">
-                <div className="text-2xl font-bold text-purple-600">
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <div className="text-2xl font-bold text-gray-800">
                   {getCurrentWeekData().totalJobs}
                 </div>
-                <div className="text-sm text-purple-600">Total Jobs</div>
+                <div className="text-sm text-gray-600">Total Jobs</div>
               </div>
               
-              <div className="bg-white p-3 rounded-lg shadow-sm">
-                <div className="text-2xl font-bold text-purple-600">
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <div className="text-2xl font-bold text-gray-800">
                   {getCurrentWeekData().totalLossTime}
                 </div>
-                <div className="text-sm text-purple-600">Loss Time</div>
+                <div className="text-sm text-gray-600">Loss Time</div>
               </div>
               
-              <div className="bg-white p-3 rounded-lg shadow-sm">
-                <div className="text-2xl font-bold text-purple-600">
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <div className="text-2xl font-bold text-gray-800">
                   {getCurrentWeekData().daysCompleted}
                 </div>
-                <div className="text-sm text-purple-600">Days Completed</div>
+                <div className="text-sm text-gray-600">Days Completed</div>
               </div>
             </div>
             
             <div className="mt-4 text-center">
-              <p className="text-purple-700 mb-2">Ready to start a new week?</p>
+              <p className="text-gray-700 mb-2">Ready to start a new week?</p>
               <button
                 onClick={resetWeek}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
               >
                 🚀 Start New Week
               </button>
@@ -3051,42 +3051,42 @@ const ProductionTracker = () => {
         
         {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
-          <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
+          <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center">
-              <Target className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-2 sm:mr-3" />
+              <Target className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600 mr-2 sm:mr-3" />
               <div>
-                <p className="text-xs sm:text-sm text-blue-600">Target</p>
-                <p className="text-lg sm:text-xl font-bold text-blue-800">{TARGET_MINUTES} min</p>
+                <p className="text-xs sm:text-sm text-gray-600">Target</p>
+                <p className="text-lg sm:text-xl font-bold text-gray-800">{TARGET_MINUTES} min</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
+          <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center">
-              <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mr-2 sm:mr-3" />
+              <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600 mr-2 sm:mr-3" />
               <div>
-                <p className="text-xs sm:text-sm text-green-600">Completed</p>
-                <p className="text-lg sm:text-xl font-bold text-green-800">{completedMinutes.toFixed(1)} min</p>
+                <p className="text-xs sm:text-sm text-gray-600">Completed</p>
+                <p className="text-lg sm:text-xl font-bold text-gray-800">{completedMinutes.toFixed(1)} min</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-yellow-50 p-3 sm:p-4 rounded-lg">
+          <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center">
-              <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 mr-2 sm:mr-3" />
+              <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600 mr-2 sm:mr-3" />
               <div>
-                <p className="text-xs sm:text-sm text-yellow-600">Remaining</p>
-                <p className="text-lg sm:text-xl font-bold text-yellow-800">{remainingMinutes.toFixed(1)} min</p>
+                <p className="text-xs sm:text-sm text-gray-600">Remaining</p>
+                <p className="text-lg sm:text-xl font-bold text-gray-800">{remainingMinutes.toFixed(1)} min</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-purple-50 p-3 sm:p-4 rounded-lg">
+          <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-center">
-              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 mr-2 sm:mr-3" />
+              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600 mr-2 sm:mr-3" />
               <div>
-                <p className="text-xs sm:text-sm text-purple-600">Progress</p>
-                <p className="text-lg sm:text-xl font-bold text-purple-800">{completedPercentage.toFixed(1)}%</p>
+                <p className="text-xs sm:text-sm text-gray-600">Progress</p>
+                <p className="text-lg sm:text-xl font-bold text-gray-800">{completedPercentage.toFixed(1)}%</p>
               </div>
             </div>
           </div>
@@ -3094,13 +3094,13 @@ const ProductionTracker = () => {
 
         {/* Loss Time Alert */}
         {lossTimeTotal > 0 && (
-          <div className="bg-red-50 p-3 sm:p-4 rounded-none sm:rounded-lg mb-4 border border-red-200">
+          <div className="bg-white p-3 sm:p-4 rounded-lg mb-4 border border-gray-200 shadow-sm">
             <div className="flex items-center">
-              <StopCircle className="h-6 w-6 sm:h-8 sm:w-8 text-red-600 mr-2 sm:mr-3" />
+              <StopCircle className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600 mr-2 sm:mr-3" />
               <div>
-                <p className="text-xs sm:text-sm text-red-600">Loss Time Today</p>
-                <p className="text-lg sm:text-xl font-bold text-red-800">{lossTimeTotal} min</p>
-                <p className="text-xs text-red-500">Adjusted Target: {adjustedTarget} minutes (was {TARGET_MINUTES})</p>
+                <p className="text-xs sm:text-sm text-gray-600">Loss Time Today</p>
+                <p className="text-lg sm:text-xl font-bold text-gray-800">{lossTimeTotal} min</p>
+                <p className="text-xs text-gray-500">Adjusted Target: {adjustedTarget} minutes (was {TARGET_MINUTES})</p>
               </div>
             </div>
           </div>
@@ -3210,7 +3210,7 @@ const ProductionTracker = () => {
 
             {/* Item Info Display */}
             {getCurrentItem() && (
-              <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
                 <p className="text-sm text-gray-600">
                   <span className="font-medium">Target Quantity:</span> {getCurrentItem()?.quantity} units
                 </p>
@@ -3282,7 +3282,7 @@ const ProductionTracker = () => {
               </div>
 
               {showLossTimeForm && (
-                <div className="bg-red-50 p-4 rounded-lg space-y-3 mb-4">
+                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-3 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Reason for Loss Time</label>
                     <select
@@ -3343,14 +3343,14 @@ const ProductionTracker = () => {
                 <div className="space-y-2">
                   <h4 className="font-medium text-gray-700">Recent Loss Time:</h4>
                   {lossTimeEntries.slice(-3).reverse().map(entry => (
-                    <div key={entry.id} className="flex justify-between items-center bg-red-50 p-2 rounded border">
+                    <div key={entry.id} className="flex justify-between items-center bg-white p-2 rounded border border-gray-200 shadow-sm">
                       <div>
-                        <span className="font-medium text-red-700">{entry.reason}</span>
+                        <span className="font-medium text-gray-700">{entry.reason}</span>
                         <span className="text-sm text-gray-600 ml-2">({entry.minutes} min at {entry.timestamp})</span>
                       </div>
                       <button
                         onClick={() => deleteLossTimeEntry(entry.id)}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-gray-600 hover:text-gray-800"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
