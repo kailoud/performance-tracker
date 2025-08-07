@@ -777,7 +777,7 @@ const ProductionTracker = () => {
   };
 
   // Check if deletion is allowed (non-admin users cannot delete after finish day or if less than 2 items remain)
-  const canDeleteData = (dateString: string): boolean => {
+  const canDeleteData = React.useCallback((dateString: string): boolean => {
     if (isAdmin) return true; // Admin can always delete
     const dayData = allDailyData[dateString];
     
@@ -793,10 +793,10 @@ const ProductionTracker = () => {
     }
     
     return true;
-  };
+  }, [isAdmin, allDailyData]);
 
   // Check if individual items can be deleted (more than 2 total items)
-  const canDeleteIndividualItem = (dateString: string): boolean => {
+  const canDeleteIndividualItem = React.useCallback((dateString: string): boolean => {
     if (isAdmin) return true; // Admin can always delete
     const dayData = allDailyData[dateString];
     
@@ -808,19 +808,19 @@ const ProductionTracker = () => {
     // Can delete individual items if there are more than 2 total items
     const totalItems = (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0);
     return totalItems > 2;
-  };
+  }, [isAdmin, allDailyData]);
 
   // Memoized version for the current selected date to avoid repeated calculations
   const canDeleteCurrentData = React.useMemo(() => {
     if (!selectedDate) return false;
     return canDeleteData(selectedDate);
-  }, [selectedDate, allDailyData, isAdmin]);
+  }, [selectedDate, canDeleteData]);
 
   // Memoized version for individual item deletion
   const canDeleteCurrentIndividualItem = React.useMemo(() => {
     if (!selectedDate) return false;
     return canDeleteIndividualItem(selectedDate);
-  }, [selectedDate, allDailyData, isAdmin]);
+  }, [selectedDate, canDeleteIndividualItem]);
 
   // Get the current week's data for summary
   const getCurrentWeekData = () => {
