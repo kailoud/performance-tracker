@@ -743,6 +743,39 @@ const ProductionTracker = () => {
     return workingDays.every(day => allDailyData[day]?.isFinished);
   };
 
+  // Check if user has logged work for the selected date
+  const hasLoggedWork = (dateString: string): boolean => {
+    const dayData = allDailyData[dateString];
+    return dayData && (dayData.completedJobs.length > 0 || dayData.lossTimeEntries.length > 0);
+  };
+
+  // Check if Finish Day button should be enabled (after working hours with data)
+  const shouldEnableFinishDay = (dateString: string): boolean => {
+    if (!dateString) return false;
+    
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0];
+    const isWorkingDayToday = isWorkingDay(today);
+    const isWithinHours = isWithinWorkingHours(today);
+    
+    // Admin can always finish day
+    if (isAdmin) return true;
+    
+    // Only allow for today's date
+    if (dateString !== todayString) return false;
+    
+    // Must be a working day
+    if (!isWorkingDayToday) return false;
+    
+    // If within working hours, check normal access
+    if (isWithinHours) {
+      return canAccessDate(dateString);
+    }
+    
+    // If outside working hours, only enable if user has logged work
+    return hasLoggedWork(dateString);
+  };
+
   // Get the current week's data for summary
   const getCurrentWeekData = () => {
     const workingDays = getDisplayWorkingDays();
@@ -1155,9 +1188,35 @@ const ProductionTracker = () => {
     
     // Check restrictions for non-admin users
     if (!isAdmin) {
-      if (!canAccessDate(selectedDate)) {
-        alert('❌ Finish Day is only available for working days in the current week for non-admin users.');
+      const today = new Date();
+      const todayString = today.toISOString().split('T')[0];
+      const isWorkingDayToday = isWorkingDay(today);
+      const isWithinHours = isWithinWorkingHours(today);
+      
+      // Only allow for today's date
+      if (selectedDate !== todayString) {
+        alert('❌ Finish Day is only available for today\'s date for non-admin users.');
         return;
+      }
+      
+      // Must be a working day
+      if (!isWorkingDayToday) {
+        alert('❌ Finish Day is only available on working days (Monday to Thursday) for non-admin users.');
+        return;
+      }
+      
+      // If within working hours, check normal access
+      if (isWithinHours) {
+        if (!canAccessDate(selectedDate)) {
+          alert('❌ Finish Day is only available for working days in the current week for non-admin users.');
+          return;
+        }
+      } else {
+        // If outside working hours, only allow if user has logged work
+        if (!hasLoggedWork(selectedDate)) {
+          alert('❌ Finish Day is only available after working hours if you have logged completed work or loss time.');
+          return;
+        }
       }
     }
     
@@ -2820,9 +2879,9 @@ const ProductionTracker = () => {
               {selectedDate && (
                 <button
                   onClick={finishWorkDay}
-                  disabled={allDailyData[selectedDate]?.isFinished || (!isAdmin && !canAccessDate(selectedDate))}
+                  disabled={allDailyData[selectedDate]?.isFinished || !shouldEnableFinishDay(selectedDate)}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                    allDailyData[selectedDate]?.isFinished || (!isAdmin && !canAccessDate(selectedDate))
+                    allDailyData[selectedDate]?.isFinished || !shouldEnableFinishDay(selectedDate)
                       ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                       : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
                   }`}
@@ -2926,9 +2985,9 @@ const ProductionTracker = () => {
               {selectedDate && (
                 <button
                   onClick={finishWorkDay}
-                  disabled={allDailyData[selectedDate]?.isFinished || (!isAdmin && !canAccessDate(selectedDate))}
+                  disabled={allDailyData[selectedDate]?.isFinished || !shouldEnableFinishDay(selectedDate)}
                   className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
-                    allDailyData[selectedDate]?.isFinished || (!isAdmin && !canAccessDate(selectedDate))
+                    allDailyData[selectedDate]?.isFinished || !shouldEnableFinishDay(selectedDate)
                       ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                       : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
                   }`}
