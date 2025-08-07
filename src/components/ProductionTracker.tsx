@@ -1103,7 +1103,28 @@ const ProductionTracker = () => {
       if (isThursday) {
         // If it's Thursday, calculate next Monday
         const currentDate = new Date(selectedDate);
-        const daysUntilMonday = (8 - currentDate.getDay()) % 7; // Days until next Monday
+        // Get the current day of week (0=Sunday, 1=Monday, ..., 4=Thursday)
+        const currentDayOfWeek = currentDate.getDay();
+        
+        // Calculate days until next Monday
+        // If today is Thursday (4), we need 4 days to get to next Monday (1)
+        // If today is Friday (5), we need 3 days to get to next Monday (1)
+        // If today is Saturday (6), we need 2 days to get to next Monday (1)
+        // If today is Sunday (0), we need 1 day to get to next Monday (1)
+        let daysUntilMonday;
+        if (currentDayOfWeek === 4) { // Thursday
+          daysUntilMonday = 4; // Thursday to next Monday = 4 days
+        } else if (currentDayOfWeek === 5) { // Friday
+          daysUntilMonday = 3; // Friday to next Monday = 3 days
+        } else if (currentDayOfWeek === 6) { // Saturday
+          daysUntilMonday = 2; // Saturday to next Monday = 2 days
+        } else if (currentDayOfWeek === 0) { // Sunday
+          daysUntilMonday = 1; // Sunday to next Monday = 1 day
+        } else {
+          // For other days, use the general formula
+          daysUntilMonday = (8 - currentDayOfWeek) % 7;
+        }
+        
         const nextMonday = new Date(currentDate);
         nextMonday.setDate(currentDate.getDate() + daysUntilMonday);
         nextDay = nextMonday.toISOString().split('T')[0];
