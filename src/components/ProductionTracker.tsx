@@ -2110,19 +2110,20 @@ const ProductionTracker = () => {
   // Timer functions
   const startTimer = () => {
     if (!timerState.isActive) {
-      // Only allow timer operations for today's date, or if admin
+      // Only allow timer operations during working hours for today's date, or if admin
       if (!isAdmin) {
         const now = new Date();
         const today = now.toISOString().split('T')[0];
         const isWorkingDayToday = isWorkingDay(now);
+        const isWithinHours = isWithinWorkingHours(now);
         
         if (selectedDate !== today) {
           alert('Timer can only be used for today\'s date for non-admin users.');
           return;
         }
         
-        if (!isWorkingDayToday) {
-          alert('Timer can only be used on working days (Monday to Thursday) for non-admin users.');
+        if (!isWorkingDayToday || !isWithinHours) {
+          alert('Timer can only be used during working hours (06:55 AM - 16:35 PM, Monday to Thursday) for non-admin users.');
           return;
         }
       }
