@@ -234,7 +234,7 @@ const ProductionTracker = () => {
       try {
         // Set a timeout for Firebase initialization
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Firebase initialization timeout')), 10000); // 10 second timeout
+          setTimeout(() => reject(new Error('Firebase initialization timeout')), 5000); // 5 second timeout
         });
         
         // Test Firebase connection with timeout
@@ -244,42 +244,18 @@ const ProductionTracker = () => {
         ]);
       } catch (error) {
         console.error('Firebase initialization error:', error);
-        // If Firebase fails, clear storage and retry
-        if ('indexedDB' in window) {
-          const databasesToDelete = [
-            'firebaseLocalStorageDb',
-            'firebaseLocalStorage',
-            'firebaseRemoteConfig',
-            'firebaseRemoteConfigDb'
-          ];
-          
-          databasesToDelete.forEach(dbName => {
-            const request = indexedDB.deleteDatabase(dbName);
-            request.onsuccess = () => {
-              console.log(`Database ${dbName} cleared successfully`);
-            };
-          });
-        }
-        
-        // Clear localStorage Firebase entries
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && (key.includes('firebase') || key.includes('Firebase') || key.includes('remoteConfig'))) {
-            keysToRemove.push(key);
-            localStorage.removeItem(key);
-          }
-        }
-        
-        // Force reload after clearing storage
-        setTimeout(() => {
-          console.log('Reloading page after Firebase storage clear...');
-          window.location.reload();
-        }, 1000);
+        // Don't reload the page, just continue with the app
+        // The auth state listener will handle the rest
       }
     };
 
     checkFirebaseInit();
+
+    // Add a fallback timeout to prevent infinite loading
+    const loadingTimeout = setTimeout(() => {
+      console.log('Loading timeout reached, proceeding with app...');
+      setIsLoading(false);
+    }, 15000); // 15 second timeout
 
     const unsubscribe = onAuthChange(async (user: any) => {
       if (user) {
@@ -345,9 +321,13 @@ const ProductionTracker = () => {
         setAllDailyData({});
       }
       setIsLoading(false);
+      clearTimeout(loadingTimeout);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      clearTimeout(loadingTimeout);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
