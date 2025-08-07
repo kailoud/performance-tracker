@@ -781,32 +781,46 @@ const ProductionTracker = () => {
     if (isAdmin) return true; // Admin can always delete
     const dayData = allDailyData[dateString];
     
-    console.log('🔍 canDeleteData check:', {
-      dateString,
-      isAdmin,
-      dayData,
-      isFinished: dayData?.isFinished,
-      completedJobs: dayData?.completedJobs?.length || 0,
-      lossTimeEntries: dayData?.lossTimeEntries?.length || 0,
-      totalItems: (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0)
-    });
+    // Cannot delete if day is finished
+    if (dayData?.isFinished) {
+      return false;
+    }
+    
+    // Cannot delete if less than 3 items (for bulk deletion - ensures at least 2 remain after deletion)
+    const totalItems = (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0);
+    if (totalItems < 3) {
+      return false;
+    }
+    
+    return true;
+  };
+
+  // Check if individual items can be deleted (more than 2 total items)
+  const canDeleteIndividualItem = (dateString: string): boolean => {
+    if (isAdmin) return true; // Admin can always delete
+    const dayData = allDailyData[dateString];
     
     // Cannot delete if day is finished
     if (dayData?.isFinished) {
-      console.log('❌ Cannot delete: Day is finished');
       return false;
     }
     
-    // Cannot delete if less than 3 items (to ensure at least 2 remain after deletion)
+    // Can delete individual items if there are more than 2 total items
     const totalItems = (dayData?.completedJobs?.length || 0) + (dayData?.lossTimeEntries?.length || 0);
-    if (totalItems < 3) {
-      console.log('❌ Cannot delete: Less than 3 items total');
-      return false;
-    }
-    
-    console.log('✅ Can delete: All conditions met');
-    return true;
+    return totalItems > 2;
   };
+
+  // Memoized version for the current selected date to avoid repeated calculations
+  const canDeleteCurrentData = React.useMemo(() => {
+    if (!selectedDate) return false;
+    return canDeleteData(selectedDate);
+  }, [selectedDate, allDailyData, isAdmin]);
+
+  // Memoized version for individual item deletion
+  const canDeleteCurrentIndividualItem = React.useMemo(() => {
+    if (!selectedDate) return false;
+    return canDeleteIndividualItem(selectedDate);
+  }, [selectedDate, allDailyData, isAdmin]);
 
   // Get the current week's data for summary
   const getCurrentWeekData = () => {
@@ -3725,13 +3739,13 @@ const ProductionTracker = () => {
                           completedJobs.forEach(job => handleDeleteJob(job.id));
                         }
                       }}
-                      disabled={!canDeleteData(selectedDate)}
+                      disabled={!canDeleteCurrentData}
                       className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                        canDeleteData(selectedDate)
+                        canDeleteCurrentData
                           ? 'bg-red-600 hover:bg-red-700 text-white'
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
-                      title={canDeleteData(selectedDate) ? "Delete all completed jobs" : "Cannot delete (day finished or less than 3 items total)"}
+                      title={canDeleteCurrentData ? "Delete all completed jobs" : "Cannot delete (day finished or less than 3 items total)"}
                     >
                       🗑️ Clear All
                     </button>
@@ -3776,13 +3790,13 @@ const ProductionTracker = () => {
                                   handleDeleteJob(job.id);
                                 }
                               }}
-                              disabled={!canDeleteData(selectedDate)}
+                              disabled={!canDeleteCurrentIndividualItem}
                               className={`p-1.5 rounded transition-colors ${
-                                canDeleteData(selectedDate)
+                                canDeleteCurrentIndividualItem
                                   ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
                                   : 'text-gray-400 cursor-not-allowed'
                               }`}
-                              title={canDeleteData(selectedDate) ? "Delete this job" : "Cannot delete (day finished or less than 3 items total)"}
+                              title={canDeleteCurrentIndividualItem ? "Delete this job" : "Cannot delete (day finished or less than 2 items total)"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -3810,13 +3824,13 @@ const ProductionTracker = () => {
                           lossTimeEntries.forEach(entry => handleDeleteLossTime(entry.id));
                         }
                       }}
-                      disabled={!canDeleteData(selectedDate)}
+                      disabled={!canDeleteCurrentData}
                       className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                        canDeleteData(selectedDate)
+                        canDeleteCurrentData
                           ? 'bg-red-600 hover:bg-red-700 text-white'
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
-                      title={canDeleteData(selectedDate) ? "Delete all loss time entries" : "Cannot delete (day finished or less than 3 items total)"}
+                      title={canDeleteCurrentData ? "Delete all loss time entries" : "Cannot delete (day finished or less than 3 items total)"}
                     >
                       🗑️ Clear All
                     </button>
@@ -3845,13 +3859,13 @@ const ProductionTracker = () => {
                                   handleDeleteLossTime(entry.id);
                                 }
                               }}
-                              disabled={!canDeleteData(selectedDate)}
+                              disabled={!canDeleteCurrentIndividualItem}
                               className={`p-1.5 rounded transition-colors ${
-                                canDeleteData(selectedDate)
+                                canDeleteCurrentIndividualItem
                                   ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
                                   : 'text-gray-400 cursor-not-allowed'
                               }`}
-                              title={canDeleteData(selectedDate) ? "Delete this loss time entry" : "Cannot delete (day finished or less than 3 items total)"}
+                              title={canDeleteCurrentIndividualItem ? "Delete this loss time entry" : "Cannot delete (day finished or less than 2 items total)"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
