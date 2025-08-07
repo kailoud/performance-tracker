@@ -4455,52 +4455,45 @@ const ProductionTracker = () => {
                 <div className="space-y-6">
                   {/* Date Selection */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-2">📅 Available Dates</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">📅 Select Date with Data</label>
                     {Object.keys(editingUserData).length > 0 ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {Object.keys(editingUserData)
-                          .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()) // Sort newest first
-                          .map(date => {
-                            const dayData = editingUserData[date];
-                            const hasJobs = dayData.completedJobs.length > 0;
-                            const hasLossTime = dayData.lossTimeEntries.length > 0;
-                            const isFinished = dayData.isFinished;
-                            
-                            return (
-                              <button
-                                key={date}
-                                onClick={() => {
-                                  console.log(`Admin: Date changed to ${date}`);
-                                  console.log(`Admin: Data for new date:`, editingUserData[date]);
-                                  setEditingSelectedDate(date);
-                                }}
-                                className={`p-3 rounded-lg border transition-all duration-200 text-left ${
-                                  editingSelectedDate === date
-                                    ? 'bg-blue-600 text-white border-blue-600 shadow-md transform scale-105'
-                                    : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm'
-                                }`}
-                              >
-                                <div className="space-y-1">
-                                  <div className="font-semibold text-xs">
-                                    {new Date(date).toLocaleDateString('en-US', { 
-                                      weekday: 'short',
-                                      month: 'short',
-                                      day: 'numeric'
-                                    })}
-                                  </div>
-                                  <div className="flex items-center justify-between text-xs opacity-75">
-                                    <span>{hasJobs ? `📋 ${dayData.completedJobs.length} jobs` : '📋 0 jobs'}</span>
-                                    <span>{hasLossTime ? `⚠️ ${dayData.lossTimeEntries.length} loss` : '⚠️ 0 loss'}</span>
-                                  </div>
-                                  {isFinished && (
-                                    <div className="text-xs font-medium text-green-600">
-                                      ✅ Finished
-                                    </div>
-                                  )}
-                                </div>
-                              </button>
-                            );
-                          })}
+                      <div className="relative">
+                        <select
+                          value={editingSelectedDate}
+                          onChange={(e) => {
+                            console.log(`Admin: Date changed to ${e.target.value}`);
+                            console.log(`Admin: Data for new date:`, editingUserData[e.target.value]);
+                            setEditingSelectedDate(e.target.value);
+                          }}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                        >
+                          <option value="">Select a date...</option>
+                          {Object.keys(editingUserData)
+                            .filter(date => {
+                              const dayData = editingUserData[date];
+                              return dayData.completedJobs.length > 0 || dayData.lossTimeEntries.length > 0;
+                            })
+                            .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()) // Sort newest first
+                            .map(date => {
+                              const dayData = editingUserData[date];
+                              const hasJobs = dayData.completedJobs.length > 0;
+                              const hasLossTime = dayData.lossTimeEntries.length > 0;
+                              const isFinished = dayData.isFinished;
+                              
+                              return (
+                                <option key={date} value={date}>
+                                  {new Date(date).toLocaleDateString('en-US', { 
+                                    weekday: 'short',
+                                    month: 'short',
+                                    day: 'numeric'
+                                  })} - {hasJobs ? `${dayData.completedJobs.length} jobs` : '0 jobs'} {hasLossTime ? `(${dayData.lossTimeEntries.length} loss)` : ''} {isFinished ? '✅' : ''}
+                                </option>
+                              );
+                            })}
+                        </select>
+                        <div className="mt-2 text-xs text-gray-500">
+                          Showing only dates with completed jobs or loss time entries
+                        </div>
                       </div>
                     ) : (
                       <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
