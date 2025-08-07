@@ -2744,8 +2744,8 @@ const ProductionTracker = () => {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-3">
                 <img 
-                  src="/bike1.png" 
-                  alt="Logo" 
+                  src="/promax.png" 
+                  alt="Promax Logo" 
                   className="w-8 h-8 object-contain"
                 />
                 <div>
