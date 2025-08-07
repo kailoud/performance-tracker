@@ -776,6 +776,13 @@ const ProductionTracker = () => {
     return hasLoggedWork(dateString);
   };
 
+  // Check if deletion is allowed (non-admin users cannot delete after finish day)
+  const canDeleteData = (dateString: string): boolean => {
+    if (isAdmin) return true; // Admin can always delete
+    const dayData = allDailyData[dateString];
+    return !dayData?.isFinished; // Non-admin users cannot delete if day is finished
+  };
+
   // Get the current week's data for summary
   const getCurrentWeekData = () => {
     const workingDays = getDisplayWorkingDays();
@@ -2063,6 +2070,12 @@ const ProductionTracker = () => {
     console.log('🗑️ Main interface delete for date:', targetDate, 'user:', userId);
     const currentData = allDailyData[targetDate];
     if (currentData) {
+      // Check if day is finished (non-admin users cannot delete after finish day)
+      if (currentData.isFinished && !isAdmin) {
+        alert('❌ Cannot delete data after the day has been finished. Please contact an administrator if you need to make changes.');
+        return;
+      }
+      
       const updatedJobs = currentData.completedJobs.filter(job => job.id !== jobId);
       const updatedData = {
         ...currentData,
@@ -2121,6 +2134,12 @@ const ProductionTracker = () => {
     console.log('🗑️ Main interface delete loss time for date:', targetDate, 'user:', userId);
     const currentData = allDailyData[targetDate];
     if (currentData) {
+      // Check if day is finished (non-admin users cannot delete after finish day)
+      if (currentData.isFinished && !isAdmin) {
+        alert('❌ Cannot delete data after the day has been finished. Please contact an administrator if you need to make changes.');
+        return;
+      }
+      
       const updatedLossTime = currentData.lossTimeEntries.filter(entry => entry.id !== entryId);
       const updatedData = {
         ...currentData,
@@ -3667,8 +3686,13 @@ const ProductionTracker = () => {
                           completedJobs.forEach(job => handleDeleteJob(job.id));
                         }
                       }}
-                      className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors"
-                      title="Delete all completed jobs"
+                      disabled={!canDeleteData(selectedDate)}
+                      className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                        canDeleteData(selectedDate)
+                          ? 'bg-red-600 hover:bg-red-700 text-white'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
+                      title={canDeleteData(selectedDate) ? "Delete all completed jobs" : "Cannot delete after day is finished"}
                     >
                       🗑️ Clear All
                     </button>
@@ -3713,8 +3737,13 @@ const ProductionTracker = () => {
                                   handleDeleteJob(job.id);
                                 }
                               }}
-                              className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                              title="Delete this job"
+                              disabled={!canDeleteData(selectedDate)}
+                              className={`p-1.5 rounded transition-colors ${
+                                canDeleteData(selectedDate)
+                                  ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
+                                  : 'text-gray-400 cursor-not-allowed'
+                              }`}
+                              title={canDeleteData(selectedDate) ? "Delete this job" : "Cannot delete after day is finished"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -3742,8 +3771,13 @@ const ProductionTracker = () => {
                           lossTimeEntries.forEach(entry => handleDeleteLossTime(entry.id));
                         }
                       }}
-                      className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors"
-                      title="Delete all loss time entries"
+                      disabled={!canDeleteData(selectedDate)}
+                      className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                        canDeleteData(selectedDate)
+                          ? 'bg-red-600 hover:bg-red-700 text-white'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
+                      title={canDeleteData(selectedDate) ? "Delete all loss time entries" : "Cannot delete after day is finished"}
                     >
                       🗑️ Clear All
                     </button>
@@ -3772,8 +3806,13 @@ const ProductionTracker = () => {
                                   handleDeleteLossTime(entry.id);
                                 }
                               }}
-                              className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                              title="Delete this loss time entry"
+                              disabled={!canDeleteData(selectedDate)}
+                              className={`p-1.5 rounded transition-colors ${
+                                canDeleteData(selectedDate)
+                                  ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
+                                  : 'text-gray-400 cursor-not-allowed'
+                              }`}
+                              title={canDeleteData(selectedDate) ? "Delete this loss time entry" : "Cannot delete after day is finished"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
