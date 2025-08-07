@@ -569,70 +569,58 @@ const ProductionTracker = () => {
 
   // Time and access control functions
   const isWithinWorkingHours = (date: Date): boolean => {
-    // TEMPORARILY DISABLED FOR TESTING - Always return true
-    return true;
-    
-    // Original logic (commented out for testing):
-    // const hours = date.getHours();
-    // const minutes = date.getMinutes();
-    // const currentTime = hours * 60 + minutes;
-    // const startTime = 6 * 60 + 55; // 06:55 AM
-    // const endTime = 16 * 60 + 35; // 16:35 PM (4:35 PM)
-    // return currentTime >= startTime && currentTime <= endTime;
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const currentTime = hours * 60 + minutes;
+    const startTime = 6 * 60 + 55; // 06:55 AM
+    const endTime = 16 * 60 + 35; // 16:35 PM (4:35 PM)
+    return currentTime >= startTime && currentTime <= endTime;
   };
 
   const isWorkingDay = (date: Date): boolean => {
-    // TEMPORARILY DISABLED FOR TESTING - Always return true
-    return true;
-    
-    // Original logic (commented out for testing):
-    // const day = date.getDay();
-    // return day >= 1 && day <= 4; // Monday (1) to Thursday (4)
+    const day = date.getDay();
+    return day >= 1 && day <= 4; // Monday (1) to Thursday (4)
   };
 
   const canAccessDate = (dateString: string): boolean => {
-    // TEMPORARILY DISABLED FOR TESTING - Always allow access to all dates
-    return true;
+    const date = new Date(dateString);
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0];
     
-    // Original logic (commented out for testing):
-    // const date = new Date(dateString);
-    // const today = new Date();
-    // const todayString = today.toISOString().split('T')[0];
-    // 
-    // // Check if it's a working day
-    // if (!isWorkingDay(date)) return false;
-    // 
-    // // Admin can access all dates
-    // if (isAdmin) return true;
-    // 
-    // // For past dates, always allow access
-    // if (date < today) return true;
-    // 
-    // // For today, only allow access during working hours
-    // if (dateString === todayString) {
-    //   return isWithinWorkingHours(today);
-    // }
-    // 
-    // // For future dates, implement sequential access
-    // const workingDays = getWorkingDays();
-    // const todayIndex = workingDays.indexOf(todayString);
-    // const dateIndex = workingDays.indexOf(dateString);
-    // 
-    // if (todayIndex === -1 || dateIndex === -1) return false;
-    // 
-    // // Only allow access to the next sequential working day
-    // if (dateIndex === todayIndex + 1) {
-    //   // Check if current day is finished
-    //   const currentDayData = allDailyData[workingDays[todayIndex]];
-    //   if (currentDayData?.isFinished) {
-    //     // Current day is finished, allow access to next day during working hours
-    //     return isWithinWorkingHours(today);
-    //   }
-    //   return false; // Current day not finished, no access to next day
-    // }
-    // 
-    // // For dates beyond the next sequential day, no access
-    // return false;
+    // Check if it's a working day
+    if (!isWorkingDay(date)) return false;
+    
+    // Admin can access all dates
+    if (isAdmin) return true;
+    
+    // For past dates, always allow access
+    if (date < today) return true;
+    
+    // For today, only allow access during working hours
+    if (dateString === todayString) {
+      return isWithinWorkingHours(today);
+    }
+    
+    // For future dates, implement sequential access
+    const workingDays = getWorkingDays();
+    const todayIndex = workingDays.indexOf(todayString);
+    const dateIndex = workingDays.indexOf(dateString);
+    
+    if (todayIndex === -1 || dateIndex === -1) return false;
+    
+    // Only allow access to the next sequential working day
+    if (dateIndex === todayIndex + 1) {
+      // Check if current day is finished
+      const currentDayData = allDailyData[workingDays[todayIndex]];
+      if (currentDayData?.isFinished) {
+        // Current day is finished, allow access to next day during working hours
+        return isWithinWorkingHours(today);
+      }
+      return false; // Current day not finished, no access to next day
+    }
+    
+    // For dates beyond the next sequential day, no access
+    return false;
   };
 
   // Update current time every minute
