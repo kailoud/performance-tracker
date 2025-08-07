@@ -230,22 +230,55 @@ const ProductionTracker = () => {
 
   // Firebase authentication effect
   useEffect(() => {
-    // Check Firebase initialization
+    // Check Firebase initialization with timeout
     const checkFirebaseInit = async () => {
       try {
-        // Test Firebase connection
-        await auth.authStateReady();
+        // Set a timeout for Firebase initialization
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Firebase initialization timeout')), 10000); // 10 second timeout
+        });
+        
+        // Test Firebase connection with timeout
+        await Promise.race([
+          auth.authStateReady(),
+          timeoutPromise
+        ]);
+        
         setFirebaseInitialized(true);
       } catch (error) {
         console.error('Firebase initialization error:', error);
         // If Firebase fails, clear storage and retry
         if ('indexedDB' in window) {
-          const request = indexedDB.deleteDatabase('firebaseLocalStorageDb');
-          request.onsuccess = () => {
-            console.log('Firebase storage cleared, retrying initialization...');
-            window.location.reload();
-          };
+          const databasesToDelete = [
+            'firebaseLocalStorageDb',
+            'firebaseLocalStorage',
+            'firebaseRemoteConfig',
+            'firebaseRemoteConfigDb'
+          ];
+          
+          databasesToDelete.forEach(dbName => {
+            const request = indexedDB.deleteDatabase(dbName);
+            request.onsuccess = () => {
+              console.log(`Database ${dbName} cleared successfully`);
+            };
+          });
         }
+        
+        // Clear localStorage Firebase entries
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.includes('firebase') || key.includes('Firebase') || key.includes('remoteConfig'))) {
+            keysToRemove.push(key);
+            localStorage.removeItem(key);
+          }
+        }
+        
+        // Force reload after clearing storage
+        setTimeout(() => {
+          console.log('Reloading page after Firebase storage clear...');
+          window.location.reload();
+        }, 1000);
       }
     };
 
@@ -2489,12 +2522,34 @@ const ProductionTracker = () => {
             <p className="text-sm text-yellow-600 mt-2">Initializing Firebase...</p>
           )}
           <p className="text-sm text-gray-500 mt-2">If this takes too long, try refreshing the page</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Refresh Page
-          </button>
+          <div className="flex space-x-2 mt-4">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Refresh Page
+            </button>
+            <button 
+              onClick={() => {
+                // Force clear all storage and reload
+                if ('indexedDB' in window) {
+                  indexedDB.databases().then(databases => {
+                    databases.forEach(db => {
+                      if (db.name) {
+                        indexedDB.deleteDatabase(db.name);
+                      }
+                    });
+                  });
+                }
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.reload();
+              }} 
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Clear Storage & Reload
+            </button>
+          </div>
         </div>
       </div>
     );

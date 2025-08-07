@@ -17,26 +17,48 @@ const firebaseConfig = {
 // Clear problematic Firebase storage on initialization
 const clearFirebaseStorage = () => {
   try {
-    // Clear IndexedDB storage that might be corrupted
+    // Clear ALL IndexedDB databases that might be corrupted
     if ('indexedDB' in window) {
-      const request = indexedDB.deleteDatabase('firebaseLocalStorageDb');
-      request.onsuccess = () => {
-        console.log('Firebase storage cleared successfully');
-      };
-      request.onerror = () => {
-        console.log('Could not clear Firebase storage');
-      };
+      // Clear Firebase specific databases
+      const databasesToDelete = [
+        'firebaseLocalStorageDb',
+        'firebaseLocalStorage',
+        'firebaseRemoteConfig',
+        'firebaseRemoteConfigDb'
+      ];
+      
+      databasesToDelete.forEach(dbName => {
+        const request = indexedDB.deleteDatabase(dbName);
+        request.onsuccess = () => {
+          console.log(`Database ${dbName} cleared successfully`);
+        };
+        request.onerror = () => {
+          console.log(`Could not clear database ${dbName}`);
+        };
+      });
     }
     
-    // Clear localStorage Firebase entries
+    // Clear ALL localStorage entries related to Firebase
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.includes('firebase')) {
+      if (key && (key.includes('firebase') || key.includes('Firebase') || key.includes('remoteConfig'))) {
         keysToRemove.push(key);
       }
     }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+      console.log(`Removed localStorage key: ${key}`);
+    });
+    
+    // Clear sessionStorage as well
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && (key.includes('firebase') || key.includes('Firebase') || key.includes('remoteConfig'))) {
+        sessionStorage.removeItem(key);
+        console.log(`Removed sessionStorage key: ${key}`);
+      }
+    }
     
   } catch (error) {
     console.log('Error clearing Firebase storage:', error);
