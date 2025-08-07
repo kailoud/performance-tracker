@@ -593,8 +593,15 @@ const ProductionTracker = () => {
     // Admin can access all dates
     if (isAdmin) return true;
     
-    // For past dates, always allow access
-    if (date < today) return true;
+    // For past dates, only allow access if it's the same week and during working hours
+    if (date < today) {
+      const workingDays = getWorkingDays();
+      const isInCurrentWeek = workingDays.includes(dateString);
+      if (!isInCurrentWeek) return false; // No access to past weeks
+      
+      // For past dates in current week, only allow during working hours
+      return isWithinWorkingHours(today);
+    }
     
     // For today, only allow access during working hours
     if (dateString === todayString) {
@@ -785,6 +792,18 @@ const ProductionTracker = () => {
 
   const handleSubmit = async () => {
     if (!userId || !selectedDate) return;
+    
+    // Check working hours restrictions for non-admin users
+    if (!isAdmin) {
+      const now = new Date();
+      const isWorkingDayToday = isWorkingDay(now);
+      const isWithinHours = isWithinWorkingHours(now);
+      
+      if (!isWorkingDayToday || !isWithinHours) {
+        alert('❌ Job logging is only available during working hours (06:55 AM - 16:35 PM, Monday to Thursday) for non-admin users.');
+        return;
+      }
+    }
     
     let item;
     
@@ -982,6 +1001,18 @@ const ProductionTracker = () => {
 
   const handleLossTimeSubmit = async () => {
     if (!selectedLossReason || !lossTimeMinutes || !userId || !selectedDate) return;
+
+    // Check working hours restrictions for non-admin users
+    if (!isAdmin) {
+      const now = new Date();
+      const isWorkingDayToday = isWorkingDay(now);
+      const isWithinHours = isWithinWorkingHours(now);
+      
+      if (!isWorkingDayToday || !isWithinHours) {
+        alert('❌ Loss time logging is only available during working hours (06:55 AM - 16:35 PM, Monday to Thursday) for non-admin users.');
+        return;
+      }
+    }
 
     const minutes = parseInt(lossTimeMinutes);
     if (minutes <= 0) {
